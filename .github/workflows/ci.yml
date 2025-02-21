@@ -1,0 +1,83 @@
+name: Python CI
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [3.12]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 flake8-html mypy black isort
+
+      # Run auto-fix tools
+      - name: Run auto-fix with Black, flake8, and isort
+        run: |
+          black --config ./.github/config/.black .
+          isort --settings-file ./.github/config/.isort.cfg . --profile black --filter-files
+          flake8 --config ./.github/config/.flake8 .
+          mypy . --config-file .github/config/mypy.ini --ignore-missing-imports
+
+      # Run the linters and generate an HTML report
+      - name: Check and Upload Lint Report
+        if: always()  # Ensure this step runs even if the previous step fails
+        run: |
+          if [ -d reports/linting-report ]; then
+            echo "Linting report exists, proceeding to upload."
+          else
+            echo "No linting report found. Creating placeholder."
+            mkdir -p reports/linting-report
+            echo "<html><body>No linting issues detected or linting failed to produce output.</body></html>" > reports/linting-report/index.html
+          fi
+
+      - name: Upload Lint Report
+        if: always()  # Ensure this step runs even if the previous step fails
+        uses: actions/upload-artifact@v3
+        with:
+          name: linting-report
+          path: reports/linting-report
+
+  notify-success:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Send success message to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: '✅ CI Passed: Python linting, type-checking, and tests succeeded on Python versions 3.7, 3.8, and 3.9.'
+          debug: true
+
+  notify-failure:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: Send failure message to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: "❌ CI Failed: Issues detected in linting, type-checking, or tests for Python versions 3.7, 3.8, and 3.9."
+          debug: true

@@ -1,0 +1,4 @@
+[flake8]
+exclude =.git,venv,.venv,__init__.py,__pycache__,tests, topblog
+max-line-length = 79
+ignore = E203, E266, E501, W503, F405
