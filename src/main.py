@@ -1,19 +1,23 @@
+from fastapi import HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-
 from src.core.configs import config
 from src.create_fastapi_app import create_app
 from src.routers.v1 import bot
-from fastapi import Request, HTTPException
+
 
 app = create_app(
     create_custom_static_urls=True,
 )
 
+
 # Middleware для проверки секретного токена
 @app.middleware("http")
 async def verify_secret_token(request: Request, call_next):
     if request.url.path == "/webhook":
-        if request.headers.get("X-Telegram-Bot-Api-Secret-Token") != config.secret_token:
+        if (
+            request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+            != config.secret_token
+        ):
             raise HTTPException(status_code=403, detail="Forbidden")
     return await call_next(request)
 
@@ -36,4 +40,4 @@ app.add_middleware(
 )
 
 
-app.include_router(bot.router, prefix="", tags=["bot"])
+app.include_router(bot.router, prefix="/api/v1", tags=["bot"])

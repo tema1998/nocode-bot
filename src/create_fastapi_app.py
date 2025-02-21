@@ -1,21 +1,21 @@
-import logging
-import os
+from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.responses import ORJSONResponse
-
-from src.bot_handlers import start, handle_message
+from src.bot_handlers import BotHandlers
 from src.core.configs import config, logger
+from telegram.ext import (
+    ApplicationBuilder,
+    CallbackQueryHandler,
+    MessageHandler,
+    filters,
+)
 
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI
-
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 def register_static_docs_routes(app: FastAPI):
     @app.get("/docs", include_in_schema=False)
@@ -40,19 +40,26 @@ def register_static_docs_routes(app: FastAPI):
             redoc_js_url="https://unpkg.com/redoc@next/bundles/redoc.standalone.js",
         )
 
+
 # Инициализация приложения бота
-application = ApplicationBuilder().read_timeout(30).token(config.bot_token).build()
-# Регистрируем обработчики
-application.add_handler(CommandHandler("start", start))
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))  # Обработка текстовых сообщений
+application = (
+    ApplicationBuilder().read_timeout(30).token(config.bot_token).build()
+)
+# Регистрируем универсальный обработчик команд
+bot_handlers = BotHandlers()
+application.add_handler(
+    MessageHandler(filters.TEXT & filters.COMMAND, bot_handlers.handle_command)
+)
+application.add_handler(
+    CallbackQueryHandler(bot_handlers.button_callback)
+)  # Обработчик инлайн-кнопок
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Установка вебхука при запуске
     await application.bot.set_webhook(
-        url=config.webhook_url,
-        secret_token=config.secret_token
+        url=config.webhook_url, secret_token=config.secret_token
     )
     logger.info(config.webhook_url)
     logger.info("Webhook установлен!")

@@ -2,13 +2,15 @@ import logging
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,  # Уровень логирования
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'  # Формат логов
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Формат логов
 )
 
 logger = logging.getLogger(__name__)  # Получаем объект логгера
+
 
 class Config(BaseSettings):
     app_name: str = "API"
@@ -56,4 +58,3 @@ class Config(BaseSettings):
 
 
 config = Config()
-

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.inspection import inspect
 from src.db.db_utils import Base
@@ -34,5 +34,16 @@ class UUIDMixin:
         }
 
 
-class Document(Base, UUIDMixin, TimeStampedMixin):
-    __tablename__ = "documents"
+class Command(Base):
+    __tablename__ = "commands"
+    id = Column(Integer, primary_key=True)
+    command = Column(String, nullable=False, unique=True)
+    response = Column(String, nullable=False)
+
+
+class Button(Base):
+    __tablename__ = "buttons"
+    id = Column(Integer, primary_key=True)
+    command_id = Column(Integer, ForeignKey("commands.id"))
+    text = Column(String, nullable=False)
+    callback_data = Column(String, nullable=False)
