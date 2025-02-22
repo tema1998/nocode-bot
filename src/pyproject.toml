@@ -23,6 +23,7 @@ black = "^25.1.0"
 isort = "^6.0.0"
 flake8 = "^7.1.2"
 mypy = "^1.15.0"
+requests = "^2.32.3"
 
 
 [build-system]

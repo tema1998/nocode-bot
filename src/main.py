@@ -1,7 +1,8 @@
 from fastapi import HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from src.core.configs import config
 from src.create_fastapi_app import create_app
+from src.models.bot import Bot
+from src.repositories.async_pg_repository import get_repository
 from src.routers.v1 import bot
 
 
@@ -10,15 +11,29 @@ app = create_app(
 )
 
 
-# Middleware для проверки секретного токена
 @app.middleware("http")
 async def verify_secret_token(request: Request, call_next):
-    if request.url.path == "/webhook":
-        if (
-            request.headers.get("X-Telegram-Bot-Api-Secret-Token")
-            != config.secret_token
-        ):
-            raise HTTPException(status_code=403, detail="Forbidden")
+    # Получаем bot_id из пути
+    bot_id = request.url.path.split("/")[-1]
+    if not bot_id.isdigit():
+        return await call_next(request)
+
+    # Получаем secret_token из заголовка
+    secret_token = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+    if not secret_token:
+        raise HTTPException(status_code=403, detail="Secret token is missing")
+
+    # Получаем бота из базы данных
+    repository = await get_repository()
+    bot = await repository.fetch_by_id(Bot, int(bot_id))
+    if not bot:
+        raise HTTPException(status_code=404, detail="Bot not found")
+
+    # Проверяем secret_token
+    if bot.secret_token != secret_token:
+        raise HTTPException(status_code=403, detail="Invalid secret token")
+
+    # Продолжаем обработку запроса
     return await call_next(request)
 
 

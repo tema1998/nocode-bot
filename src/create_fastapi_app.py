@@ -1,5 +1,3 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.openapi.docs import (
     get_redoc_html,
@@ -7,14 +5,7 @@ from fastapi.openapi.docs import (
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.responses import ORJSONResponse
-from src.bot_handlers import BotHandlers
-from src.core.configs import config, logger
-from telegram.ext import (
-    ApplicationBuilder,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
+from src.core.configs import config
 
 
 def register_static_docs_routes(app: FastAPI):
@@ -41,40 +32,12 @@ def register_static_docs_routes(app: FastAPI):
         )
 
 
-# Инициализация приложения бота
-application = (
-    ApplicationBuilder().read_timeout(30).token(config.bot_token).build()
-)
-# Регистрируем универсальный обработчик команд
-bot_handlers = BotHandlers()
-application.add_handler(
-    MessageHandler(filters.TEXT & filters.COMMAND, bot_handlers.handle_command)
-)
-application.add_handler(
-    CallbackQueryHandler(bot_handlers.button_callback)
-)  # Обработчик инлайн-кнопок
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Установка вебхука при запуске
-    await application.bot.set_webhook(
-        url=config.webhook_url, secret_token=config.secret_token
-    )
-    logger.info(config.webhook_url)
-    logger.info("Webhook установлен!")
-    yield
-    # Очистка при завершении (если нужно)
-    logger.info("Приложение завершает работу...")
-
-
 def create_app(
     create_custom_static_urls: bool = False,
 ) -> FastAPI:
     app = FastAPI(
         title=config.app_name,
         default_response_class=ORJSONResponse,
-        lifespan=lifespan,
         docs_url=None if create_custom_static_urls else "/docs",
         redoc_url=None if create_custom_static_urls else "/redoc",
     )

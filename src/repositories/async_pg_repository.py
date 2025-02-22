@@ -6,6 +6,7 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import joinedload, sessionmaker
+from src.core.configs import config
 from src.db.db_utils import Base
 from src.repositories.async_data_repository import AsyncRepository
 
@@ -18,7 +19,7 @@ class PostgresAsyncRepository(AsyncRepository):
         )
 
     async def fetch_by_id(
-        self, model_class: Type[Base], record_id: str
+        self, model_class: Type[Base], record_id: str | int
     ) -> Optional[Base]:
         async with self.async_session() as session:
             result = await session.get(model_class, record_id)
@@ -144,3 +145,8 @@ class PostgresAsyncRepository(AsyncRepository):
             result = await session.execute(stmt)
             items = result.scalars().all()
             return items if items else None
+
+
+async def get_repository() -> PostgresAsyncRepository:
+    repository = PostgresAsyncRepository(dsn=config.dsn)
+    return repository
