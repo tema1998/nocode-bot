@@ -3,13 +3,12 @@ import logging
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# Настройка логирования
 logging.basicConfig(
-    level=logging.INFO,  # Уровень логирования
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Формат логов
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-logger = logging.getLogger(__name__)  # Получаем объект логгера
+logger = logging.getLogger(__name__)
 
 
 class Config(BaseSettings):
@@ -33,9 +32,7 @@ class Config(BaseSettings):
     redis_host: str = "127.0.0.1"
     redis_port: str = "6379"
 
-    bot_token: str = "7213712931:31uTX763YDG36DBU"
     webhook_url: str = "url"
-    secret_token: str = "token"
 
     @property
     def broker_url(self) -> str:
