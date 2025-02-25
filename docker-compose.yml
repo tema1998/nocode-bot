@@ -15,54 +15,54 @@ services:
     ports:
       - "8080:8080" #TODO to delete on prod
 
-#  celery_worker:
-#    build:
-#      context: .
-#      dockerfile: ./broker/Dockerfile.celery
-#    restart: always
-#    depends_on:
-#      redis:
-#        condition: service_started
-#      rabbitmq_broker:
-#        condition: service_healthy
-#    env_file:
-#      - .env
-#    command: celery -A src.tasks worker -l info  --concurrency=2
-#    environment:
-#      CELERY_BROKER_URL: amqp://${BROKER_USER}:${BROKER_PASS}@rabbitmq_broker:5672//
-#      CELERY_RESULT_BACKEND: redis://:${REDIS_PASS}@redis:6379/0
+  celery_worker:
+    build:
+      context: .
+      dockerfile: ./broker/Dockerfile.celery
+    restart: always
+    depends_on:
+      redis:
+        condition: service_started
+      rabbitmq_broker:
+        condition: service_healthy
+    env_file:
+      - .env
+    command: celery -A src.tasks worker -l info  --concurrency=2
+    environment:
+      CELERY_BROKER_URL: amqp://${BROKER_USER}:${BROKER_PASS}@rabbitmq_broker:5672//
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASS}@redis:6379/0
 
-#  flower:
-#    build:
-#      context: .
-#      dockerfile: ./broker/Dockerfile.flower
-#    restart: always
-#    depends_on:
-##      - celery_worker
-#      - rabbitmq_broker
-#    ports:
-#      - "5555:5555" #TODO: DELETE ON PROD
-#    volumes:
-#      - flower_data:/app/flower_data
-#    env_file:
-#      - .env
-#    environment:
-#      CELERY_BROKER_URL: ${BROKER_PROTOCOL}://${BROKER_USER}:${BROKER_PASS}@${BROKER_HOST}:${BROKER_PORT}//
-#      CELERY_RESULT_BACKEND: redis://:${REDIS_PASS}@${REDIS_HOST}:${REDIS_PORT}/0
-#    command: celery -A src.celery.tasks flower --port=5555
+  flower:
+    build:
+      context: .
+      dockerfile: ./broker/Dockerfile.flower
+    restart: always
+    depends_on:
+#      - celery_worker
+      - rabbitmq_broker
+    ports:
+      - "5555:5555" #TODO: DELETE ON PROD
+    volumes:
+      - flower_data:/app/flower_data
+    env_file:
+      - .env
+    environment:
+      CELERY_BROKER_URL: ${BROKER_PROTOCOL}://${BROKER_USER}:${BROKER_PASS}@${BROKER_HOST}:${BROKER_PORT}//
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASS}@${REDIS_HOST}:${REDIS_PORT}/0
+    command: celery -A src.celery.tasks flower --port=5555
 
-#  beat:
-#    restart: always
-#    build:
-#      context: .
-#    depends_on:
-#      - worker
-#      - redis
-#    volumes:
-#      - ./src/:/usr/src/app/
-#    env_file:
-#      - ./.env
-#    command: ["celery", "--workdir=./mail_sender", "-A", "mail_sender", "beat", "-l", "info", "-S", "django"]
+  beat:
+    restart: always
+    build:
+      context: .
+    depends_on:
+      - worker
+      - redis
+    volumes:
+      - ./src/:/usr/src/app/
+    env_file:
+      - ./.env
+    command: ["celery", "--workdir=./mail_sender", "-A", "mail_sender", "beat", "-l", "info", "-S", "django"]
 
   db:
     image: postgres:15
