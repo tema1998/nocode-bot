@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)  # Получаем объект логге
 class Config(BaseSettings):
     app_name: str = "API"
 
-    db_host: str = "127.0.0.1"
-    db_port: int = 5432
-    db_name: str = "db_name"
-    db_user: str = "db_user"
-    db_password: str = "qwerty"
+    bot_service_db_host: str = "127.0.0.1"
+    bot_service_db_port: int = 5432
+    bot_service_db_name: str = "db_name"
+    bot_service_db_user: str = "db_user"
+    bot_service_db_password: str = "qwerty"
 
     sqlalchemy_echo: bool = True
 
@@ -49,7 +49,7 @@ class Config(BaseSettings):
 
     @property
     def dsn(self) -> str:
-        return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        return f"postgresql+asyncpg://{self.bot_service_db_user}:{self.bot_service_db_password}@{self.bot_service_db_host}:{self.bot_service_db_port}/{self.bot_service_db_name}"
 
     model_config = SettingsConfigDict(
         env_file=".env",
