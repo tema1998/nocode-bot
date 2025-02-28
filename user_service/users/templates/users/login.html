@@ -1,0 +1,55 @@
+{% extends 'login.html' %}
+
+{% block title %}
+Login
+{% endblock %}
+
+{% block content %}
+<div class="p-5">
+    <div class="text-center">
+        <h1 class="h4 text-gray-900 mb-4">Добро пожаловать!</h1>
+    </div>
+
+    <form class="user" method="post">
+        {% csrf_token %}
+
+        <div class="form-group" >
+            Логин:
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.username.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            Пароль:
+            {{ form.password }}
+            {% if form.password.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.username.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary btn-user btn-block">Войти</button>
+        <hr>
+        <a href="index.html" class="btn btn-google btn-user btn-block">
+            <i class="fab fa-google fa-fw"></i> Войти с Google
+        </a>
+        <a href="index.html" class="btn btn-facebook btn-user btn-block">
+            <i class="fab fa-facebook-f fa-fw"></i> Войти с Facebook
+        </a>
+    </form>
+    <hr>
+    <div class="text-center">
+        <a class="small" href="forgot-password.html">Забыли пароль?</a>
+    </div>
+    <div class="text-center">
+        <a class="small" href="register.html">Регистрация</a>
+    </div>
+</div>
+{% endblock %}

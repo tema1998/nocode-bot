@@ -11,11 +11,21 @@ load_dotenv()
 
 config = context.config
 
-config.set_main_option("DB_USER", os.environ["DB_USER"])
-config.set_main_option("DB_PASS", os.environ["DB_PASSWORD"])
-config.set_main_option("DB_HOST", os.environ["DB_HOST"])
-config.set_main_option("DB_NAME", os.environ["DB_NAME"])
-config.set_main_option("DB_PORT", os.environ["DB_PORT"])
+config.set_main_option(
+    "BOT_SERVICE_DB_USER", os.environ["BOT_SERVICE_DB_USER"]
+)
+config.set_main_option(
+    "BOT_SERVICE_DB_PASS", os.environ["BOT_SERVICE_DB_PASSWORD"]
+)
+config.set_main_option(
+    "BOT_SERVICE_DB_HOST", os.environ["BOT_SERVICE_DB_HOST"]
+)
+config.set_main_option(
+    "BOT_SERVICE_DB_NAME", os.environ["BOT_SERVICE_DB_NAME"]
+)
+config.set_main_option(
+    "BOT_SERVICE_DB_PORT", os.environ["BOT_SERVICE_DB_PORT"]
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
