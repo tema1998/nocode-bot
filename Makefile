@@ -14,6 +14,6 @@ run-bot-service:
 	uvicorn src.main:app --reload --env-file .env.local
 
 run-user-service:
-	cd user_service && uvicorn bot_management.asgi:application --host 0.0.0.0 --port 8000 --reload
+	cd user_service && python manage.py runserver
 
 
