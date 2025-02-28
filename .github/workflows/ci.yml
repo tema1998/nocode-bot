@@ -45,11 +45,11 @@ jobs:
             echo "No linting report found. Creating placeholder."
             mkdir -p reports/linting-report
             echo "<html><body>No linting issues detected or linting failed to produce output.</body></html>" > reports/linting-report/index.html
-          fi
+          
 
       - name: Upload Lint Report
         if: always()  # Ensure this step runs even if the previous step fails
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linting-report
           path: reports/linting-report
