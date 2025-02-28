@@ -32,7 +32,7 @@ class RegisterView(View):
             user = form.save()  # Save the new user
             login(request, user)  # Log the user in
             messages.success(request, "Регистрация прошла успешно!")
-            return redirect("home")
+            return redirect("index")
         return render(request, "users/register.html", {"form": form})
 
 
@@ -71,7 +71,7 @@ class LoginView(View):
             if user is not None:
                 login(request, user)  # Log the user in
                 messages.success(request, f"Добро пожаловать, {username}!")
-                return redirect("home")
+                return redirect("index")
         return render(request, "users/login.html", {"form": form})
 
 
