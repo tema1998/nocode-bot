@@ -1,0 +1,78 @@
+{% extends 'register.html' %}
+
+{% block title %}
+Register
+{% endblock %}
+
+{% block content %}
+<div class="p-5">
+    <div class="text-center">
+        <h1 class="h4 text-gray-900 mb-4">Регистрация</h1>
+    </div>
+
+    <form class="user" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            Логин:
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.username.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            Email:
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.email.errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-group row">
+            <div class="col-sm-6 mb-3 mb-sm-0">
+                Пароль:
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.password1.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="col-sm-6">
+                Повторите пароль:
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div class="">
+                        {% for error in form.password2.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-user btn-block">Зарегистрироваться</button>
+        <hr>
+        <a href="index.html" class="btn btn-google btn-user btn-block">
+            <i class="fab fa-google fa-fw"></i> Регистрация с Google
+        </a>
+        <a href="index.html" class="btn btn-facebook btn-user btn-block">
+            <i class="fab fa-facebook-f fa-fw"></i> Регистрация с Facebook
+        </a>
+    </form>
+    <hr>
+    <div class="text-center">
+        <a class="small" href="forgot-password.html">Забыли пароль?</a>
+    </div>
+    <div class="text-center">
+        <a class="small" href="{% url 'login' %}">У вас уже есть аккаунт? Войти</a>
+    </div>
+</div>
+{% endblock %}
