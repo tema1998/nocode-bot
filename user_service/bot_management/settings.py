@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
 
 SECRET_KEY = os.getenv(
     "USER_SERVICE_SECRET_KEY", "DSAmdU3H783hs8M9S30k9xSi9d3KD"
@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -42,11 +43,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "bot_management.urls"
-
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            TEMPLATE_DIR,
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -71,7 +74,7 @@ DATABASES = {
         "PORT": os.getenv("USER_SERVICE_DB_PORT"),
         "USER": os.getenv("USER_SERVICE_DB_USER"),
         "PASSWORD": os.getenv("USER_SERVICE_DB_PASSWORD"),
-        "NAME": os.getenv("USER_SERVICE_DB_DB", BASE_DIR / "db.sqlite3"),
+        "NAME": os.getenv("USER_SERVICE_DB_NAME", BASE_DIR / "db.sqlite3"),
     }
 }
 
@@ -107,10 +110,11 @@ USE_TZ = True
 
 
 STATIC_URL = "/static/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 MEDIA_URL = "/media/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 
 # Default primary key field type
