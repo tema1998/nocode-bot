@@ -13,8 +13,7 @@ SECRET_KEY = os.getenv(
     "USER_SERVICE_SECRET_KEY", "DSAmdU3H783hs8M9S30k9xSi9d3KD"
 )
 
-DEBUG = bool(int(os.getenv("USER_SERVICE_DJANGO_DEBUG", 1)))
-DEVELOPMENT = bool(int(os.getenv("USER_SERVICE_DJANGO_DEVELOPMENT", 1)))
+DEBUG = bool(int(os.getenv("USER_SERVICE_DEBUG", 1)))
 
 ALLOWED_HOSTS = [
     os.getenv("USER_SERVICE_ALLOWED_HOST", "*"),
@@ -30,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "users",
+    "core",
 ]
 
 MIDDLEWARE = [
