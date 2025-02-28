@@ -18,7 +18,7 @@ class RegisterView(View):
         Renders the registration form.
         """
         form = RegisterForm()
-        return render(request, "auth/register.html", {"form": form})
+        return render(request, "users/register.html", {"form": form})
 
     def post(self, request):
         """
@@ -33,7 +33,7 @@ class RegisterView(View):
             login(request, user)  # Log the user in
             messages.success(request, "Регистрация прошла успешно!")
             return redirect("home")
-        return render(request, "auth/register.html", {"form": form})
+        return render(request, "users/register.html", {"form": form})
 
 
 class LoginView(View):
@@ -48,7 +48,7 @@ class LoginView(View):
         Renders the login form.
         """
         form = LoginForm()
-        return render(request, "auth/login.html", {"form": form})
+        return render(request, "users/login.html", {"form": form})
 
     def post(self, request):
         """
@@ -72,7 +72,7 @@ class LoginView(View):
                 login(request, user)  # Log the user in
                 messages.success(request, f"Добро пожаловать, {username}!")
                 return redirect("home")
-        return render(request, "auth/login.html", {"form": form})
+        return render(request, "users/login.html", {"form": form})
 
 
 class LogoutView(View):
@@ -88,4 +88,4 @@ class LogoutView(View):
         """
         logout(request)  # Log the user out
         messages.success(request, "Вы вышли из системы.")
-        return redirect("/auth/register")
+        return redirect("index")
