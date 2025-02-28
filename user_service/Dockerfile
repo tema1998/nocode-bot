@@ -19,9 +19,12 @@ COPY /.env ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
-    poetry install
+    poetry install --no-root
 
 
 COPY /user_service/ /app/
 
 CMD ["/bin/bash", "start.sh"]
+
+
+

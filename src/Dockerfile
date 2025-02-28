@@ -1,4 +1,4 @@
-FROM python:3.11.11
+FROM python:3.12
 
 RUN apt-get update && apt-get install -y libpq-dev gunicorn &&\
   apt-get install --no-install-recommends -y wget make wait-for-it\
@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir poetry && \
     cd src && \
     poetry config virtualenvs.create false && \
-    poetry install
+    poetry install --no-root
 
 COPY ./src /srv/app/src/
 
