@@ -112,7 +112,7 @@ services:
       retries: 3
     restart: always
     ports:
-      - "5432:5433" #TODO to delete on prod
+      - "5433:5432" #TODO to delete on prod
 
   rabbitmq_broker:
     image: rabbitmq:4.0-management  # Includes the management plugin for monitoring
