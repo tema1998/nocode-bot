@@ -1,5 +1,3 @@
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.openapi.docs import (
     get_redoc_html,
@@ -7,19 +5,23 @@ from fastapi.openapi.docs import (
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.responses import ORJSONResponse
-from src.bot_handlers import BotHandlers
-from src.core.configs import config, logger
-from telegram.ext import (
-    ApplicationBuilder,
-    CallbackQueryHandler,
-    MessageHandler,
-    filters,
-)
+from src.core.configs import config
 
 
 def register_static_docs_routes(app: FastAPI):
+    """Register static documentation routes (Swagger UI and ReDoc) for the FastAPI application.
+
+    Args:
+        app (FastAPI): The FastAPI application instance to register routes on.
+    """
+
     @app.get("/docs", include_in_schema=False)
     async def custom_swagger_ui_html():
+        """Serve the Swagger UI documentation HTML page.
+
+        Returns:
+            HTML: The HTML content of the Swagger UI page.
+        """
         return get_swagger_ui_html(
             openapi_url=app.openapi_url,
             title=app.title + " - Swagger UI",
@@ -30,10 +32,20 @@ def register_static_docs_routes(app: FastAPI):
 
     @app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)  # type: ignore
     async def swagger_ui_redirect():
+        """Redirect for OAuth2 in Swagger UI.
+
+        Returns:
+            HTML: Redirect HTML for OAuth2 support in Swagger UI.
+        """
         return get_swagger_ui_oauth2_redirect_html()
 
     @app.get("/redoc", include_in_schema=False)
     async def redoc_html():
+        """Serve the ReDoc documentation HTML page.
+
+        Returns:
+            HTML: The HTML content of the ReDoc page.
+        """
         return get_redoc_html(
             openapi_url=app.openapi_url,
             title=app.title + " - ReDoc",
@@ -41,40 +53,19 @@ def register_static_docs_routes(app: FastAPI):
         )
 
 
-# Инициализация приложения бота
-application = (
-    ApplicationBuilder().read_timeout(30).token(config.bot_token).build()
-)
-# Регистрируем универсальный обработчик команд
-bot_handlers = BotHandlers()
-application.add_handler(
-    MessageHandler(filters.TEXT & filters.COMMAND, bot_handlers.handle_command)
-)
-application.add_handler(
-    CallbackQueryHandler(bot_handlers.button_callback)
-)  # Обработчик инлайн-кнопок
+def create_app(create_custom_static_urls: bool = False) -> FastAPI:
+    """Create and configure a FastAPI application instance.
 
+    Args:
+        create_custom_static_urls (bool): Whether to create custom static URLs for docs.
+                                            If True, custom routes will be registered.
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Установка вебхука при запуске
-    await application.bot.set_webhook(
-        url=config.webhook_url, secret_token=config.secret_token
-    )
-    logger.info(config.webhook_url)
-    logger.info("Webhook установлен!")
-    yield
-    # Очистка при завершении (если нужно)
-    logger.info("Приложение завершает работу...")
-
-
-def create_app(
-    create_custom_static_urls: bool = False,
-) -> FastAPI:
+    Returns:
+        FastAPI: The configured FastAPI application instance.
+    """
     app = FastAPI(
         title=config.app_name,
         default_response_class=ORJSONResponse,
-        lifespan=lifespan,
         docs_url=None if create_custom_static_urls else "/docs",
         redoc_url=None if create_custom_static_urls else "/redoc",
     )
