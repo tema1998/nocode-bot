@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: src/Dockerfile
     depends_on:
-      db:
+      bot_service_db:
         condition: service_healthy
       rabbitmq_broker:
         condition: service_healthy
@@ -14,6 +14,21 @@ services:
       - ./src:/srv/app/src
     ports:
       - "8080:8080" #TODO to delete on prod
+
+
+  user_service:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: user_service/Dockerfile
+    depends_on:
+      user_service_db:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: always
+    ports:
+      - "8000:8000" #TODO to delete on prod
 
   celery_worker:
     build:
@@ -56,7 +71,8 @@ services:
     build:
       context: .
     depends_on:
-      - worker
+      - celery_worker
+
       - redis
     volumes:
       - ./src/:/usr/src/app/
@@ -64,15 +80,15 @@ services:
       - ./.env
     command: ["celery", "--workdir=./mail_sender", "-A", "mail_sender", "beat", "-l", "info", "-S", "django"]
 
-  db:
+  bot_service_db:
     image: postgres:15
-    container_name: db
+    container_name: bot_service_db
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${BOT_SERVICE_DB_NAME}
+      POSTGRES_USER: ${BOT_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${BOT_SERVICE_DB_PASSWORD}
     volumes:
-      - db_data:/var/lib/postgresql/data/
+      - bot_service_db_data:/var/lib/postgresql/data/
     healthcheck:
       test: [ "CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'" ]
       interval: 10s
@@ -81,6 +97,24 @@ services:
     restart: always
     ports:
       - "5432:5432" #TODO to delete on prod
+
+  user_service_db:
+    image: postgres:15
+    container_name: user_service_db
+    environment:
+      POSTGRES_DB: ${USER_SERVICE_DB_NAME}
+      POSTGRES_USER: ${USER_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
+    volumes:
+      - user_service_db_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    ports:
+      - "5433:5432" #TODO to delete on prod
 
   rabbitmq_broker:
     image: rabbitmq:4.0-management  # Includes the management plugin for monitoring
@@ -113,7 +147,8 @@ services:
     command: redis-server --requirepass ${REDIS_PASS}
 
 volumes:
-  db_data:
+  bot_service_db_data:
+  user_service_db_data:
   rabbitmq_data:
   redis_data:
   flower_data:
