@@ -1,12 +1,12 @@
 from typing import Any, Dict, List, Optional, Type, Union
 from uuid import UUID
 
+from bot_service.core.configs import config
+from bot_service.db.db_utils import Base
 from sqlalchemy import and_, delete, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import joinedload, sessionmaker
-from src.core.configs import config
-from src.db.db_utils import Base
 
 
 class PostgresAsyncRepository:

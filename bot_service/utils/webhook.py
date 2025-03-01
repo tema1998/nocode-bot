@@ -1,4 +1,4 @@
-from src.core.configs import config
+from bot_service.core.configs import config
 from telegram.ext import Application
 
 

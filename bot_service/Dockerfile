@@ -8,19 +8,19 @@ RUN apt-get update && apt-get install -y libpq-dev gunicorn &&\
 WORKDIR /srv/app
 COPY /.env ./
 
-COPY /src/start.sh ./
+COPY /bot_service/start.sh ./
 
-COPY /src/alembic.ini ./src/
-COPY /src/poetry.lock /src/pyproject.toml ./src/
+COPY /bot_service/alembic.ini ./bot_service/
+COPY /bot_service/poetry.lock /bot_service/pyproject.toml ./bot_service/
 
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir poetry && \
-    cd src && \
+    cd bot_service && \
     poetry config virtualenvs.create false && \
     poetry install --no-root
 
-COPY ./src /srv/app/src/
+COPY ./bot_service /srv/app/bot_service/
 
 ENV PYTHONPATH "${PYTHONPATH}:/"
 

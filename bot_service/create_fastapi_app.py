@@ -1,3 +1,4 @@
+from bot_service.core.configs import config
 from fastapi import FastAPI
 from fastapi.openapi.docs import (
     get_redoc_html,
@@ -5,7 +6,6 @@ from fastapi.openapi.docs import (
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.responses import ORJSONResponse
-from src.core.configs import config
 
 
 def register_static_docs_routes(app: FastAPI):

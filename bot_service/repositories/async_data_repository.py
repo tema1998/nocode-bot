@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Type, Union
 from uuid import UUID
 
-from src.db.db_utils import Base
+from bot_service.db.db_utils import Base
 
 
 class AsyncRepository(ABC):

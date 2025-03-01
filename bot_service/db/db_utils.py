@@ -1,8 +1,8 @@
 from typing import AsyncGenerator
 
+from bot_service.core.configs import config
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
-from src.core.configs import config
 
 
 Base = declarative_base()

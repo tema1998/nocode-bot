@@ -1,9 +1,9 @@
 from datetime import datetime
 
+from bot_service.db.db_utils import Base
 from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import relationship
-from src.db.db_utils import Base
 
 
 class TimeStampedMixin:

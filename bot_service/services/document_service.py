@@ -1,7 +1,7 @@
-# from src.core.configs import config
-# from src.models.document import Document
-# from src.repositories.async_pg_repository import PostgresAsyncRepository
-# from src.schemas.document import DocumentIn
+# from bot_service.core.configs import config
+# from bot_service.models.document import Document
+# from bot_service.repositories.async_pg_repository import PostgresAsyncRepository
+# from bot_service.schemas.document import DocumentIn
 #
 #
 # class DocumentService:

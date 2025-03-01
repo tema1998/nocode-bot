@@ -11,4 +11,4 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем файлы приложения
-COPY /src /app/src/
+COPY /bot_service /app/bot_service/

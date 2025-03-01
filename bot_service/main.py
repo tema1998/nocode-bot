@@ -1,9 +1,9 @@
+from bot_service.create_fastapi_app import create_app
+from bot_service.models.bot import Bot
+from bot_service.repositories.async_pg_repository import get_repository
+from bot_service.routers.v1 import bot
 from fastapi import HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from src.create_fastapi_app import create_app
-from src.models.bot import Bot
-from src.repositories.async_pg_repository import get_repository
-from src.routers.v1 import bot
 
 
 app = create_app(

@@ -1,19 +1,26 @@
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException
-from src.models.bot import Bot, Button, Command, Funnel, FunnelStep, UserState
-from src.repositories.async_pg_repository import (
+from bot_service.models.bot import (
+    Bot,
+    Button,
+    Command,
+    Funnel,
+    FunnelStep,
+    UserState,
+)
+from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
     get_repository,
 )
-from src.schemas.bot import (
+from bot_service.schemas.bot import (
     BotCreate,
     ButtonCreate,
     CommandCreate,
     FunnelCreate,
     FunnelStepCreate,
 )
-from src.utils.webhook import set_webhook
+from bot_service.utils.webhook import set_webhook
+from fastapi import APIRouter, Depends, HTTPException
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import (
     Application,
