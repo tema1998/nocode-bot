@@ -10,7 +10,7 @@ COPY /.env ./
 
 COPY /src/start.sh ./
 
-COPY /alembic.ini ./
+COPY /src/alembic.ini ./src/
 COPY /src/poetry.lock /src/pyproject.toml ./src/
 
 
