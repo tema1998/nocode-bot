@@ -11,9 +11,9 @@ run-user-service-db:
 	docker compose up user_service_db
 
 run-bot-service:
-	uvicorn bot_service.main:app --reload --env-file .env.local
+	uvicorn bot_service.main:app --reload --env-file .env.local --host 0.0.0.0 --port 8080
 
-Frun-user-service:
+run-user-service:
 	cd user_service && python manage.py runserver
 
 
