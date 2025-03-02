@@ -7,12 +7,15 @@ Bot
 {% block content %}
 <div class="container-fluid">
 
-    <!-- Page Heading -->
-    <h1 class="h3 mb-2 text-gray-800">Tables</h1>
-    <p class="mb-4">DataTables is a third party plugin that is used to generate the demo table below.
-        For more information about DataTables, please visit the <a target="_blank"
-            href="https://datatables.net">official DataTables documentation</a>.</p>
-
+    <h1 class="h3 mb-2 text-gray-800">Как получить создать телеграм-бота и получить token??</h1>
+    <ol>
+        <li>Перейдите по ссылке на официальный телеграм канал <a href="https://t.me/BotFather">@BotFather</a>.</li>
+        <li>Нажмите <code>Начать</code>/<code>Start</code></li>
+        <li>Введите команду <code>/newbot</code>.</li>
+        <li>Введите название вашего бота <code>qwerty</code>.</li>
+        <li>Введите username вашего бота(обратите внимание, что в слово bot в конце обязательно, например <code>TetrisBot</code> или <code>tetris_bot</code>) .</li>
+        <li>Скопируйте ваш token(пример token'а <code>1234567890:QWERTYUIOPasdfghjklZXCVBNMqwertyuio</code>)</li>
+    </ol>
     <!-- DataTales Example -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
@@ -21,11 +24,11 @@ Bot
         <div class="card-body">
 
                 <div class="container mt-5">
-                    <h1>Create a New Bot</h1>
+                    <h1>Добавить нового бота</h1>
                     <form method="post">
                         {% csrf_token %}
                         {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary">Create Bot</button>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
                     </form>
                     {% if error %}
                         <div class="alert alert-danger mt-3">{{ error }}</div>
