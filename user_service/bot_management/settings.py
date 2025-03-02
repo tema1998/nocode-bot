@@ -13,6 +13,10 @@ SECRET_KEY = os.getenv(
     "USER_SERVICE_SECRET_KEY", "DSAmdU3H783hs8M9S30k9xSi9d3KD"
 )
 
+BOT_SERVICE_API_URL = os.getenv(
+    "BOT_SERVICE_API_URL", "http://127.0.0.1:8080/api/v1/"
+)
+
 DEBUG = bool(int(os.getenv("USER_SERVICE_DEBUG", 1)))
 
 ALLOWED_HOSTS = [

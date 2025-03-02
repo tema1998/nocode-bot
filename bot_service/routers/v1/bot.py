@@ -14,11 +14,13 @@ from bot_service.repositories.async_pg_repository import (
 )
 from bot_service.schemas.bot import (
     BotCreate,
+    BotCreateResponse,
     ButtonCreate,
     CommandCreate,
     FunnelCreate,
     FunnelStepCreate,
 )
+from bot_service.utils.bot import get_bot_username
 from bot_service.utils.webhook import set_webhook
 from fastapi import APIRouter, Depends, HTTPException
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
@@ -34,7 +36,8 @@ router = APIRouter()
     "/bots/",
     summary="Create a new bot",
     description="Generates a secret token and creates a new bot in the database, then sets a webhook for the new bot.",
-    response_description="The created bot object",
+    response_model=BotCreateResponse,
+    response_description="The created bot ID and name.",
     status_code=201,
 )
 async def create_bot(
@@ -44,8 +47,19 @@ async def create_bot(
     # Generate a secret token
     secret_token = secrets.token_hex(16)  # Generating a random token
 
+    # Get bot username
+    try:
+        bot_username = await get_bot_username(
+            bot_token=bot.token,
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Bot token is not valid.",
+        )
+
     # Create a bot in the database
-    db_bot = Bot(token=bot.token, name=bot.name, secret_token=secret_token)
+    db_bot = Bot(token=bot.token, secret_token=secret_token, name=bot_username)
     inserted_bot = await repository.insert(db_bot)
 
     try:
@@ -63,7 +77,7 @@ async def create_bot(
             detail=f"Failed to set webhook: {str(e)}",
         )
 
-    return inserted_bot
+    return BotCreateResponse(id=inserted_bot.id, name=inserted_bot.name)
 
 
 @router.post(

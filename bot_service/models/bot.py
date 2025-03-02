@@ -1,7 +1,15 @@
 from datetime import datetime
 
 from bot_service.db.db_utils import Base
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import relationship
 
@@ -34,6 +42,7 @@ class Bot(Base, TimeStampedMixin):
 
     __tablename__ = "bots"
     id = Column(Integer, primary_key=True, index=True)
+    is_active = Column(Boolean, default=True)
     token = Column(String, unique=True, index=True)
     secret_token = Column(String)
     name = Column(String)
