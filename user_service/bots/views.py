@@ -8,11 +8,8 @@ from .forms import BotForm
 from .models import Bot
 
 
-FASTAPI_URL = "http://127.0.0.1:8080/api/v1/bots"
-
-
-class CreateBotView(LoginRequiredMixin, FormView):
-    template_name = "bots/create_bot.html"  # Шаблон для отображения формы
+class AddBotView(LoginRequiredMixin, FormView):
+    template_name = "bots/add_bot.html"  # Шаблон для отображения формы
     form_class = BotForm  # Форма, которую будем использовать
     success_url = reverse_lazy(
         "index"

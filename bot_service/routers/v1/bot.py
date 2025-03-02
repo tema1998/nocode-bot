@@ -40,7 +40,7 @@ router = APIRouter()
     response_description="The created bot ID and name.",
     status_code=201,
 )
-async def create_bot(
+async def add_bot(
     bot: BotCreate,
     repository: PostgresAsyncRepository = Depends(get_repository),
 ):
