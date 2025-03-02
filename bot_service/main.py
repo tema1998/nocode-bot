@@ -1,7 +1,7 @@
 from bot_service.create_fastapi_app import create_app
 from bot_service.models.bot import Bot
 from bot_service.repositories.async_pg_repository import get_repository
-from bot_service.routers.v1 import bot
+from bot_service.routers.v1 import bot, button, command, funnel, webhook
 from fastapi import HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,6 +13,9 @@ app = create_app(
 
 @app.middleware("http")
 async def verify_secret_token(request: Request, call_next):
+    if not request.url.path.startswith("/api/v1/webhook/"):
+        return await call_next(request)
+
     # Получаем bot_id из пути
     bot_id = request.url.path.split("/")[-1]
     if not bot_id.isdigit():
@@ -55,4 +58,8 @@ app.add_middleware(
 )
 
 
-app.include_router(bot.router, prefix="/api/v1", tags=["bot"])
+app.include_router(bot.router, prefix="/api/v1/bot", tags=["bot"])
+app.include_router(button.router, prefix="/api/v1/button", tags=["button"])
+app.include_router(funnel.router, prefix="/api/v1/funnel", tags=["funnel"])
+app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
+app.include_router(command.router, prefix="/api/v1/command", tags=["command"])

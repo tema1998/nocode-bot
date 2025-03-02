@@ -13,6 +13,19 @@ class BotCreateResponse(BaseModel):
         from_attributes = True
 
 
+class BotResponse(BaseModel):
+    """
+    Pydantic model for representing bot details in API responses.
+    """
+
+    is_active: bool
+    token: str
+    name: str | None
+
+    class Config:
+        from_attributes = True
+
+
 class CommandCreate(BaseModel):
     command: str
     response: str
