@@ -1,11 +1,24 @@
 import requests
 from bot_management.settings import BOT_SERVICE_API_URL
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic.edit import FormView
 
 from .forms import BotForm
 from .models import Bot
+
+
+class BotsView(LoginRequiredMixin, View):
+
+    template_name = "bots/bots.html"  # Указываем шаблон
+
+    def get(self, request, *args, **kwargs):
+
+        bots = Bot.objects.filter(user=request.user)
+
+        return render(request, self.template_name, {"bots": bots})
 
 
 class AddBotView(LoginRequiredMixin, FormView):

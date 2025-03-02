@@ -1,10 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'index.html' %}
 
-</body>
-</html>
+{% block title %}
+Ваши боты
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"></h6>
+        </div>
+        <div class="card-body">
+
+                <div class="container mt-5">
+                    <h1>Список ваших ботов</h1>
+
+                    <ul class="list-group">
+                        {% for bot in bots %}
+                            <li class="list-group-item">
+                                <a href="https://t.me/{{bot.bot_username}}" target="_blank">@{{ bot.bot_username }}</a> -
+                                <a href="">Конструктор</a>
+
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">No bots found.</li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
