@@ -66,6 +66,7 @@ async def get_bot(
     return BotResponse(
         is_active=bot.is_active,
         token=bot.token,
+        username=bot.name,
         name=bot_name,  # Include the bot's name
     )
 

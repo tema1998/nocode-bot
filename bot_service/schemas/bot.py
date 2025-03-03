@@ -20,6 +20,7 @@ class BotResponse(BaseModel):
 
     is_active: bool
     token: str
+    username: str
     name: str | None
 
     class Config:

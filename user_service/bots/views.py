@@ -1,7 +1,8 @@
 import requests
 from bot_management.settings import BOT_SERVICE_API_URL
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
@@ -34,6 +35,53 @@ class BotsView(LoginRequiredMixin, View):
         return render(request, self.template_name, {"bots": bots})
 
 
+class BotDetailView(LoginRequiredMixin, View):
+    """
+    View to display bot details by making a GET request to the FastAPI endpoint.
+    """
+
+    template_name = (
+        "bots/bot_details.html"  # Template for rendering bot details
+    )
+
+    def get(self, request, bot_id, *args, **kwargs):
+        """
+        Handles GET requests to display bot details.
+
+        Args:
+            request (HttpRequest): The request object.
+            bot_id (int): The ID of the bot to retrieve.
+
+        Returns:
+            HttpResponse: Rendered template with bot details.
+
+        Raises:
+            Http404: If the bot is not found or the user is not the owner.
+        """
+        # Retrieve the bot from the database
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("You are not the owner of this bot.")
+
+        try:
+            # Make a GET request to the FastAPI endpoint to get bot details by bot_service ID
+            response = requests.get(f"{BOT_SERVICE_API_URL}bot/{bot.bot_id}")
+            response.raise_for_status()  # Check for HTTP errors
+
+            # Parse the response data
+            bot_data = response.json()
+        except requests.exceptions.RequestException as e:
+            # Return an error response if the request fails
+            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+
+        # Add the user_service bot ID to the response data
+        bot_data["id"] = bot.id
+
+        return render(request, self.template_name, {"bot": bot_data})
+
+
 class AddBotView(LoginRequiredMixin, FormView):
     """
     View to add a new bot by submitting a form.
@@ -61,7 +109,7 @@ class AddBotView(LoginRequiredMixin, FormView):
         try:
             # Send a POST request to the FastAPI service to create a bot
             response = requests.post(
-                BOT_SERVICE_API_URL + "bots",
+                BOT_SERVICE_API_URL + "bot",
                 json={"token": token},
             )
             response.raise_for_status()  # Raise an exception for HTTP errors

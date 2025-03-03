@@ -19,13 +19,13 @@
 
                     <ul class="list-group">
                         {% for bot in bots %}
-                            <li class="list-group-item">
+                            <li class="list-group-item h4">
                                 <a href="https://t.me/{{bot.bot_username}}" target="_blank">@{{ bot.bot_username }}</a> -
-                                <a href="">Конструктор</a>
+                                <a href="{% url 'bot-details' bot.id %}">Перейти в конструктор</a>
 
                             </li>
                         {% empty %}
-                            <li class="list-group-item">No bots found.</li>
+                            <li class="list-group-item">У вас нету ботов. <a href="{% url 'add-bot' %}">Добавить </a></li>
                         {% endfor %}
                     </ul>
 
