@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -7,17 +9,13 @@ class BotCreate(BaseModel):
 
 class BotCreateResponse(BaseModel):
     id: int
-    name: str
+    username: str
 
     class Config:
         from_attributes = True
 
 
-class BotResponse(BaseModel):
-    """
-    Pydantic model for representing bot details in API responses.
-    """
-
+class BotGetResponse(BaseModel):
     is_active: bool
     token: str
     username: str
@@ -25,6 +23,15 @@ class BotResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BotPatchRequest(BaseModel):
+    is_active: Optional[bool] = None
+    token: Optional[str] = None
+
+
+class BotPatchResponse(BotGetResponse):
+    pass
 
 
 class CommandCreate(BaseModel):
