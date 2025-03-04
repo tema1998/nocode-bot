@@ -2,8 +2,7 @@ import requests
 from bot_management.settings import BOT_SERVICE_API_URL
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic.edit import FormView
 
@@ -89,9 +88,6 @@ class AddBotView(LoginRequiredMixin, FormView):
 
     template_name = "bots/add_bot.html"  # Template for rendering the form
     form_class = BotForm  # Form class to use for bot creation
-    success_url = reverse_lazy(
-        "index"
-    )  # URL to redirect to after successful bot creation
 
     def form_valid(self, form):
         """
@@ -120,15 +116,15 @@ class AddBotView(LoginRequiredMixin, FormView):
         # Extract bot data from the response
         bot_data = response.json()
         bot_id = bot_data["id"]
-        bot_username = bot_data["name"]
+        bot_username = bot_data["username"]
 
         # Save the bot in the Django database
-        Bot.objects.create(
+        bot = Bot.objects.create(
             user=self.request.user, bot_id=bot_id, bot_username=bot_username
         )
 
         # Redirect to the success URL
-        return super().form_valid(form)
+        return redirect("bot-details", bot.id)
 
     def form_invalid(self, form, error=None):
         """
