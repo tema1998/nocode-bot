@@ -1,4 +1,5 @@
 {% extends 'index.html' %}
+{% load static %}
 
 {% block title %}
 Ваши боты
@@ -16,16 +17,18 @@
 
                 <div class="container mt-5">
                     <h1>Telegram Bot @{{ bot.username }}</h1>
-                    <div class="card">
-                        <div class="card-body">
-                            <p class="card-text h3">
-                                <strong>Username:</strong> {{ bot.username }}<br>
-                                <strong>Name:</strong> {{ bot.username }}<br>
-                                <strong>Active:</strong> {{ bot.is_active }}<br>
-                                <strong>Token:</strong> {{ bot.token }}<br>
-                            </p>
-                        </div>
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text h3">
+                            <strong>Username:</strong> {{ bot.username }}<br>
+                            <strong>Name:</strong> {{ bot.username }}<br>
+                            <strong>Active:</strong> {{ bot.is_active }}<br>
+                            <strong>Token:</strong>
+                            <span id="token" style="display: none;">{{ bot.token }}</span>
+                            <button id="showTokenBtn" class="btn btn-primary btn-sm">Показать</button>
+                        </p>
                     </div>
+                </div>
 
                 </div>
 
@@ -37,4 +40,8 @@
 
 {% block sidebar-nav %}
     {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'bootstrap/js/bot-details.js' %}"></script>
 {% endblock %}
