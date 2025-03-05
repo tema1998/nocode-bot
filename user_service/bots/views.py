@@ -1,5 +1,5 @@
-import requests
-from bot_management.settings import BOT_SERVICE_API_URL
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse
@@ -9,6 +9,10 @@ from django.views.generic.edit import FormView
 
 from .forms import BotForm
 from .models import Bot
+from .utils import create_bot, get_bot_details, update_bot
+
+
+logger = logging.getLogger("bots")
 
 
 class BotsView(LoginRequiredMixin, View):
@@ -66,13 +70,14 @@ class BotDetailView(LoginRequiredMixin, View):
             raise Http404("You are not the owner of this bot.")
 
         try:
-            # Make a GET request to the FastAPI endpoint to get bot details by bot_service ID
-            response = requests.get(f"{BOT_SERVICE_API_URL}bot/{bot.bot_id}")
-            response.raise_for_status()  # Check for HTTP errors
-
-            # Parse the response data
-            bot_data = response.json()
-        except requests.exceptions.RequestException as e:
+            # Fetch bot details from the FastAPI service
+            bot_data = get_bot_details(bot.bot_id)
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
             # Return an error response if the request fails
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
 
@@ -82,6 +87,16 @@ class BotDetailView(LoginRequiredMixin, View):
         return render(request, self.template_name, {"bot": bot_data})
 
     def post(self, request, bot_id):
+        """
+        Handles POST requests to update bot details.
+
+        Args:
+            request (HttpRequest): The request object.
+            bot_id (int): The ID of the bot to update.
+
+        Returns:
+            HttpResponseRedirect: Redirects to the bot details page.
+        """
         # Retrieve the bot object or return a 404 error if the bot is not found
         bot = get_object_or_404(Bot, id=bot_id)
 
@@ -102,13 +117,14 @@ class BotDetailView(LoginRequiredMixin, View):
             return redirect("bot-details", bot_id=bot.id)
 
         try:
-            # Send a PATCH request to the FastAPI service to update the bot
-            response = requests.patch(
-                BOT_SERVICE_API_URL + f"bot/{bot.bot_id}",
-                json={"token": token, "is_active": is_active},
+            # Update bot data in the FastAPI service
+            update_bot(bot.bot_id, token, is_active)
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to update bot. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,  # Добавляем traceback в лог
             )
-            response.raise_for_status()  # Raise an exception for HTTP errors
-        except requests.exceptions.RequestException:
             # If an error occurs during the API request, show an error message and redirect
             messages.error(
                 request,
@@ -143,28 +159,28 @@ class AddBotView(LoginRequiredMixin, FormView):
         token = form.cleaned_data["token"]
 
         try:
-            # Send a POST request to the FastAPI service to create a bot
-            response = requests.post(
-                BOT_SERVICE_API_URL + "bot",
-                json={"token": token},
+            # Create a new bot in the FastAPI service
+            bot_data = create_bot(token)
+            bot_id = bot_data["id"]
+            bot_username = bot_data["username"]
+
+            # Save the bot in the Django database
+            Bot.objects.create(
+                user=self.request.user,
+                bot_id=bot_id,
+                bot_username=bot_username,
             )
-            response.raise_for_status()  # Raise an exception for HTTP errors
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to create bot. Token: {token}. Error: {str(e)}",
+                exc_info=True,
+            )
             # If an error occurs, return the form with an error message
             return self.form_invalid(form, error=str(e))
 
-        # Extract bot data from the response
-        bot_data = response.json()
-        bot_id = bot_data["id"]
-        bot_username = bot_data["username"]
-
-        # Save the bot in the Django database
-        bot = Bot.objects.create(
-            user=self.request.user, bot_id=bot_id, bot_username=bot_username
-        )
-
         # Redirect to the success URL
-        return redirect("bot-details", bot.id)
+        return redirect("bot-details", bot_id=bot_id)
 
     def form_invalid(self, form, error=None):
         """
