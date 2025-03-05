@@ -1,3 +1,6 @@
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
 from bot_service.create_fastapi_app import create_app
 from bot_service.models.bot import Bot
 from bot_service.repositories.async_pg_repository import get_repository
@@ -8,6 +11,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = create_app(
     create_custom_static_urls=True,
+)
+
+logging.basicConfig(
+    level=logging.ERROR,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        TimedRotatingFileHandler(
+            "error.log", when="midnight", backupCount=7
+        ),  # Ротация каждый день
+        logging.StreamHandler(),
+    ],
 )
 
 

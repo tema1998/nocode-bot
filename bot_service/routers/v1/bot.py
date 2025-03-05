@@ -76,7 +76,9 @@ async def update_bot(
     Raises:
         HTTPException: If the bot is not found or if there is an error updating the bot.
     """
-    updated_bot = await bot_repository.update_bot(bot_id, bot_update.dict())
+    updated_bot = await bot_repository.update_bot(
+        bot_id, bot_update.model_dump()
+    )
     return BotPatchResponse(**updated_bot)
 
 
@@ -107,5 +109,5 @@ async def add_bot(
     Raises:
         HTTPException: If the bot token is invalid or if there is an error creating the bot.
     """
-    created_bot = await bot_repository.create_bot(bot.dict())
+    created_bot = await bot_repository.create_bot(bot.model_dump())
     return BotCreateResponse(**created_bot)

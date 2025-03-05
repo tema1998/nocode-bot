@@ -1,7 +1,13 @@
+import logging
+
 from bot_service.core.configs import config
 from fastapi import HTTPException
 from telegram.error import TelegramError
 from telegram.ext import Application
+
+
+# Настройка логгера
+logger = logging.getLogger(__name__)
 
 
 class TelegramApiRepository:
@@ -37,12 +43,18 @@ class TelegramApiRepository:
             )
         except TelegramError as e:
             # Handle Telegram-specific errors
+            logger.error(
+                f"Telegram error while setting webhook for bot {bot_id}: {str(e)}"
+            )
             raise HTTPException(
                 status_code=500,
                 detail=f"Failed to set webhook due to a Telegram error: {str(e)}",
             )
         except Exception as e:
             # Handle any other unexpected errors
+            logger.error(
+                f"Unexpected error while setting webhook for bot {bot_id}: {str(e)}"
+            )
             raise HTTPException(
                 status_code=500,
                 detail=f"An unexpected error occurred while setting the webhook: {str(e)}",
@@ -56,15 +68,20 @@ class TelegramApiRepository:
             bot_token (str): The Telegram bot token.
         """
         try:
+            webhook_url = f"{config.webhook_url}/api/v1/blocked"
+
             # Initialize the Telegram bot application
             application = Application.builder().token(bot_token).build()
 
             # Set the webhook with the specified URL and secret token
             await application.bot.set_webhook(
-                url="https://reset-url.com/",
+                url=webhook_url,
                 secret_token="secret",
             )
-        except Exception:
+        except Exception as e:
+            logger.error(
+                f"Error resetting webhook for bot with token {bot_token}: {str(e)}"
+            )
             pass
 
     async def get_bot_username(self, bot_token: str) -> str | None:
@@ -81,10 +98,16 @@ class TelegramApiRepository:
             HTTPException: If the bot token is invalid or the request fails.
         """
         try:
+
             application = Application.builder().token(bot_token).build()
             bot_info = await application.bot.get_me()
-            return bot_info.username
+            username = bot_info.username
+
+            return username
         except Exception as e:
+            logger.error(
+                f"Failed to fetch username for bot with token {bot_token}: {str(e)}"
+            )
             raise HTTPException(
                 status_code=400,
                 detail=f"Failed to fetch bot username: {str(e)}",
@@ -104,10 +127,16 @@ class TelegramApiRepository:
             HTTPException: If the bot token is invalid or the request fails.
         """
         try:
+
             application = Application.builder().token(bot_token).build()
             bot_info = await application.bot.get_me()
-            return bot_info.first_name
+            name = bot_info.first_name
+
+            return name
         except Exception as e:
+            logger.error(
+                f"Failed to fetch name for bot with token {bot_token}: {str(e)}"
+            )
             raise HTTPException(
                 status_code=400,
                 detail=f"Failed to fetch bot name: {str(e)}",
