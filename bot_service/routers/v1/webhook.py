@@ -35,6 +35,9 @@ async def webhook(
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
 
+    if not bot.is_active:
+        raise HTTPException(status_code=403, detail="Bot is deactivated.")
+
     # Create an instance of Application using the bot's token
     application = Application.builder().token(bot.token).build()
 
