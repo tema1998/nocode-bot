@@ -1,6 +1,6 @@
+from bot_service.core.configs import config
 from bot_service.models.bot import (
     Bot,
-    Funnel,
     FunnelStep,
     UserState,
 )
@@ -105,37 +105,6 @@ async def webhook(
                     ),
                 )
     else:
-        # If the user has no active funnel, start a new one
-        # Fetch the first funnel associated with the bot
-        funnels = await repository.fetch_by_query(Funnel, {"bot_id": bot_id})
-        if not funnels:
-            await update.message.reply_text("No available funnels.")  # type: ignore
-            return
-
-        first_funnel = funnels[0]
-        first_step = await repository.fetch_by_query(
-            FunnelStep, {"funnel_id": first_funnel.id}
-        )
-        if not first_step:
-            await update.message.reply_text("Funnel not configured.")  # type: ignore
-            return
-
-        # Create a new user state
-        user_state = UserState(
-            user_id=user_id,
-            bot_id=bot_id,
-            funnel_id=first_funnel.id,
-            current_step_id=first_step[0].id,
-        )
-        await repository.insert(user_state)
-
-        # Send the first step's message
-        await update.message.reply_text(  # type: ignore
-            first_step[0].text,
-            reply_markup=ReplyKeyboardMarkup(
-                [[KeyboardButton(b.text)] for b in first_step[0].buttons],
-                resize_keyboard=True,
-            ),
-        )
+        await update.message.reply_text(bot.default_reply if bot.default_reply else config.bot_default_reply)  # type: ignore
 
     return {"status": "ok"}

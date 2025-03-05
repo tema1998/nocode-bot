@@ -45,6 +45,7 @@ class Bot(Base, TimeStampedMixin):
     is_active = Column(Boolean, default=True)
     token = Column(String, unique=True, index=True)
     secret_token = Column(String)
+    default_reply = Column(String, nullable=True, default="")
     username = Column(String)
     commands = relationship("Command", back_populates="bot")
 

@@ -34,6 +34,10 @@ class Config(BaseSettings):
 
     webhook_url: str = "url"
 
+    bot_default_reply: str = (
+        "Я Вас не понимаю. Пожалуйста выберите команду в кнопочном меню."
+    )
+
     @property
     def broker_url(self) -> str:
         return f"{self.broker_protocol}://{self.broker_user}:{self.broker_pass}@{self.broker_host}:{self.broker_port}//"
