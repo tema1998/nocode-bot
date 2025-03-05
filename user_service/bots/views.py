@@ -128,7 +128,7 @@ class BotDetailView(LoginRequiredMixin, View):
             # If an error occurs during the API request, show an error message and redirect
             messages.error(
                 request,
-                "Ошибка при обновлении данных. Мы работаем над ее устранением!.",
+                "Ошибка при обновлении данных. Проверьте токен!",
             )
             return redirect("bot-details", bot_id=bot.id)
 
@@ -165,10 +165,11 @@ class AddBotView(LoginRequiredMixin, FormView):
             bot_username = bot_data["username"]
 
             # Save the bot in the Django database
-            Bot.objects.create(
+            bot = Bot.objects.create(
                 user=self.request.user,
                 bot_id=bot_id,
                 bot_username=bot_username,
+                default_reply="Я Вас не понимаю, воспользуйтесь кнопочным меню",
             )
         except Exception as e:
             # Log the error
@@ -180,7 +181,7 @@ class AddBotView(LoginRequiredMixin, FormView):
             return self.form_invalid(form, error=str(e))
 
         # Redirect to the success URL
-        return redirect("bot-details", bot_id=bot_id)
+        return redirect("bot-details", bot_id=bot.id)
 
     def form_invalid(self, form, error=None):
         """
