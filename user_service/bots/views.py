@@ -1,5 +1,6 @@
 import requests
 from bot_management.settings import BOT_SERVICE_API_URL
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -43,7 +44,7 @@ class BotDetailView(LoginRequiredMixin, View):
         "bots/bot_details.html"  # Template for rendering bot details
     )
 
-    def get(self, request, bot_id, *args, **kwargs):
+    def get(self, request, bot_id):
         """
         Handles GET requests to display bot details.
 
@@ -79,6 +80,45 @@ class BotDetailView(LoginRequiredMixin, View):
         bot_data["id"] = bot.id
 
         return render(request, self.template_name, {"bot": bot_data})
+
+    def post(self, request, bot_id):
+        # Retrieve the bot object or return a 404 error if the bot is not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Update the `is_active` and `token` fields
+        is_active = (
+            request.POST.get("is_active") == "on"
+        )  # The toggle returns 'on' or None
+        form = BotForm(request.POST)
+
+        # Validate token
+        if form.is_valid():
+            token = form.cleaned_data["token"]
+        else:
+            # If the form is invalid, show an error message and redirect
+            messages.error(
+                request, "Неверный формат токена. Изменения не были сохранены."
+            )
+            return redirect("bot-details", bot_id=bot.id)
+
+        try:
+            # Send a PATCH request to the FastAPI service to update the bot
+            response = requests.patch(
+                BOT_SERVICE_API_URL + f"bot/{bot.bot_id}",
+                json={"token": token, "is_active": is_active},
+            )
+            response.raise_for_status()  # Raise an exception for HTTP errors
+        except requests.exceptions.RequestException:
+            # If an error occurs during the API request, show an error message and redirect
+            messages.error(
+                request,
+                "Ошибка при обновлении данных. Мы работаем над ее устранением!.",
+            )
+            return redirect("bot-details", bot_id=bot.id)
+
+        # If everything is successful, show a success message and redirect
+        messages.success(request, "Данные бота успешно обновлены.")
+        return redirect("bot-details", bot_id=bot.id)
 
 
 class AddBotView(LoginRequiredMixin, FormView):

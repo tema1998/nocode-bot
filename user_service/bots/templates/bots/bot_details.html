@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Ваши боты
+Конструктор - @{{bot.username}}
 {% endblock %}
 
 {% block content %}
@@ -15,22 +15,46 @@
         </div>
         <div class="card-body">
 
-                <div class="container mt-5">
-                    <h1>Telegram Bot @{{ bot.username }}</h1>
+            <div class="container mt-5">
+                <h1>Telegram Bot @{{ bot.username }}</h1>
                 <div class="card">
                     <div class="card-body">
-                        <p class="card-text h3">
-                            <strong>Username:</strong> {{ bot.username }}<br>
-                            <strong>Name:</strong> {{ bot.username }}<br>
-                            <strong>Active:</strong> {{ bot.is_active }}<br>
-                            <strong>Token:</strong>
-                            <span id="token" style="display: none;">{{ bot.token }}</span>
-                            <button id="showTokenBtn" class="btn btn-primary btn-sm">Показать</button>
-                        </p>
+                        <form id="botForm" method="post" action="{% url 'bot-details' bot.id %}">
+                            {% csrf_token %}
+                            <p class="card-text h3">
+                                <strong>Имя пользователя:</strong> <a href="https://t.me/{{bot.username}}" target="_blank"> @{{ bot.username }} </a><br>
+                                <strong>Имя:</strong> {{ bot.name }}<br>
+
+                                <div class="d-flex">
+                                    <strong class="card-text h3">Активен:</strong>
+                                    <div class="form-check form-switch">
+                                        <input class="" type="checkbox" id="is_active" name="is_active"
+                                               style="transform: scale(2);" {% if bot.is_active %}checked{% endif %}>
+                                    </div>
+                                </div><br>
+
+                                <div class="d-flex align-items-center">
+                                    <strong class="card-text h3 me-10">Token:</strong>
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" id="tokenInput" name="token" value="{{ bot.token }}" style="display: none;">
+                                        <button type="button" id="showTokenBtn" class="btn btn-primary btn-sm">Показать</button>
+                                    </div>
+                                </div><br>
+                            </p>
+
+                            {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                            {% endif %}
+
+                            <button type="submit" class="btn btn-success">Сохранить изменения</button>
+                        </form>
                     </div>
                 </div>
-
-                </div>
+            </div>
 
         </div>
     </div>
