@@ -31,7 +31,7 @@ class TelegramApiRepository:
         """
         try:
             # Construct the webhook URL
-            webhook_url = f"{config.webhook_url}/api/v1/webhook/{bot_id}"
+            webhook_url = f"{config.webhook_url}/{bot_id}"
 
             # Initialize the Telegram bot application
             application = Application.builder().token(bot_token).build()
