@@ -23,3 +23,15 @@ class BotForm(forms.Form):
                 "Invalid Telegram token format. Expected format: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'."
             )
         return token
+
+
+class BotDefaultReplyForm(forms.Form):
+    default_reply = forms.CharField(
+        label="Ответ бота на неизвестную команду/сообщение:",
+        max_length=1500,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-user",
+            }
+        ),
+    )

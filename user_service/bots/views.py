@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic.edit import FormView
 
-from .forms import BotForm
+from .forms import BotDefaultReplyForm, BotForm
 from .models import Bot
 from .utils import create_bot, get_bot_details, update_bot
 
@@ -41,7 +41,7 @@ class BotsView(LoginRequiredMixin, View):
 
 class BotDetailView(LoginRequiredMixin, View):
     """
-    View to display bot details by making a GET request to the FastAPI endpoint.
+    View to display bot details by making a GET request to the Bot-Service endpoint.
     """
 
     template_name = (
@@ -70,7 +70,7 @@ class BotDetailView(LoginRequiredMixin, View):
             raise Http404("You are not the owner of this bot.")
 
         try:
-            # Fetch bot details from the FastAPI service
+            # Fetch bot details from the Bot-Service service
             bot_data = get_bot_details(bot.bot_id)
         except Exception as e:
             # Log the error
@@ -117,13 +117,13 @@ class BotDetailView(LoginRequiredMixin, View):
             return redirect("bot-details", bot_id=bot.id)
 
         try:
-            # Update bot data in the FastAPI service
+            # Update bot data in the Bot-Service service
             update_bot(bot.bot_id, token, is_active)
         except Exception as e:
             # Log the error
             logger.error(
                 f"Failed to update bot. Bot ID: {bot.bot_id}. Error: {str(e)}",
-                exc_info=True,  # Добавляем traceback в лог
+                exc_info=True,
             )
             # If an error occurs during the API request, show an error message and redirect
             messages.error(
@@ -159,9 +159,9 @@ class AddBotView(LoginRequiredMixin, FormView):
         token = form.cleaned_data["token"]
 
         try:
-            # Create a new bot in the FastAPI service
+            # Create a new bot in the Bot-service service
             bot_data = create_bot(token)
-            bot_id = bot_data["id"]
+            bot_id = bot_data["id"]  # Bot ID of the Bot-service
             bot_username = bot_data["username"]
 
             # Save the bot in the Django database
@@ -169,7 +169,6 @@ class AddBotView(LoginRequiredMixin, FormView):
                 user=self.request.user,
                 bot_id=bot_id,
                 bot_username=bot_username,
-                default_reply="Я Вас не понимаю, воспользуйтесь кнопочным меню",
             )
         except Exception as e:
             # Log the error
@@ -201,3 +200,98 @@ class AddBotView(LoginRequiredMixin, FormView):
 
         # Render the template with the form and error
         return self.render_to_response(context)
+
+
+class BotDefaultReplyView(LoginRequiredMixin, View):
+    """
+    View to display/patch bot default reply by making a GET/PATCH request to the Bot-Service endpoint.
+    """
+
+    template_name = (
+        "bots/bot_default_reply.html"  # Template for rendering bot details
+    )
+
+    def get(self, request, bot_id):
+        """
+        Handles GET requests to display bot details.
+
+        Args:
+            request (HttpRequest): The request object.
+            bot_id (int): The ID of the bot to retrieve.
+
+        Returns:
+            HttpResponse: Rendered template with bot details.
+
+        Raises:
+            Http404: If the bot is not found or the user is not the owner.
+        """
+        # Retrieve the bot from the database
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("You are not the owner of this bot.")
+
+        try:
+            # Fetch bot details from the Bot-Service service
+            bot_data = get_bot_details(bot.bot_id)
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # Return an error response if the request fails
+            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+
+        # Add the user_service bot ID to the response data
+        bot_data["id"] = bot.id
+
+        return render(request, self.template_name, {"bot": bot_data})
+
+    def post(self, request, bot_id):
+        """
+        Handles POST requests to update bot's default reply.
+
+        Args:
+            request (HttpRequest): The request object.
+            bot_id (int): The ID of the bot to update.
+
+        Returns:
+            HttpResponseRedirect: Redirects to the bot details page.
+        """
+        # Retrieve the bot object or return a 404 error if the bot is not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        form = BotDefaultReplyForm(request.POST)
+
+        # Validate default_reply
+        if form.is_valid():
+            default_reply = form.cleaned_data["default_reply"]
+        else:
+            # If the form is invalid, show an error message and redirect
+            messages.error(
+                request,
+                "Текст сообщения слишком большой, ограничение 255 символов.",
+            )
+            return redirect("bot-default-reply", bot_id=bot.id)
+
+        try:
+            # Update bot's default reply in the Bot-Service service
+            update_bot(bot_id=bot.bot_id, default_reply=default_reply)
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to update bot. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # If an error occurs during the API request, show an error message and redirect
+            messages.error(
+                request,
+                "Ошибка при обновлении данных. Повторите обновление позже.",
+            )
+            return redirect("bot-default-reply", bot_id=bot.id)
+
+        # If everything is successful, show a success message and redirect
+        messages.success(request, "Успешно обновлено.")
+        return redirect("bot-default-reply", bot_id=bot.id)

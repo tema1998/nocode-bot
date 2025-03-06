@@ -1,0 +1,67 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}
+Конструктор - @{{bot.username}}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">Настройка ответа бота на неизвестную команду/сообщение</h1>
+    <p class="mb-4">Здесь вы можете настроить ответное сообщение бота на команду/сообщение логика обработки которых не определена в конструкторе.</p>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"></h6>
+        </div>
+        <div class="card-body">
+
+            <div class="container mt-5">
+                <h1>Telegram Bot @{{ bot.username }}</h1>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="botForm" method="post" action="{% url 'bot-default-reply' bot.id %}">
+                            {% csrf_token %}
+
+                            <p class="card-text h3">
+                                <strong>Ответ бота на неизвестную команду/сообщение:</strong>
+                            </p>
+
+                            <!-- Текстовое поле с ограничением символов -->
+                            <textarea name="default_reply" class="form-control" rows="9" maxlength="1500" oninput="updateCharCount(this)">{{ bot.default_reply }}</textarea><br>
+
+                            <!-- Отображение счетчика символов -->
+                            <div id="charCount">
+                                Осталось символов: <span id="remainingChars">1500</span>/1500
+                            </div>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <button type="submit" class="btn btn-success">Сохранить изменения</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'bootstrap/js/bot-default-reply.js' %}"></script>
+{% endblock %}

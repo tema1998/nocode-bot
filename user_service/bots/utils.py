@@ -30,12 +30,12 @@ def get_bot_details(bot_id):
     except RequestException as e:
         logger.error(
             f"Failed to fetch bot details. Bot ID: {bot_id}. Error: {str(e)}",
-            exc_info=True,  # Добавляем traceback в лог
+            exc_info=True,
         )
         raise RequestException(f"Failed to fetch bot details: {str(e)}")
 
 
-def update_bot(bot_id, token, is_active):
+def update_bot(bot_id, token=None, is_active=None, default_reply=None):
     """
     Updates bot data in the FastAPI service.
 
@@ -43,6 +43,7 @@ def update_bot(bot_id, token, is_active):
         bot_id (int): The ID of the bot.
         token (str): The bot token.
         is_active (bool): The bot's active status.
+        default_reply (bool): The bot's default reply message.
 
     Returns:
         dict: Updated bot data.
@@ -53,14 +54,18 @@ def update_bot(bot_id, token, is_active):
     try:
         response = requests.patch(
             f"{BOT_SERVICE_API_URL}bot/{bot_id}",
-            json={"token": token, "is_active": is_active},
+            json={
+                "token": token,
+                "is_active": is_active,
+                "default_reply": default_reply,
+            },
         )
         response.raise_for_status()
         return response.json()
     except RequestException as e:
         logger.error(
             f"Failed to update bot. Bot ID: {bot_id}. Error: {str(e)}",
-            exc_info=True,  # Добавляем traceback в лог
+            exc_info=True,
         )
         raise RequestException(f"Failed to update bot: {str(e)}")
 
