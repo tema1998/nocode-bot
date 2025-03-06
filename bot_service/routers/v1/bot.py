@@ -9,7 +9,7 @@ from bot_service.schemas.bot import (
     BotPatchRequest,
     BotPatchResponse,
 )
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 
 router = APIRouter()
@@ -44,6 +44,38 @@ async def get_bot(
     """
     bot_details = await bot_repository.get_bot_details(bot_id)
     return BotGetResponse(**bot_details)
+
+
+@router.delete(
+    "/{bot_id}",
+    summary="Delete a bot by ID",
+    description="Delete a bot by its ID. This operation is irreversible.",
+    response_description="Confirmation of the bot deletion.",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_bot(
+    bot_id: int,
+    bot_repository: TelegramBotRepository = Depends(
+        get_telegram_bot_repository
+    ),
+) -> None:
+    """
+    Delete a bot by its ID.
+
+    Args:
+        bot_id (int): The ID of the bot to delete.
+        bot_repository (TelegramBotRepository): The repository for bot-related operations.
+
+    Returns:
+        None: Returns no content on successful deletion.
+
+    Raises:
+        HTTPException: If the bot is not found or if there is an error during deletion.
+    """
+    await bot_repository.delete_bot(bot_id)
+
+    # Return no content on successful deletion
+    return None
 
 
 @router.patch(

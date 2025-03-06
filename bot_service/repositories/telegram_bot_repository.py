@@ -1,5 +1,6 @@
 import logging
 import secrets
+from typing import Any, Dict
 
 from bot_service.models.bot import Bot
 from bot_service.repositories.async_pg_repository import (
@@ -25,10 +26,34 @@ class TelegramBotRepository:
         db_repository: PostgresAsyncRepository,
         tg_api_repository: TelegramApiRepository,
     ):
+        """
+        Initialize the TelegramBotRepository.
+
+        Args:
+            db_repository (PostgresAsyncRepository): The repository for database operations.
+            tg_api_repository (TelegramApiRepository): The repository for Telegram API interactions.
+        """
         self.db_repository = db_repository
         self.tg_api_repository = tg_api_repository
 
-    async def get_bot_details(self, bot_id: int):
+    async def get_bot_details(self, bot_id: int) -> Dict[str, Any]:
+        """
+        Retrieve details of a bot by its ID.
+
+        Args:
+            bot_id (int): The ID of the bot to retrieve.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the bot's details, including:
+                - is_active (bool): Whether the bot is active.
+                - token (str): The bot's token.
+                - username (str): The bot's username.
+                - name (str): The bot's name.
+                - default_reply (str): The bot's default reply message.
+
+        Raises:
+            HTTPException: If the bot is not found or if there is an error fetching the bot's name.
+        """
         bot = await self.db_repository.fetch_by_id(Bot, bot_id)
 
         if bot is None:
@@ -54,7 +79,29 @@ class TelegramBotRepository:
             "default_reply": bot.default_reply,
         }
 
-    async def update_bot(self, bot_id: int, bot_update: dict):
+    async def update_bot(
+        self, bot_id: int, bot_update: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Update a bot's details.
+
+        Args:
+            bot_id (int): The ID of the bot to update.
+            bot_update (Dict[str, Any]): A dictionary containing the fields to update:
+                - is_active (Optional[bool]): Whether the bot should be active.
+                - default_reply (Optional[str]): The bot's default reply message.
+                - token (Optional[str]): The bot's new token.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the updated bot's details:
+                - is_active (bool): Whether the bot is active.
+                - token (str): The bot's token.
+                - username (str): The bot's username.
+                - default_reply (str): The bot's default reply message.
+
+        Raises:
+            HTTPException: If the bot is not found or if there is an error updating the bot.
+        """
         bot = await self.db_repository.fetch_by_id(Bot, bot_id)
 
         if bot is None:
@@ -100,7 +147,55 @@ class TelegramBotRepository:
             "default_reply": bot.default_reply,
         }
 
-    async def create_bot(self, bot_data: dict):
+    async def delete_bot(self, bot_id: int) -> None:
+        """
+        Delete a bot by its ID.
+
+        Args:
+            bot_id (int): The ID of the bot to delete.
+
+        Raises:
+            HTTPException: If the bot is not found or if there is an error deleting the bot.
+        """
+        bot = await self.db_repository.fetch_by_id(Bot, bot_id)
+
+        if bot is None:
+            logger.error(f"Bot with ID {bot_id} not found for deleting.")
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        try:
+            await self.tg_api_repository.reset_webhook(
+                bot_token=bot.token,
+            )
+        except Exception as e:
+            logger.error(
+                f"Failed to reset bot token for bot ID {bot_id} with token {bot.token}: {e}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to reset bot token: {str(e)}",
+            )
+
+        await self.db_repository.delete(Bot, bot_id)
+
+        return None
+
+    async def create_bot(self, bot_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a new bot.
+
+        Args:
+            bot_data (Dict[str, Any]): A dictionary containing the bot's data:
+                - token (str): The bot's token.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the created bot's details:
+                - id (int): The ID of the created bot.
+                - username (str): The bot's username.
+
+        Raises:
+            HTTPException: If the bot token is invalid or if there is an error setting the webhook.
+        """
         secret_token = secrets.token_hex(16)
 
         try:
@@ -147,4 +242,14 @@ def get_telegram_bot_repository(
     db_repository: PostgresAsyncRepository = Depends(get_repository),
     tg_repository: TelegramApiRepository = Depends(TelegramApiRepository),
 ) -> TelegramBotRepository:
+    """
+    Dependency function to get an instance of TelegramBotRepository.
+
+    Args:
+        db_repository (PostgresAsyncRepository): The repository for database operations.
+        tg_repository (TelegramApiRepository): The repository for Telegram API interactions.
+
+    Returns:
+        TelegramBotRepository: An instance of TelegramBotRepository.
+    """
     return TelegramBotRepository(db_repository, tg_repository)
