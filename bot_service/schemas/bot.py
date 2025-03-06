@@ -20,6 +20,7 @@ class BotGetResponse(BaseModel):
     token: str
     username: str
     name: str | None
+    default_reply: str | None
 
     class Config:
         from_attributes = True
@@ -28,10 +29,14 @@ class BotGetResponse(BaseModel):
 class BotPatchRequest(BaseModel):
     is_active: Optional[bool] = None
     token: Optional[str] = None
+    default_reply: Optional[str] = None
 
 
-class BotPatchResponse(BotGetResponse):
-    pass
+class BotPatchResponse(BaseModel):
+    is_active: bool
+    token: str
+    username: str
+    default_reply: str
 
 
 class CommandCreate(BaseModel):

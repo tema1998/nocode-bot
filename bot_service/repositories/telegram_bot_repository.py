@@ -51,6 +51,7 @@ class TelegramBotRepository:
             "token": bot.token,
             "username": bot.username,
             "name": bot_name,
+            "default_reply": bot.default_reply,
         }
 
     async def update_bot(self, bot_id: int, bot_update: dict):
@@ -62,6 +63,9 @@ class TelegramBotRepository:
 
         if bot_update.get("is_active") is not None:
             bot.is_active = bot_update["is_active"]
+
+        if bot_update.get("default_reply") is not None:
+            bot.default_reply = bot_update["default_reply"]
 
         if (
             bot_update.get("token") is not None
@@ -89,22 +93,11 @@ class TelegramBotRepository:
 
         await self.db_repository.update(bot)
 
-        try:
-            bot_name = await self.tg_api_repository.get_bot_name(bot.token)
-        except Exception as e:
-            logger.error(
-                f"Failed to fetch bot name for token {bot.token}: {e}"
-            )
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to fetch bot name: {str(e)}",
-            )
-
         return {
             "is_active": bot.is_active,
             "token": bot.token,
             "username": bot.username,
-            "name": bot_name,
+            "default_reply": bot.default_reply,
         }
 
     async def create_bot(self, bot_data: dict):
