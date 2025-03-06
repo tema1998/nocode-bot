@@ -96,3 +96,30 @@ def create_bot(token):
             exc_info=True,
         )
         raise RequestException(f"Failed to create bot: {str(e)}")
+
+
+def delete_bot(bot_id):
+    """
+    Deletes a bot with the specified bot ID from the bot service.
+
+    Args:
+        bot_id (str): The ID of the bot from Bot-Service that needs to be deleted.
+
+    Raises:
+        RequestException: If the request to delete the bot fails.
+
+    Returns:
+        Response status code.
+    """
+    try:
+        response = requests.delete(
+            f"{BOT_SERVICE_API_URL}bot/{bot_id}",
+        )
+        response.raise_for_status()
+        return response.status_code
+    except RequestException as e:
+        logger.error(
+            f"Failed to delete bot. Bot-service bot ID: {bot_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(f"Failed to create bot: {str(e)}")

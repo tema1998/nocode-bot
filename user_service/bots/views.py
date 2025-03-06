@@ -9,7 +9,7 @@ from django.views.generic.edit import FormView
 
 from .forms import BotDefaultReplyForm, BotForm
 from .models import Bot
-from .utils import create_bot, get_bot_details, update_bot
+from .utils import create_bot, delete_bot, get_bot_details, update_bot
 
 
 logger = logging.getLogger("bots")
@@ -51,23 +51,13 @@ class BotDetailView(LoginRequiredMixin, View):
     def get(self, request, bot_id):
         """
         Handles GET requests to display bot details.
-
-        Args:
-            request (HttpRequest): The request object.
-            bot_id (int): The ID of the bot to retrieve.
-
-        Returns:
-            HttpResponse: Rendered template with bot details.
-
-        Raises:
-            Http404: If the bot is not found or the user is not the owner.
         """
         # Retrieve the bot from the database
         bot = get_object_or_404(Bot, id=bot_id)
 
         # Check if the user is the owner of the bot
         if bot.user != request.user:
-            raise Http404("You are not the owner of this bot.")
+            raise Http404("Вы не являетесь владельцем данного бота.")
 
         try:
             # Fetch bot details from the Bot-Service service
@@ -89,13 +79,6 @@ class BotDetailView(LoginRequiredMixin, View):
     def post(self, request, bot_id):
         """
         Handles POST requests to update bot details.
-
-        Args:
-            request (HttpRequest): The request object.
-            bot_id (int): The ID of the bot to update.
-
-        Returns:
-            HttpResponseRedirect: Redirects to the bot details page.
         """
         # Retrieve the bot object or return a 404 error if the bot is not found
         bot = get_object_or_404(Bot, id=bot_id)
@@ -135,6 +118,42 @@ class BotDetailView(LoginRequiredMixin, View):
         # If everything is successful, show a success message and redirect
         messages.success(request, "Данные бота успешно обновлены.")
         return redirect("bot-details", bot_id=bot.id)
+
+
+class BotDeleteView(LoginRequiredMixin, View):
+
+    def post(self, request, bot_id):
+        """
+        Handles DELETE requests to delete a bot.
+        """
+        # Retrieve the bot object or return a 404 error if the bot is not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("Вы не являетесь владельцем данного бота.")
+
+        try:
+            # Delete the bot from the Bot-Service service
+            delete_bot(bot.bot_id)  # pass ID of the bot from Bot-service
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to delete bot. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # If an error occurs during the API request, show an error message and redirect
+            messages.error(request, "Ошибка при удалении бота.")
+            return redirect("bot-details", bot_id=bot.id)
+
+        bot_username = bot.bot_username
+
+        # Delete the bot from the local database
+        bot.delete()
+
+        # Show a success message and redirect to the bot list page
+        messages.success(request, f"Бот @{bot_username} успешно удален.")
+        return redirect("bots")  # Redirect to the bot list page
 
 
 class AddBotView(LoginRequiredMixin, FormView):
@@ -230,7 +249,7 @@ class BotDefaultReplyView(LoginRequiredMixin, View):
 
         # Check if the user is the owner of the bot
         if bot.user != request.user:
-            raise Http404("You are not the owner of this bot.")
+            raise Http404("Вы не являетесь владельцем данного бота.")
 
         try:
             # Fetch bot details from the Bot-Service service
