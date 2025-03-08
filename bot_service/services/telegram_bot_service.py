@@ -2,7 +2,7 @@ import logging
 import secrets
 from typing import Any, Dict
 
-from bot_service.models.bot import Bot
+from bot_service.models.bot import Bot, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
     get_repository,
@@ -173,6 +173,14 @@ class TelegramBotService:
                 detail=f"Failed to reset webhook: {str(e)}",
             )
 
+        # Delete bot's main menu
+        bot_main_menu = await self.db_repository.fetch_by_query_one(
+            MainMenu, {"bot_id": bot_id}
+        )
+        await self.db_repository.delete(
+            MainMenu, bot_main_menu.id  # type:ignore
+        )
+
         await self.db_repository.delete(Bot, bot_id)
 
         return None
@@ -211,27 +219,28 @@ class TelegramBotService:
             secret_token=secret_token,
             username=bot_username,
         )
-        inserted_bot = await self.db_repository.insert(db_bot)
-
+        bot = await self.db_repository.insert(db_bot)
+        bot_main_menu = await self.db_repository.insert(
+            MainMenu(bot_id=bot.id)
+        )
         try:
             await self.tg_api_repository.set_webhook(
-                bot_id=inserted_bot.id,
+                bot_id=bot.id,
                 bot_token=bot_data["token"],
                 bot_secret_token=secret_token,
             )
         except Exception as e:
-            await self.db_repository.delete(Bot, inserted_bot.id)
-            logger.error(
-                f"Failed to set webhook for bot ID {inserted_bot.id}: {e}"
-            )
+            await self.db_repository.delete(Bot, bot.id)
+            await self.db_repository.delete(MainMenu, bot_main_menu.id)
+            logger.error(f"Failed to set webhook for bot ID {bot.id}: {e}")
             raise HTTPException(
                 status_code=400,
                 detail=f"Failed to set webhook: {str(e)}",
             )
 
         return {
-            "id": inserted_bot.id,
-            "username": inserted_bot.username,
+            "id": bot.id,
+            "username": bot.username,
         }
 
 

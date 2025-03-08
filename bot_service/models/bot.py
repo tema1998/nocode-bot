@@ -71,7 +71,7 @@ class MainMenu(Base):
 
     __tablename__ = "main_menu"
     id = Column(Integer, primary_key=True, index=True)
-    welcome_message = Column(String(3000), nullable=False)
+    welcome_message = Column(String(3000), nullable=True)
     bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
     bot = relationship("Bot", back_populates="main_menu")
     buttons = relationship("Button", back_populates="main_menu")
