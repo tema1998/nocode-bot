@@ -101,6 +101,33 @@ class PostgresAsyncRepository:
 
             return items if items else None
 
+    async def fetch_by_query_one(
+        self, model_class: Type[Base], filters: Dict[str, Any]
+    ) -> Union[None, Base]:
+        """
+        Fetch one record based on a set of filters.
+
+        Args:
+            model_class (Type[Base]): The ORM model class to query.
+            filters (Dict[str, Any]): A dictionary of filters to apply to the query.
+
+        Returns:
+            Union[None, Base]: A list of fetched record or None if none found.
+        """
+        async with self.async_session() as session:
+            conditions = []
+
+            # Build conditions from filters
+            for column, value in filters.items():
+                conditions.append(getattr(model_class, column) == value)
+
+            stmt = select(model_class).where(and_(*conditions))
+
+            result = await session.execute(stmt)
+            item = result.scalars().one_or_none()
+
+            return item
+
     async def fetch_by_query_with_pagination(
         self,
         model_class: Type[Base],
