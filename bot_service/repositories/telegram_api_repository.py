@@ -68,7 +68,8 @@ class TelegramApiRepository:
             bot_token (str): The Telegram bot token.
         """
         try:
-            webhook_url = f"{config.webhook_url}/api/v1/blocked"
+            # webhook_url = f"{config.webhook_url}/api/v1/blocked"
+            webhook_url = "https://com.com/api/v1/blocked"
 
             # Initialize the Telegram bot application
             application = Application.builder().token(bot_token).build()
