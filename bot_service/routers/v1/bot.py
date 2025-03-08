@@ -1,13 +1,13 @@
-from bot_service.repositories.telegram_bot_repository import (
-    TelegramBotRepository,
-    get_telegram_bot_repository,
-)
 from bot_service.schemas.bot import (
     BotCreate,
     BotCreateResponse,
     BotGetResponse,
     BotPatchRequest,
     BotPatchResponse,
+)
+from bot_service.services.telegram_bot_service import (
+    TelegramBotService,
+    get_telegram_bot_service,
 )
 from fastapi import APIRouter, Depends, status
 
@@ -25,16 +25,14 @@ router = APIRouter()
 )
 async def get_bot(
     bot_id: int,
-    bot_repository: TelegramBotRepository = Depends(
-        get_telegram_bot_repository
-    ),
+    bot_service: TelegramBotService = Depends(get_telegram_bot_service),
 ) -> BotGetResponse:
     """
     Retrieve details of a bot by its ID.
 
     Args:
         bot_id (int): The ID of the bot to retrieve.
-        bot_repository (TelegramBotRepository): The repository for bot-related operations.
+        bot_service (TelegramBotService): The service for bot-related operations.
 
     Returns:
         BotGetResponse: The bot's details, including active status, token, and name.
@@ -42,7 +40,7 @@ async def get_bot(
     Raises:
         HTTPException: If the bot is not found or if there is an error fetching the bot's name.
     """
-    bot_details = await bot_repository.get_bot_details(bot_id)
+    bot_details = await bot_service.get_bot_details(bot_id)
     return BotGetResponse(**bot_details)
 
 
@@ -55,16 +53,14 @@ async def get_bot(
 )
 async def delete_bot(
     bot_id: int,
-    bot_repository: TelegramBotRepository = Depends(
-        get_telegram_bot_repository
-    ),
+    bot_service: TelegramBotService = Depends(get_telegram_bot_service),
 ) -> None:
     """
     Delete a bot by its ID.
 
     Args:
         bot_id (int): The ID of the bot to delete.
-        bot_repository (TelegramBotRepository): The repository for bot-related operations.
+        bot_service (TelegramBotService): The service for bot-related operations.
 
     Returns:
         None: Returns no content on successful deletion.
@@ -72,9 +68,7 @@ async def delete_bot(
     Raises:
         HTTPException: If the bot is not found or if there is an error during deletion.
     """
-    await bot_repository.delete_bot(bot_id)
-
-    # Return no content on successful deletion
+    await bot_service.delete_bot(bot_id)
     return None
 
 
@@ -90,9 +84,7 @@ async def delete_bot(
 async def update_bot(
     bot_id: int,
     bot_update: BotPatchRequest,
-    bot_repository: TelegramBotRepository = Depends(
-        get_telegram_bot_repository
-    ),
+    bot_service: TelegramBotService = Depends(get_telegram_bot_service),
 ) -> BotPatchResponse:
     """
     Update bot details by ID.
@@ -100,7 +92,7 @@ async def update_bot(
     Args:
         bot_id (int): The ID of the bot to update.
         bot_update (BotPatchRequest): The data to update the bot with.
-        bot_repository (TelegramBotRepository): The repository for bot-related operations.
+        bot_service (TelegramBotService): The service for bot-related operations.
 
     Returns:
         BotPatchResponse: The updated bot details, including active status, token, username, and name.
@@ -108,9 +100,7 @@ async def update_bot(
     Raises:
         HTTPException: If the bot is not found or if there is an error updating the bot.
     """
-    updated_bot = await bot_repository.update_bot(
-        bot_id, bot_update.model_dump()
-    )
+    updated_bot = await bot_service.update_bot(bot_id, bot_update.model_dump())
     return BotPatchResponse(**updated_bot)
 
 
@@ -124,16 +114,14 @@ async def update_bot(
 )
 async def add_bot(
     bot: BotCreate,
-    bot_repository: TelegramBotRepository = Depends(
-        get_telegram_bot_repository
-    ),
+    bot_service: TelegramBotService = Depends(get_telegram_bot_service),
 ):
     """
     Create a new bot.
 
     Args:
         bot (BotCreate): The data to create the bot with.
-        bot_repository (TelegramBotRepository): The repository for bot-related operations.
+        bot_service (TelegramBotService): The service for bot-related operations.
 
     Returns:
         BotCreateResponse: The created bot details, including ID and username.
@@ -141,5 +129,5 @@ async def add_bot(
     Raises:
         HTTPException: If the bot token is invalid or if there is an error creating the bot.
     """
-    created_bot = await bot_repository.create_bot(bot.model_dump())
+    created_bot = await bot_service.create_bot(bot.model_dump())
     return BotCreateResponse(**created_bot)

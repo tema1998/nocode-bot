@@ -142,3 +142,13 @@ class TelegramApiRepository:
                 status_code=400,
                 detail=f"Failed to fetch bot name: {str(e)}",
             )
+
+
+def get_telegram_api_repository() -> TelegramApiRepository:
+    """
+    Dependency function to get an instance of TelegramApiRepository.
+
+    Returns:
+        TelegramApiRepository: An instance of TelegramApiRepository.
+    """
+    return TelegramApiRepository()

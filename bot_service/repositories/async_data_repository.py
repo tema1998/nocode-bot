@@ -5,7 +5,7 @@ from uuid import UUID
 from bot_service.db.db_utils import Base
 
 
-class AsyncRepository(ABC):
+class AsyncDataRepository(ABC):
     @abstractmethod
     async def fetch_by_id(self, model_class, record_id: str) -> Optional[Any]:
         """Fetch a record by its ID from the specified index (e.g., table, collection)."""

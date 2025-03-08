@@ -9,6 +9,7 @@ from bot_service.repositories.async_pg_repository import (
 )
 from bot_service.repositories.telegram_api_repository import (
     TelegramApiRepository,
+    get_telegram_api_repository,
 )
 from fastapi import Depends, HTTPException
 
@@ -16,9 +17,9 @@ from fastapi import Depends, HTTPException
 logger = logging.getLogger(__name__)
 
 
-class TelegramBotRepository:
+class TelegramBotService:
     """
-    Repository for handling bot-related operations, combining database and Telegram API interactions.
+    Service for managing Telegram bot operations, including database and Telegram API interactions.
     """
 
     def __init__(
@@ -27,7 +28,7 @@ class TelegramBotRepository:
         tg_api_repository: TelegramApiRepository,
     ):
         """
-        Initialize the TelegramBotRepository.
+        Initialize the TelegramBotService.
 
         Args:
             db_repository (PostgresAsyncRepository): The repository for database operations.
@@ -164,16 +165,12 @@ class TelegramBotRepository:
             raise HTTPException(status_code=404, detail="Bot not found")
 
         try:
-            await self.tg_api_repository.reset_webhook(
-                bot_token=bot.token,
-            )
+            await self.tg_api_repository.reset_webhook(bot_token=bot.token)
         except Exception as e:
-            logger.error(
-                f"Failed to reset bot token for bot ID {bot_id} with token {bot.token}: {e}"
-            )
+            logger.error(f"Failed to reset webhook for bot ID {bot_id}: {e}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to reset bot token: {str(e)}",
+                detail=f"Failed to reset webhook: {str(e)}",
             )
 
         await self.db_repository.delete(Bot, bot_id)
@@ -238,18 +235,20 @@ class TelegramBotRepository:
         }
 
 
-def get_telegram_bot_repository(
+def get_telegram_bot_service(
     db_repository: PostgresAsyncRepository = Depends(get_repository),
-    tg_repository: TelegramApiRepository = Depends(TelegramApiRepository),
-) -> TelegramBotRepository:
+    tg_api_repository: TelegramApiRepository = Depends(
+        get_telegram_api_repository
+    ),
+) -> TelegramBotService:
     """
-    Dependency function to get an instance of TelegramBotRepository.
+    Dependency function to get an instance of TelegramBotService.
 
     Args:
         db_repository (PostgresAsyncRepository): The repository for database operations.
-        tg_repository (TelegramApiRepository): The repository for Telegram API interactions.
+        tg_api_repository (TelegramApiRepository): The repository for Telegram API interactions.
 
     Returns:
-        TelegramBotRepository: An instance of TelegramBotRepository.
+        TelegramBotService: An instance of TelegramBotService.
     """
-    return TelegramBotRepository(db_repository, tg_repository)
+    return TelegramBotService(db_repository, tg_api_repository)

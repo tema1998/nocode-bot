@@ -3,13 +3,14 @@ from uuid import UUID
 
 from bot_service.core.configs import config
 from bot_service.db.db_utils import Base
+from bot_service.repositories.async_data_repository import AsyncDataRepository
 from sqlalchemy import and_, delete, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import joinedload, sessionmaker
 
 
-class PostgresAsyncRepository:
+class PostgresAsyncRepository(AsyncDataRepository):
     """Asynchronous repository for performing database operations with PostgreSQL."""
 
     def __init__(self, dsn: str):
