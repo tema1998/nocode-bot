@@ -37,6 +37,9 @@ class Config(BaseSettings):
     bot_default_reply: str = (
         "Я Вас не понимаю. Пожалуйста выберите команду в кнопочном меню."
     )
+    bot_default_welcome_message: str = (
+        "Приветствую вас! Это сообщение по умолчанию, отредактируйте его в настройках!"
+    )
 
     @property
     def broker_url(self) -> str:
