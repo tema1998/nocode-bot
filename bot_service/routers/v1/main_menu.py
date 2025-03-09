@@ -1,4 +1,6 @@
 from bot_service.schemas.main_menu import (
+    ButtonCreateRequest,
+    ButtonResponse,
     MainMenuResponse,
     PatchWelcomeMessageRequest,
     PatchWelcomeMessageResponse,
@@ -79,3 +81,37 @@ async def update_welcome_message(
     )
 
     return updated_welcome_message
+
+
+@router.post(
+    "/button",
+    response_model=ButtonResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new button for the main menu",
+    description="Creates a new button for the main menu of a specific bot. "
+    "The button text and reply text are provided in the request body.",
+    response_description="The details of the created button.",
+)
+async def create_main_menu_button(
+    request: ButtonCreateRequest,
+    main_menu_service: MainMenuService = Depends(get_main_menu_service),
+) -> ButtonResponse:
+    """
+    Create a new button for the main menu of a specific bot.
+
+    Args:
+        request (ButtonCreateRequest): The request body containing the bot ID, button text, and reply text.
+        main_menu_service (MainMenuService): The service responsible for creating the button.
+
+    Returns:
+        ButtonResponse: A response model containing the details of the created button.
+
+    Raises:
+        HTTPException: If the main menu for the specified bot ID is not found.
+    """
+
+    button = await main_menu_service.create_main_menu_button(
+        request.bot_id, request.button_text, request.reply_text
+    )
+
+    return button

@@ -11,10 +11,14 @@ class PatchWelcomeMessageResponse(PatchWelcomeMessageRequest):
     bot_id: int
 
 
-class ButtonResponse(BaseModel):
-    id: int
+class ButtonCreateRequest(BaseModel):
+    bot_id: int
     button_text: str
     reply_text: str
+
+
+class ButtonResponse(ButtonCreateRequest):
+    id: int
 
 
 class MainMenuResponse(BaseModel):

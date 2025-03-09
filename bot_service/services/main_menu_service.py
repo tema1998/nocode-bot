@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict
 
-from bot_service.models.bot import MainMenu
+from bot_service.models.bot import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
     get_repository,
@@ -68,6 +68,7 @@ class MainMenuService:
         main_menu_buttons = [
             ButtonResponse(
                 id=button.id,
+                bot_id=bot_id,
                 button_text=button.button_text,
                 reply_text=button.reply_text,
             )
@@ -107,6 +108,50 @@ class MainMenuService:
 
         return PatchWelcomeMessageResponse(
             bot_id=bot_id, welcome_message=welcome_message
+        )
+
+    async def create_main_menu_button(
+        self, bot_id: int, button_text: str, reply_text: str
+    ) -> ButtonResponse:
+        """
+        Create a new button for the main menu of a specific bot.
+
+        Args:
+            bot_id (int): The unique identifier of the bot to which the button belongs.
+            button_text (str): The text displayed on the button.
+            reply_text (str): The text sent as a reply when the button is clicked.
+
+        Returns:
+            ButtonResponse: A response model containing the details of the created button.
+
+        Raises:
+            HTTPException: If the main menu for the specified bot ID is not found.
+        """
+
+        main_menu = await self.db_repository.fetch_by_query_one_joinedload(
+            MainMenu, {"bot_id": bot_id}, "buttons"
+        )
+
+        if main_menu is None:
+            logger.error(f"Bot with ID {bot_id} doesn't have a main menu.")
+            raise HTTPException(
+                status_code=404, detail="Bot's main menu not found"
+            )
+
+        button = Button(
+            button_text=button_text,
+            reply_text=reply_text,
+            main_menu_id=main_menu.id,
+            bot_id=bot_id,
+        )
+
+        await self.db_repository.insert(button)
+
+        return ButtonResponse(
+            id=int(button.id),
+            bot_id=bot_id,
+            button_text=button_text,
+            reply_text=reply_text,
         )
 
 
