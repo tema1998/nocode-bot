@@ -129,6 +129,42 @@ class PostgresAsyncRepository(AsyncDataRepository):
 
             return item
 
+    async def fetch_by_query_one_joinedload(
+        self,
+        model_class: Type[Base],
+        filters: Dict[str, Any],
+        joinedload_field: Optional[str] = None,
+    ) -> Union[None, Base]:
+        """
+        Fetch one record based on a set of filters.
+
+        Args:
+            model_class (Type[Base]): The ORM model class to query.
+            filters (Dict[str, Any]): A dictionary of filters to apply to the query.
+            joinedload_field (Optional[str]): The field foe join operation.
+        Returns:
+            Union[None, Base]: A list of fetched record or None if none found.
+        """
+        async with self.async_session() as session:
+            conditions = []
+
+            # Build conditions from filters
+            for column, value in filters.items():
+                conditions.append(getattr(model_class, column) == value)
+
+            stmt = select(model_class).where(and_(*conditions))
+
+            if joinedload_field:
+                # Apply joinedload option if a field is specified
+                stmt = stmt.options(
+                    joinedload(getattr(model_class, joinedload_field))
+                )
+
+            result = await session.execute(stmt)
+            item = result.scalars().unique().one_or_none()
+
+            return item
+
     async def fetch_by_query_with_pagination(
         self,
         model_class: Type[Base],
