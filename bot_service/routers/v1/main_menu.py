@@ -1,6 +1,7 @@
 from bot_service.schemas.main_menu import (
     ButtonCreateRequest,
     ButtonResponse,
+    ButtonUpdateRequest,
     MainMenuResponse,
     PatchWelcomeMessageRequest,
     PatchWelcomeMessageResponse,
@@ -112,6 +113,41 @@ async def create_main_menu_button(
 
     button = await main_menu_service.create_main_menu_button(
         request.bot_id, request.button_text, request.reply_text
+    )
+
+    return button
+
+
+@router.patch(
+    "/button/{button_id}",
+    response_model=ButtonResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update a button in the main menu",
+    description="Updates the text or reply text of a button in the main menu. "
+    "Only the fields provided in the request body will be updated.",
+    response_description="The details of the updated button.",
+)
+async def update_main_menu_button(
+    button_id: int,
+    request: ButtonUpdateRequest,
+    main_menu_service: MainMenuService = Depends(get_main_menu_service),
+) -> ButtonResponse:
+    """
+    Update a button in the main menu of a bot.
+
+    Args:
+        button_id (int): The unique identifier of the button to update.
+        request (ButtonUpdateRequest): The request body containing the new button text and/or reply text.
+        main_menu_service (MainMenuService): The service responsible for updating the button.
+
+    Returns:
+        ButtonResponse: A response model containing the details of the updated button.
+
+    Raises:
+        HTTPException: If the button with the specified ID is not found.
+    """
+    button = await main_menu_service.update_main_menu_button(
+        button_id, request.button_text, request.reply_text
     )
 
     return button

@@ -164,6 +164,61 @@ class MainMenuService:
             reply_text=reply_text,
         )
 
+    async def update_main_menu_button(
+        self, button_id: int, button_text: str, reply_text: str
+    ) -> ButtonResponse:
+        """
+        Update the text and reply text of a button in the main menu.
+
+        Args:
+            button_id (int): The unique identifier of the button to update.
+            button_text (str): The new text to display on the button.
+            reply_text (str): The new text to send as a reply when the button is clicked.
+
+        Returns:
+            ButtonResponse: A response model containing the details of the updated button.
+
+        Raises:
+            HTTPException:
+                - 404: If the button with the specified ID is not found.
+                - 400: If a button with the same text already exists for the same bot.
+        """
+        # Fetch the button by its ID
+        button = await self.db_repository.fetch_by_query_one_joinedload(
+            Button, {"id": button_id}
+        )
+
+        # Check if the button exists
+        if button is None:
+            logger.error(f"Button with ID {button_id} not found.")
+            raise HTTPException(status_code=404, detail="Button not found")
+
+        # Check if the new button text already exists for the same bot
+        if button_text != button.button_text:
+            buttons_with_same_text = await self.db_repository.fetch_by_query(
+                Button, {"bot_id": button.bot_id, "button_text": button_text}
+            )
+            if buttons_with_same_text:
+                raise HTTPException(
+                    status_code=400,
+                    detail="A button with the same text already exists.",
+                )
+
+        # Update the button text and reply text
+        button.button_text = button_text
+        button.reply_text = reply_text
+
+        # Save the updated button to the database
+        await self.db_repository.update(button)
+
+        # Return the updated button details
+        return ButtonResponse(
+            id=int(button.id),
+            bot_id=button.bot_id,
+            button_text=button.button_text,
+            reply_text=button.reply_text,
+        )
+
 
 def get_main_menu_service(
     db_repository: PostgresAsyncRepository = Depends(get_repository),

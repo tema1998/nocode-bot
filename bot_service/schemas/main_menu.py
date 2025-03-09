@@ -17,6 +17,11 @@ class ButtonCreateRequest(BaseModel):
     reply_text: str
 
 
+class ButtonUpdateRequest(BaseModel):
+    button_text: str
+    reply_text: str
+
+
 class ButtonResponse(ButtonCreateRequest):
     id: int
 
