@@ -138,6 +138,16 @@ class MainMenuService:
                 status_code=404, detail="Bot's main menu not found"
             )
 
+        # Check if button text exists
+        buttons_with_same_text = await self.db_repository.fetch_by_query(
+            Button, {"bot_id": bot_id, "button_text": button_text}
+        )
+        if buttons_with_same_text:
+            raise HTTPException(
+                status_code=400,
+                detail="A button with the same text already exists.",
+            )
+
         button = Button(
             button_text=button_text,
             reply_text=reply_text,
