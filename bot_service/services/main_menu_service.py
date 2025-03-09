@@ -10,7 +10,10 @@ from bot_service.repositories.telegram_api_repository import (
     TelegramApiRepository,
     get_telegram_api_repository,
 )
-from bot_service.schemas.main_menu import ButtonResponse
+from bot_service.schemas.main_menu import (
+    ButtonResponse,
+    PatchWelcomeMessageResponse,
+)
 from fastapi import Depends, HTTPException
 
 
@@ -19,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 class MainMenuService:
     """
-    Service for managing main menu of the bot, including database and Telegram API interactions.
+    Service for managing the main menu of a bot, including database and Telegram API interactions.
     """
 
     def __init__(
         self,
         db_repository: PostgresAsyncRepository,
         tg_api_repository: TelegramApiRepository,
-    ):
+    ) -> None:
         """
         Initialize the MainMenuService.
 
@@ -40,13 +43,24 @@ class MainMenuService:
     async def main_menu_with_welcome_message(
         self, bot_id: int
     ) -> Dict[str, Any]:
+        """
+        Retrieve the main menu and its welcome message for a specific bot.
 
+        Args:
+            bot_id (int): The unique identifier of the bot.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the welcome message and a list of buttons.
+
+        Raises:
+            HTTPException: If the main menu for the specified bot ID is not found.
+        """
         main_menu = await self.db_repository.fetch_by_query_one_joinedload(
             MainMenu, {"bot_id": bot_id}, "buttons"
         )
 
         if main_menu is None:
-            logger.error(f"Bot with ID {bot_id} doesn't have main menu.")
+            logger.error(f"Bot with ID {bot_id} doesn't have a main menu.")
             raise HTTPException(
                 status_code=404, detail="Bot's main menu not found"
             )
@@ -64,6 +78,37 @@ class MainMenuService:
             "buttons": main_menu_buttons,
         }
 
+    async def update_welcome_message(
+        self, bot_id: int, welcome_message: str
+    ) -> PatchWelcomeMessageResponse:
+        """
+        Update the welcome message of the main menu for a specific bot.
+
+        Args:
+            bot_id (int): The unique identifier of the bot.
+            welcome_message (str): The new welcome message to set.
+
+
+        Raises:
+            HTTPException: If the main menu for the specified bot ID is not found.
+        """
+        main_menu = await self.db_repository.fetch_by_query_one_joinedload(
+            MainMenu, {"bot_id": bot_id}, "buttons"
+        )
+
+        if main_menu is None:
+            logger.error(f"Bot with ID {bot_id} doesn't have a main menu.")
+            raise HTTPException(
+                status_code=404, detail="Bot's main menu not found"
+            )
+
+        main_menu.welcome_message = welcome_message
+        await self.db_repository.update(main_menu)
+
+        return PatchWelcomeMessageResponse(
+            bot_id=bot_id, welcome_message=welcome_message
+        )
+
 
 def get_main_menu_service(
     db_repository: PostgresAsyncRepository = Depends(get_repository),
@@ -79,6 +124,6 @@ def get_main_menu_service(
         tg_api_repository (TelegramApiRepository): The repository for Telegram API interactions.
 
     Returns:
-        TelegramBotService: An instance of MainMenuService.
+        MainMenuService: An instance of MainMenuService.
     """
     return MainMenuService(db_repository, tg_api_repository)
