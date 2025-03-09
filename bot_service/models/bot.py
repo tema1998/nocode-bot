@@ -62,7 +62,7 @@ class Button(Base, TimeStampedMixin):
     funnel = relationship("Funnel")
     main_menu_id = Column(Integer, ForeignKey("main_menu.id"), nullable=True)
     main_menu = relationship("MainMenu", back_populates="buttons")
-    bot_id = Column(Integer, ForeignKey("bots.id"))
+    bot_id = Column(Integer, ForeignKey("bots.id"), index=True)
     bot = relationship("Bot", back_populates="buttons")
 
 
