@@ -4,7 +4,14 @@ from logging.handlers import TimedRotatingFileHandler
 from bot_service.create_fastapi_app import create_app
 from bot_service.models.bot import Bot
 from bot_service.repositories.async_pg_repository import get_repository
-from bot_service.routers.v1 import bot, button, command, funnel, webhook
+from bot_service.routers.v1 import (
+    bot,
+    button,
+    command,
+    funnel,
+    main_menu,
+    webhook,
+)
 from fastapi import HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -73,6 +80,9 @@ app.add_middleware(
 
 
 app.include_router(bot.router, prefix="/api/v1/bot", tags=["bot"])
+app.include_router(
+    main_menu.router, prefix="/api/v1/main-menu", tags=["main-menu"]
+)
 app.include_router(button.router, prefix="/api/v1/button", tags=["button"])
 app.include_router(funnel.router, prefix="/api/v1/funnel", tags=["funnel"])
 app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
