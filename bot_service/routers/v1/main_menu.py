@@ -151,3 +151,27 @@ async def update_main_menu_button(
     )
 
     return button
+
+
+@router.delete(
+    "/button/{button_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a button from the main menu",
+    description="Deletes a button from the main menu by its unique identifier.",
+    response_description="No content. The button has been successfully deleted.",
+)
+async def delete_main_menu_button(
+    button_id: int,
+    main_menu_service: MainMenuService = Depends(get_main_menu_service),
+):
+    """
+    Delete a button from the main menu of a bot.
+
+    Args:
+        button_id (int): The unique identifier of the button to delete.
+        main_menu_service (MainMenuService): The service responsible for deleting the button.
+
+    Raises:
+        HTTPException: If the button with the specified ID is not found.
+    """
+    await main_menu_service.delete_main_menu_button(button_id)
