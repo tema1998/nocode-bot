@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Конструктор - @{{bot.username}}
+Конструктор - @{{bot.bot_username}}
 {% endblock %}
 
 {% block content %}
@@ -20,27 +20,27 @@
         <div class="card-body">
 
             <div class="container mt-5">
-                <h1>Telegram Bot @{{ bot.username }}</h1>
+                <h1>Telegram Bot @{{ bot.bot_username }}</h1>
                 <div class="card">
                     <div class="card-body">
                         <form id="botForm" method="post" action="{% url 'bot-details' bot.id %}">
                             {% csrf_token %}
                             <p class="card-text h3">
-                                <strong>Имя пользователя:</strong> <a href="https://t.me/{{bot.username}}" target="_blank"> @{{ bot.username }} </a><br>
-                                <strong>Имя:</strong> {{ bot.name }}<br>
+                                <strong>Имя пользователя:</strong> <a href="https://t.me/{{bot.bot_username}}" target="_blank"> @{{ bot_data.username }} </a><br>
+                                <strong>Имя:</strong> {{bot_data.name}}<br>
 
                                 <div class="d-flex">
                                     <strong class="card-text h3">Активен:</strong>
                                     <div class="form-check form-switch">
                                         <input class="" type="checkbox" id="is_active" name="is_active"
-                                               style="transform: scale(2);" {% if bot.is_active %}checked{% endif %}>
+                                               style="transform: scale(2);" {% if bot_data.is_active %}checked{% endif %}>
                                     </div>
                                 </div><br>
 
                                 <div class="d-flex align-items-center">
                                     <strong class="card-text h3 me-10">Token:</strong>
                                     <div class="input-group mb-3">
-                                        <input type="text" class="form-control" id="tokenInput" name="token" value="{{ bot.token }}" style="display: none;">
+                                        <input type="text" class="form-control" id="tokenInput" name="token" value="{{ bot_data.token }}" style="display: none;">
                                         <button type="button" id="showTokenBtn" class="btn btn-primary btn-sm">Показать</button>
                                     </div>
                                 </div><br>

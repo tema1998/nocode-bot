@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Конструктор - @{{bot.username}}
+Настройка ответа по умолчанию - @{{bot.bot_username}}
 {% endblock %}
 
 {% block content %}
@@ -20,7 +20,7 @@
         <div class="card-body">
 
             <div class="container mt-5">
-                <h1>Telegram Bot @{{ bot.username }}</h1>
+                <h1>Telegram Bot @{{ bot.bot_username }}</h1>
                 <div class="card">
                     <div class="card-body">
                         <form id="botForm" method="post" action="{% url 'bot-default-reply' bot.id %}">
@@ -31,11 +31,11 @@
                             </p>
 
                             <!-- Текстовое поле с ограничением символов -->
-                            <textarea name="default_reply" class="form-control" rows="9" maxlength="3000" oninput="updateCharCount(this)">{{ bot.default_reply }}</textarea><br>
+                            <textarea name="default_reply" class="form-control" rows="9" maxlength="3000" oninput="updateCharCount(this)">{{ bot_data.default_reply }}</textarea><br>
 
                             <!-- Отображение счетчика символов -->
                             <div id="charCount">
-                                Осталось символов: <span id="remainingChars">3000</span>/1500
+                                Осталось символов: <span id="remainingChars">3000</span>/3000
                             </div>
 
                             {% if messages %}
@@ -63,5 +63,5 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'bootstrap/js/bot-default-reply.js' %}"></script>
+    <script src="{% static 'bootstrap/js/text-field-counter.js' %}"></script>
 {% endblock %}
