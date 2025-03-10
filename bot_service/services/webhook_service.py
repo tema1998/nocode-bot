@@ -9,8 +9,8 @@ from telegram.ext import Application
 
 
 class WebhookService:
-    def __init__(self, repository: PostgresAsyncRepository):
-        self.repository = repository
+    def __init__(self, db_repository: PostgresAsyncRepository):
+        self.db_repository = db_repository
 
     async def handle_webhook(self, bot_id: int, update_data: dict) -> dict:
         """
@@ -24,7 +24,7 @@ class WebhookService:
             dict: A status message indicating the result of the operation.
         """
         # Fetch the bot from the database
-        bot = await self.repository.fetch_by_id_joinedload(
+        bot = await self.db_repository.fetch_by_id_joinedload(
             Bot, bot_id, "main_menu"
         )
         if not bot:
@@ -64,23 +64,21 @@ class WebhookService:
         ]
         welcome_message = config.bot_default_welcome_message
 
-        # Check if the bot has a main menu
-        if bot.main_menu:
-            main_menu = await self.repository.fetch_by_id_joinedload(
-                MainMenu, bot.main_menu.id, "buttons"
-            )
+        main_menu = await self.db_repository.fetch_by_id_joinedload(
+            MainMenu, bot.main_menu.id, "buttons"
+        )
 
-            # Update welcome message if main menu has one
-            if main_menu and main_menu.welcome_message:
-                welcome_message = main_menu.welcome_message
+        # Update welcome message if main menu has message
+        if main_menu.welcome_message:  # type: ignore
+            welcome_message = main_menu.welcome_message  # type: ignore
 
-            # Add main menu buttons to the keyboard
-            if main_menu and main_menu.buttons:
-                main_menu_buttons = [
-                    [KeyboardButton(button.button_text)]
-                    for button in main_menu.buttons
-                ]
-                keyboard = main_menu_buttons + keyboard
+        # Add main menu buttons to the keyboard
+        if main_menu and main_menu.buttons:
+            main_menu_buttons = [
+                [KeyboardButton(button.button_text)]
+                for button in main_menu.buttons
+            ]
+            keyboard = main_menu_buttons + keyboard
 
         # Send welcome message with the keyboard
         await update.message.reply_text(  # type: ignore
@@ -99,7 +97,7 @@ class WebhookService:
             bot (Bot): The bot instance.
             update (Update): The incoming update from Telegram.
         """
-        button = await self.repository.fetch_by_query_one(
+        button = await self.db_repository.fetch_by_query_one(
             Button,
             {
                 "button_text": update.message.text,  # type:ignore
@@ -120,4 +118,6 @@ class WebhookService:
 
 async def get_webhook_service() -> WebhookService:
     """Dependency function to get the WebhookService instance."""
-    return WebhookService(repository=PostgresAsyncRepository(dsn=config.dsn))
+    return WebhookService(
+        db_repository=PostgresAsyncRepository(dsn=config.dsn)
+    )
