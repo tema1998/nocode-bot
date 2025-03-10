@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict, Optional
 
 import requests
 from django.conf import settings
@@ -123,3 +124,69 @@ def delete_bot(bot_id):
             exc_info=True,
         )
         raise RequestException(f"Failed to create bot: {str(e)}")
+
+
+def get_bot_main_menu(bot_id: int) -> Dict[str, Any]:
+    """
+    Fetch the main menu configuration for a specific bot.
+
+    Args:
+        bot_id (int): The unique identifier of the bot.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the main menu configuration.
+
+    Raises:
+        RequestException: If the request to fetch the main menu fails.
+    """
+    try:
+        response = requests.get(f"{BOT_SERVICE_API_URL}main-menu/{bot_id}")
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        data = response.json()
+        if not isinstance(data, dict):
+            raise RequestException("Failed to fetch bot main menu.")
+        return data
+
+    except RequestException as e:
+        logger.error(
+            f"Failed to fetch bot main menu. Bot ID: {bot_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(f"Failed to fetch bot main menu: {str(e)}")
+
+
+def update_main_menu(
+    bot_id: int, welcome_message: str
+) -> Optional[Dict[str, Any]]:
+    """
+    Update the welcome message in the main menu configuration for a specific bot.
+
+    Args:
+        bot_id (int): The unique identifier of the bot.
+        welcome_message (str): The new welcome message to set.
+
+    Returns:
+        Optional[Dict[str, Any]]: A dictionary containing the updated main menu configuration,
+                                  or None if the update fails.
+
+    Raises:
+        RequestException: If the request to update the main menu fails.
+    """
+    try:
+        response = requests.patch(
+            f"{BOT_SERVICE_API_URL}main-menu/{bot_id}",
+            json={"welcome_message": welcome_message},
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        data = response.json()
+        if not isinstance(data, dict):
+            raise RequestException("Failed to fetch bot main menu.")
+        return data
+
+    except RequestException as e:
+        logger.error(
+            f"Failed to update bot's main menu. Bot ID: {bot_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(f"Failed to update bot's main menu: {str(e)}")
