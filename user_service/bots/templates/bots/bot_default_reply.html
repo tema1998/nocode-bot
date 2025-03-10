@@ -31,11 +31,11 @@
                             </p>
 
                             <!-- Текстовое поле с ограничением символов -->
-                            <textarea name="default_reply" class="form-control" rows="9" maxlength="1500" oninput="updateCharCount(this)">{{ bot.default_reply }}</textarea><br>
+                            <textarea name="default_reply" class="form-control" rows="9" maxlength="3000" oninput="updateCharCount(this)">{{ bot.default_reply }}</textarea><br>
 
                             <!-- Отображение счетчика символов -->
                             <div id="charCount">
-                                Осталось символов: <span id="remainingChars">1500</span>/1500
+                                Осталось символов: <span id="remainingChars">3000</span>/1500
                             </div>
 
                             {% if messages %}

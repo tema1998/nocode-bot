@@ -1,5 +1,5 @@
 function updateCharCount(textarea) {
-    const maxLength = 1500; // Maximum number of characters allowed
+    const maxLength = 3000; // Maximum number of characters allowed
     const remainingCharsElement = document.getElementById('remainingChars');
     const currentLength = textarea.value.length;
 
