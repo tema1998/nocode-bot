@@ -138,15 +138,8 @@ class MainMenuService:
                 status_code=404, detail="Bot's main menu not found"
             )
 
-        # Check if button text exists
-        buttons_with_same_text = await self.db_repository.fetch_by_query(
-            Button, {"bot_id": bot_id, "button_text": button_text}
-        )
-        if buttons_with_same_text:
-            raise HTTPException(
-                status_code=400,
-                detail="A button with the same text already exists.",
-            )
+        # Check button text constraint
+        await self._check_button_text_constraint(bot_id, button_text)
 
         button = Button(
             button_text=button_text,
@@ -193,16 +186,11 @@ class MainMenuService:
             logger.error(f"Button with ID {button_id} not found.")
             raise HTTPException(status_code=404, detail="Button not found")
 
-        # Check if the new button text already exists for the same bot
+        # Check button text constraints
         if button_text != button.button_text:
-            buttons_with_same_text = await self.db_repository.fetch_by_query(
-                Button, {"bot_id": button.bot_id, "button_text": button_text}
+            await self._check_button_text_constraint(
+                button.bot_id, button_text
             )
-            if buttons_with_same_text:
-                raise HTTPException(
-                    status_code=400,
-                    detail="A button with the same text already exists.",
-                )
 
         # Update the button text and reply text
         button.button_text = button_text
@@ -242,6 +230,21 @@ class MainMenuService:
 
         # Delete the button from the database
         await self.db_repository.delete(Button, button.id)
+
+    async def _check_button_text_constraint(self, bot_id, button_text):
+        buttons_with_same_text = await self.db_repository.fetch_by_query(
+            Button, {"bot_id": bot_id, "button_text": button_text}
+        )
+        if buttons_with_same_text:
+            raise HTTPException(
+                status_code=400,
+                detail="A button with the same text already exists.",
+            )
+        if button_text == "/start":
+            raise HTTPException(
+                status_code=400,
+                detail="A button with this name is forbidden.",
+            )
 
 
 def get_main_menu_service(
