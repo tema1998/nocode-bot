@@ -190,3 +190,83 @@ def update_main_menu(
             exc_info=True,
         )
         raise RequestException(f"Failed to update bot's main menu: {str(e)}")
+
+
+def get_bot_main_menu_button(button_id: int) -> Dict[str, Any]:
+    """
+    Fetch the main menu button details for a specific button ID from the Bot-Service API.
+
+    Args:
+        button_id (int): The ID of the main menu button to retrieve.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the button details.
+
+    Raises:
+        RequestException: If the request to the Bot-Service API fails or returns an unexpected response.
+    """
+    try:
+        # Send a GET request to retrieve the button data
+        response = requests.get(
+            f"{BOT_SERVICE_API_URL}main-menu/button/{button_id}"
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        data = response.json()
+        # Ensure the response data is a dictionary
+        if not isinstance(data, dict):
+            raise RequestException("Failed to fetch bot's main menu button.")
+
+        return data
+
+    except RequestException as e:
+        # Log the error if the API request fails
+        logger.error(
+            f"Failed to fetch bot's main menu button. Button ID: {button_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(f"Failed to fetch bot main menu: {str(e)}")
+
+
+def update_main_menu_button(
+    button_id: int, button_text: str, reply_text: str
+) -> Optional[Dict[str, Any]]:
+    """
+    Update the main menu button for a specific button ID in the Bot-Service API.
+
+    Args:
+        button_id (int): The ID of the main menu button to update.
+        button_text (str): The new text for the button.
+        reply_text (str): The new reply text associated with the button.
+
+    Returns:
+        Optional[Dict[str, Any]]: A dictionary containing the updated button details,
+                                   or None if the update was unsuccessful.
+
+    Raises:
+        RequestException: If the request to the Bot-Service API fails or returns an unexpected response.
+    """
+    try:
+        # Send a PATCH request to update the button data
+        response = requests.patch(
+            f"{BOT_SERVICE_API_URL}main-menu/button/{button_id}",
+            json={"button_text": button_text, "reply_text": reply_text},
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        data = response.json()
+        # Ensure the response data is a dictionary
+        if not isinstance(data, dict):
+            raise RequestException("Failed to update bot main menu button.")
+
+        return data
+
+    except RequestException as e:
+        # Log the error if the API request fails
+        logger.error(
+            f"Failed to update bot's main menu button. Button ID: {button_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(
+            f"Failed to update bot's main menu button: {str(e)}"
+        )

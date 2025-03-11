@@ -5,8 +5,10 @@ from .views import (
     BotDefaultReplyView,
     BotDeleteView,
     BotDetailView,
+    BotMainMenuButtonView,
     BotMainMenuView,
     BotsView,
+    UpdateBotMainMenuButtonView,
 )
 
 
@@ -24,5 +26,15 @@ urlpatterns = [
         "main-menu/<int:bot_id>",
         BotMainMenuView.as_view(),
         name="bot-main-menu",
+    ),
+    path(
+        "main-menu-button/<int:bot_id>/<int:button_id>",
+        BotMainMenuButtonView.as_view(),
+        name="bot-main-menu-button",
+    ),
+    path(
+        "update-main-menu-button/<int:bot_id>/<int:button_id>",
+        UpdateBotMainMenuButtonView.as_view(),
+        name="update-bot-main-menu-button",
     ),
 ]

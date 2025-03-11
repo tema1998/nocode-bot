@@ -8,15 +8,22 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic.edit import FormView
 
-from .forms import BotDefaultReplyForm, BotForm, BotMainMenuForm
+from .forms import (
+    BotDefaultReplyForm,
+    BotForm,
+    BotMainMenuButtonForm,
+    BotMainMenuForm,
+)
 from .models import Bot
 from .utils import (
     create_bot,
     delete_bot,
     get_bot_details,
     get_bot_main_menu,
+    get_bot_main_menu_button,
     update_bot,
     update_main_menu,
+    update_main_menu_button,
 )
 
 
@@ -360,7 +367,7 @@ class BotMainMenuView(LoginRequiredMixin, View):
         except Exception as e:
             # Log the error
             logger.error(
-                f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                f"Failed to fetch bot's main menu. Bot ID: {bot.bot_id}. Error: {str(e)}",
                 exc_info=True,
             )
             # Return an error response if the request fails
@@ -419,3 +426,118 @@ class BotMainMenuView(LoginRequiredMixin, View):
         # If everything is successful, show a success message and redirect
         messages.success(request, "Успешно обновлено.")
         return redirect("bot-main-menu", bot_id=bot.id)
+
+
+class BotMainMenuButtonView(LoginRequiredMixin, View):
+    """
+    View for handling the main menu button of a bot.
+
+    This view allows users to view and update the main menu button of a bot.
+    Users must be logged in and be the owner of the bot to access this view.
+    """
+
+    template_name = "bots/main_menu_button.html"  # Template for rendering the bot's main menu button
+
+    def get(self, request, bot_id: int, button_id: int) -> HttpResponse:
+        """
+        Handle GET requests to retrieve and display the bot's main menu button.
+
+        Args:
+            request: The HTTP request object.
+            bot_id (int): The ID of the bot.
+            button_id (int): The ID of the button to retrieve.
+
+        Returns:
+            HttpResponse: A response containing the rendered template with bot and button data.
+        """
+        # Retrieve the bot from the database, returning 404 if not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("Вы не являетесь владельцем данного бота.")
+
+        try:
+            # Fetch the bot's main menu button from the Bot-Service API
+            button: Dict[str, Any] = get_bot_main_menu_button(button_id)
+        except Exception as e:
+            # Log the error if the API request fails
+            logger.error(
+                f"Failed to fetch bot's main menu button. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # Return an error response if the request fails
+            return HttpResponse(f"Произошла ошибка: {str(e)}", status=500)
+
+        # Render the template with bot and main menu button data
+        return render(
+            request,
+            self.template_name,
+            {"bot": bot, "button": button},
+        )
+
+
+class UpdateBotMainMenuButtonView(LoginRequiredMixin, View):
+    """
+    View for handling the update of a bot's main menu button.
+
+    This view processes POST requests to modify the attributes of the
+    main menu button in a specified bot. Users must be logged in to
+    access this view, and they must have permission to edit the specified bot.
+
+    Attributes:
+        login_url (str): URL where users are redirected for login if they are not authenticated.
+        redirect_field_name (str): Name of the URL parameter to redirect to after successful login.
+    """
+
+    def post(self, request, bot_id: int, button_id: int) -> HttpResponse:
+        """
+        Handle POST requests to update the bot's main menu button.
+
+        Args:
+            request: The HTTP request object.
+            bot_id (int): The ID of the bot.
+            button_id (int): The ID of the button to update.
+
+        Returns:
+            HttpResponse: A redirect response based on the result of the update operation.
+        """
+        # Retrieve the bot object or return a 404 error if the bot is not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Validate the form data
+        form = BotMainMenuButtonForm(request.POST)
+        if not form.is_valid():
+            # If the form is invalid, show an error message and redirect
+            messages.error(request, "Проверьте правильность данных.")
+            return redirect(
+                "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+            )
+
+        # Extract button text and reply text from the form
+        button_text: str = form.cleaned_data["button_text"]
+        reply_text: str = form.cleaned_data["reply_text"]
+
+        try:
+            # Update the bot's main menu button in the Bot-Service API
+            update_main_menu_button(button_id, button_text, reply_text)
+        except Exception as e:
+            # Log the error if the API request fails
+            logger.error(
+                f"Failed to update bot's main menu button. Button ID: {button_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # If an API error occurs, show an error message and redirect
+            messages.error(
+                request,
+                "Ошибка при обновлении данных. Проверьте формат данных!",
+            )
+            return redirect(
+                "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+            )
+
+        # If everything is successful, show a success message and redirect
+        messages.success(request, "Успешно обновлено.")
+        return redirect(
+            "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+        )
