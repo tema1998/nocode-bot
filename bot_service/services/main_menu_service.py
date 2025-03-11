@@ -110,6 +110,38 @@ class MainMenuService:
             bot_id=bot_id, welcome_message=welcome_message
         )
 
+    async def get_main_menu_button(self, button_id: int) -> ButtonResponse:
+        """
+        Retrieve the details of a specific button by its ID.
+
+        Args:
+            button_id (int): The unique identifier of the button to retrieve.
+
+        Returns:
+            ButtonResponse: A response model containing the details of the button.
+
+        Raises:
+            HTTPException:
+                - 404: If the button with the specified ID is not found.
+        """
+        # Fetch the button by its ID
+        button = await self.db_repository.fetch_by_query_one_joinedload(
+            Button, {"id": button_id}
+        )
+
+        # Check if the button exists
+        if button is None:
+            logger.error(f"Button with ID {button_id} not found.")
+            raise HTTPException(status_code=404, detail="Button not found")
+
+        # Return the button details
+        return ButtonResponse(
+            id=int(button.id),
+            bot_id=button.bot_id,
+            button_text=button.button_text,
+            reply_text=button.reply_text,
+        )
+
     async def create_main_menu_button(
         self, bot_id: int, button_text: str, reply_text: str
     ) -> ButtonResponse:

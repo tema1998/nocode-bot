@@ -84,6 +84,36 @@ async def update_welcome_message(
     return updated_welcome_message
 
 
+@router.get(
+    "/button/{button_id}",
+    response_model=ButtonResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get details of a specific button",
+    description="Retrieves the details of a specific button by its unique identifier.",
+    response_description="A response model containing the details of the button.",
+)
+async def get_main_menu_button(
+    button_id: int,
+    main_menu_service: MainMenuService = Depends(get_main_menu_service),
+) -> ButtonResponse:
+    """
+    Retrieve the details of a specific button by its ID.
+
+    Args:
+        button_id (int): The unique identifier of the button to retrieve.
+        main_menu_service (MainMenuService): The service responsible for retrieving the button details.
+
+    Returns:
+        ButtonResponse: A response model containing the details of the button.
+
+    Raises:
+        HTTPException:
+            - 404: If the button with the specified ID is not found.
+    """
+    button = await main_menu_service.get_main_menu_button(button_id)
+    return button
+
+
 @router.post(
     "/button",
     response_model=ButtonResponse,
