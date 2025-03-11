@@ -357,9 +357,6 @@ class BotMainMenuView(LoginRequiredMixin, View):
         try:
             # Fetch the bot's main menu from the Bot-Service API
             main_menu: Dict[str, Any] = get_bot_main_menu(bot.bot_id)
-            logger.debug(
-                f"Fetched main menu for bot ID {bot.bot_id}: {main_menu}"
-            )
         except Exception as e:
             # Log the error
             logger.error(
@@ -368,9 +365,6 @@ class BotMainMenuView(LoginRequiredMixin, View):
             )
             # Return an error response if the request fails
             return HttpResponse(f"An error occurred: {str(e)}", status=500)
-
-        # Add the bot ID to the response data
-        main_menu["bot_id"] = bot.id
 
         # Render the template with bot and main menu data
         return render(

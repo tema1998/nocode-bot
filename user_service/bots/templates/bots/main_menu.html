@@ -46,6 +46,21 @@
                                 {% endfor %}
                             {% endif %}
 
+                            {% if bot_main_menu.buttons %}
+                                <p class="card-text h3">
+                                    <strong>Кнопки:</strong>
+                                </p>
+                                {% for button in bot_main_menu.buttons %}
+                                    <div class="button-container">
+                                        <a href="">
+                                            <button type="button" class="btn btn-outline-info btn-lg mb-4">{{ button.button_text }}</button>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>Кнопок нет.</p>
+                            {% endif %}
+
                             <button type="submit" class="btn btn-success">Сохранить изменения</button>
                         </form>
                     </div>
