@@ -38,27 +38,27 @@
                                 Осталось символов: <span id="remainingChars">3000</span>/3000
                             </div>
 
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
-                                        {{ message }}
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-
                             {% if bot_main_menu.buttons %}
                                 <p class="card-text h3">
                                     <strong>Кнопки:</strong>
                                 </p>
                                 {% for button in bot_main_menu.buttons %}
                                     <div class="button-container">
-                                        <a href="">
+                                        <a href="{% url 'bot-main-menu-button' bot.id button.id %}">
                                             <button type="button" class="btn btn-outline-info btn-lg mb-4">{{ button.button_text }}</button>
                                         </a>
                                     </div>
                                 {% endfor %}
                             {% else %}
                                 <p>Кнопок нет.</p>
+                            {% endif %}
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
                             {% endif %}
 
                             <button type="submit" class="btn btn-success">Сохранить изменения</button>
@@ -78,5 +78,5 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'bootstrap/js/text-field-counter.js' %}"></script>
+    <script src="{% static 'bootstrap/js/main-menu-field-counter.js' %}"></script>
 {% endblock %}
