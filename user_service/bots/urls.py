@@ -8,6 +8,8 @@ from .views import (
     BotMainMenuButtonView,
     BotMainMenuView,
     BotsView,
+    CreateBotMainMenuButtonView,
+    DeleteBotMainMenuButtonView,
     UpdateBotMainMenuButtonView,
 )
 
@@ -36,5 +38,15 @@ urlpatterns = [
         "update-main-menu-button/<int:bot_id>/<int:button_id>",
         UpdateBotMainMenuButtonView.as_view(),
         name="update-bot-main-menu-button",
+    ),
+    path(
+        "create-main-menu-button/<int:bot_id>",
+        CreateBotMainMenuButtonView.as_view(),
+        name="create-bot-main-menu-button",
+    ),
+    path(
+        "delete-main-menu-button/<int:bot_id>/<int:button_id>",
+        DeleteBotMainMenuButtonView.as_view(),
+        name="delete-bot-main-menu-button",
     ),
 ]

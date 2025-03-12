@@ -17,7 +17,9 @@ from .forms import (
 from .models import Bot
 from .utils import (
     create_bot,
+    create_main_menu_button,
     delete_bot,
+    delete_bot_main_menu_button,
     get_bot_details,
     get_bot_main_menu,
     get_bot_main_menu_button,
@@ -537,7 +539,144 @@ class UpdateBotMainMenuButtonView(LoginRequiredMixin, View):
             )
 
         # If everything is successful, show a success message and redirect
-        messages.success(request, "Успешно обновлено.")
-        return redirect(
-            "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+        messages.success(request, "Изменения сохранены.")
+        return redirect("bot-main-menu", bot_id=bot.id)
+
+
+class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
+    """
+    A view for creating a main menu button for a bot.
+
+    This view handles both GET and POST requests:
+    - GET: Renders the form for creating a new button.
+    - POST: Processes the form data and creates the button via the Bot-Service API.
+    """
+
+    template_name = (
+        "bots/create_main_menu_button.html"  # Template for rendering the form
+    )
+
+    def get(self, request, bot_id: int) -> HttpResponse:
+        """
+        Handles GET requests to display the form for creating a new button.
+
+        Args:
+            request (HttpRequest): The incoming HTTP request.
+            bot_id (int): The ID of the bot for which the button is being created.
+
+        Returns:
+            HttpResponse: The rendered template with the bot context.
+
+        Raises:
+            Http404: If the bot does not exist or the user is not the owner.
+        """
+        # Retrieve the bot from the database, returning 404 if not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("Вы не являетесь владельцем данного бота.")
+
+        # Render the template with the bot context
+        return render(
+            request,
+            self.template_name,
+            {"bot": bot},
         )
+
+    def post(self, request, bot_id: int) -> HttpResponse:
+        """
+        Handles POST requests to create a new button.
+
+        Args:
+            request (HttpRequest): The incoming HTTP request.
+            bot_id (int): The ID of the bot for which the button is being created.
+
+        Returns:
+            HttpResponse: Redirects to the bot's main menu or the form with error messages.
+
+        Raises:
+            Http404: If the bot does not exist or the user is not the owner.
+        """
+        # Retrieve the bot object or return a 404 error if the bot is not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Validate the form data
+        form = BotMainMenuButtonForm(request.POST)
+        if not form.is_valid():
+            # If the form is invalid, show an error message and redirect
+            messages.error(request, "Проверьте правильность данных.")
+            return redirect("create-bot-main-menu-button", bot_id=bot.id)
+
+        # Extract button text and reply text from the form
+        button_text: str = form.cleaned_data["button_text"]
+        reply_text: str = form.cleaned_data["reply_text"]
+
+        try:
+            # Create the bot's main menu button via the Bot-Service API
+            create_main_menu_button(bot.bot_id, button_text, reply_text)
+        except Exception as e:
+            # Log the error if the API request fails
+            logger.error(
+                f"Failed to create bot's main menu button. Bot ID: {bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # If an API error occurs, show an error message and redirect
+            messages.error(
+                request,
+                "Ошибка при создании кнопки. Проверьте формат данных!",
+            )
+            return redirect("create-bot-main-menu", bot_id=bot.id)
+
+        # If everything is successful, show a success message and redirect
+        messages.success(request, "Кнопка успешно создана.")
+        return redirect("bot-main-menu", bot_id=bot.id)
+
+
+class DeleteBotMainMenuButtonView(LoginRequiredMixin, View):
+    """
+    A view for deleting a main menu button for a bot.
+
+    This view handles POST requests to delete a button via the Bot-Service API.
+    """
+
+    def post(self, request, bot_id, button_id):
+        """
+        Handles POST requests to delete a bot's main menu button.
+
+        Args:
+            request (HttpRequest): The incoming HTTP request.
+            bot_id (int): The ID of the bot associated with the button.
+            button_id (int): The ID of the button to be deleted.
+
+        Returns:
+            HttpResponse: Redirects to the bot's main menu with a success or error message.
+
+        Raises:
+            Http404: If the bot does not exist or the user is not the owner.
+        """
+        # Retrieve the bot object or return a 404 error if the bot is not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("Вы не являетесь владельцем данного бота.")
+
+        try:
+            # Delete the button via the Bot-Service API
+            delete_bot_main_menu_button(button_id)
+        except Exception as e:
+            # Log the error if the API request fails
+            logger.error(
+                f"Failed to delete button. Button ID: {button_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # If an error occurs, show an error message and redirect
+            messages.error(
+                request, "Ошибка при удалении кнопки. Попробуйте позже."
+            )
+            return redirect("bot-main-menu", bot_id=bot_id)
+
+        # If successful, show a success message and redirect
+        messages.success(request, "Кнопка успешно удалена.")
+        return redirect("bot-main-menu", bot_id=bot_id)

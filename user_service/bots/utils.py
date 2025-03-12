@@ -270,3 +270,83 @@ def update_main_menu_button(
         raise RequestException(
             f"Failed to update bot's main menu button: {str(e)}"
         )
+
+
+def create_main_menu_button(
+    bot_id: int, button_text: str, reply_text: str
+) -> Optional[Dict[str, Any]]:
+    """
+    Creates a new main menu button for a bot.
+
+    Args:
+        bot_id (int): The ID of the bot for which the button is being created.
+        button_text (str): The text that will be displayed on the button.
+        reply_text (str): The text that will be sent as a reply when the button is clicked.
+
+    Returns:
+        Optional[Dict[str, Any]]: A dictionary containing the created button's data if successful,
+                                  otherwise None.
+
+    Raises:
+        RequestException: If the API request fails or the response is invalid.
+    """
+    try:
+        # Send a POST request to create a main menu button
+        response = requests.post(
+            f"{BOT_SERVICE_API_URL}main-menu/button",
+            json={
+                "bot_id": bot_id,
+                "button_text": button_text,
+                "reply_text": reply_text,
+            },
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        # Parse the JSON response
+        data = response.json()
+
+        # Ensure the response data is a dictionary
+        if not isinstance(data, dict):
+            raise RequestException(
+                "Invalid response format: expected a dictionary."
+            )
+
+        return data
+
+    except RequestException as e:
+        # Log the error if the API request fails
+        logger.error(
+            f"Failed to create bot's main menu button. Bot ID: {bot_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(
+            f"Failed to create bot's main menu button: {str(e)}"
+        )
+
+
+def delete_bot_main_menu_button(button_id: int) -> None:
+    """
+    Deletes a main menu button for a bot.
+
+    Args:
+        button_id (int): The ID of the button to be deleted.
+
+    Raises:
+        RequestException: If the API request fails.
+    """
+    try:
+        # Send a DELETE request to remove the main menu button
+        response = requests.delete(
+            f"{BOT_SERVICE_API_URL}main-menu/button/{button_id}",
+        )
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+    except RequestException as e:
+        # Log the error if the API request fails
+        logger.error(
+            f"Failed to delete bot's main menu button. Button ID: {button_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        raise RequestException(
+            f"Failed to delete bot's main menu button: {str(e)}"
+        )
