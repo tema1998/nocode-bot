@@ -2,7 +2,8 @@ import logging
 import secrets
 from typing import Any, Dict
 
-from bot_service.models.bot import Bot, MainMenu
+from bot_service.models.bot import Bot
+from bot_service.models.main_menu import MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
     get_repository,

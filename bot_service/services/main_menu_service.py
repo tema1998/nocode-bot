@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict
 
-from bot_service.models.bot import Button, MainMenu
+from bot_service.models.main_menu import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
     get_repository,

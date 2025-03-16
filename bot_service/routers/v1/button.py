@@ -1,4 +1,4 @@
-from bot_service.models.bot import (
+from bot_service.models.main_menu import (
     Button,
 )
 from bot_service.repositories.async_pg_repository import (
