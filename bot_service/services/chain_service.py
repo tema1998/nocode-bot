@@ -62,7 +62,7 @@ class ChainService:
         )
         if not chain:
             if update.message is not None:
-                await update.message.reply_text("Chain not found.")
+                await update.message.reply_text("Цепочка не найдена.")
             return
 
         # Fetch the first step of the chain
@@ -71,7 +71,7 @@ class ChainService:
         )
         if not first_step:
             if update.message is not None:
-                await update.message.reply_text("Error: First step not found.")
+                await update.message.reply_text("Первый шаг цепочки не задан.")
             return
 
         # Save the user's state in the database

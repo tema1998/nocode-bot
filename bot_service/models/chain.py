@@ -8,9 +8,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from .base import Base
+from .mixin import TimeStampedMixin
 
 
-class UserState(Base):
+class UserState(Base, TimeStampedMixin):
     __tablename__ = "user_state"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
