@@ -8,7 +8,6 @@ from bot_service.routers.v1 import (
     bot,
     button,
     command,
-    funnel,
     main_menu,
     webhook,
 )
@@ -84,6 +83,5 @@ app.include_router(
     main_menu.router, prefix="/api/v1/main-menu", tags=["main-menu"]
 )
 app.include_router(button.router, prefix="/api/v1/button", tags=["button"])
-app.include_router(funnel.router, prefix="/api/v1/funnel", tags=["funnel"])
 app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
 app.include_router(command.router, prefix="/api/v1/command", tags=["command"])

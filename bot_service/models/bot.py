@@ -2,7 +2,7 @@ from datetime import datetime
 
 from bot_service.db.db_utils import Base
 from sqlalchemy import (
-    JSON,
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -49,6 +49,9 @@ class Bot(Base, TimeStampedMixin):
     username = Column(String)
     main_menu = relationship("MainMenu", back_populates="bot", uselist=False)
     buttons = relationship("Button", back_populates="bot")
+    chains = relationship(
+        "Chain", back_populates="bot", cascade="all, delete-orphan"
+    )
 
 
 class Button(Base, TimeStampedMixin):
@@ -58,12 +61,13 @@ class Button(Base, TimeStampedMixin):
     id = Column(Integer, primary_key=True, index=True)
     button_text = Column(String(64), nullable=False)
     reply_text = Column(String(3000), nullable=True)
-    funnel_id = Column(Integer, ForeignKey("funnels.id"))
-    funnel = relationship("Funnel")
     main_menu_id = Column(Integer, ForeignKey("main_menu.id"), nullable=True)
-    main_menu = relationship("MainMenu", back_populates="buttons")
     bot_id = Column(Integer, ForeignKey("bots.id"), index=True)
+    chain_id = Column(Integer, ForeignKey("chains.id"), nullable=True)
+
+    main_menu = relationship("MainMenu", back_populates="buttons")
     bot = relationship("Bot", back_populates="buttons")
+    chain = relationship("Chain", back_populates="buttons")
 
 
 class MainMenu(Base):
@@ -77,52 +81,100 @@ class MainMenu(Base):
     buttons = relationship("Button", back_populates="main_menu")
 
 
-class Funnel(Base):
-    """Model representing a funnel that groups steps for a chatbot."""
-
-    __tablename__ = "funnels"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    bot_id = Column(Integer, ForeignKey("bots.id"))
-    steps = relationship("FunnelStep", back_populates="funnel")
-
-
-class FunnelStep(Base):
-    """Model representing a step within a funnel."""
-
-    __tablename__ = "funnel_steps"
-    id = Column(Integer, primary_key=True, index=True)
-    funnel_id = Column(Integer, ForeignKey("funnels.id"))
-    text = Column(String(3000))
-    funnel_buttons = relationship(
-        "FunnelButton",
-        back_populates="step",
-        foreign_keys="FunnelButton.step_id",
-    )
-    funnel = relationship("Funnel", back_populates="steps")
-
-
-class FunnelButton(Base):
-    """Model representing a button that triggers actions in a funnel step."""
-
-    __tablename__ = "funnel_buttons"
-    id = Column(Integer, primary_key=True, index=True)
-    step_id = Column(Integer, ForeignKey("funnel_steps.id"))
-    text = Column(String)
-    next_step_id = Column(Integer, ForeignKey("funnel_steps.id"))
-    step = relationship(
-        "FunnelStep", back_populates="funnel_buttons", foreign_keys=[step_id]
-    )
-    next_step = relationship("FunnelStep", foreign_keys=[next_step_id])
-
-
 class UserState(Base):
-    """Model representing the state of a user interacting with a chatbot."""
+    __tablename__ = "user_state"
 
-    __tablename__ = "user_states"
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer)
-    bot_id = Column(Integer, ForeignKey("bots.id"))
-    funnel_id = Column(Integer, ForeignKey("funnels.id"))
-    current_step_id = Column(Integer, ForeignKey("funnel_steps.id"))
-    data = Column(JSON)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False)  # ID пользователя в Telegram
+    bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)  # ID бота
+    chain_id = Column(
+        Integer, ForeignKey("chains.id"), nullable=True
+    )  # Текущая цепочка
+    step_id = Column(
+        Integer, ForeignKey("chain_steps.id"), nullable=True
+    )  # Текущий шаг
+
+    # Связь с цепочкой и шагом
+    chain = relationship("Chain", foreign_keys=[chain_id])
+    step = relationship("ChainStep", foreign_keys=[step_id])
+
+
+class Chain(Base):
+    __tablename__ = "chains"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    bot_id = Column(
+        Integer, ForeignKey("bots.id"), nullable=False
+    )  # Связь с ботом
+    name = Column(String, nullable=False)  # Название цепочки
+    start_message = Column(
+        String, nullable=False
+    )  # Начальное сообщение цепочки
+    first_chain_step_id = Column(
+        Integer, ForeignKey("chain_steps.id"), nullable=True
+    )
+
+    first_chain_step = relationship(
+        "ChainStep", foreign_keys=[first_chain_step_id], post_update=True
+    )
+    buttons = relationship("Button", back_populates="chain")
+    steps = relationship(
+        "ChainStep",
+        back_populates="chain",
+        cascade="all, delete-orphan",
+        foreign_keys="[ChainStep.chain_id]",
+    )
+    bot = relationship("Bot", back_populates="chains")
+
+
+class ChainButton(Base):
+    __tablename__ = "chain_buttons"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    step_id = Column(
+        Integer, ForeignKey("chain_steps.id"), nullable=False
+    )  # Связь с шагом
+    text = Column(String, nullable=False)  # Текст кнопки
+    callback = Column(String, nullable=True)  # Данные для callback
+
+    # Keep the relationship to ChainStep, ensure foreign_keys are explicitly defined.
+    step = relationship(
+        "ChainStep", back_populates="chain_buttons", foreign_keys=[step_id]
+    )
+
+    # If using next_step, specify foreign key as well.
+    next_step_id = Column(
+        Integer, ForeignKey("chain_steps.id")
+    )  # Ensure there is also a defined foreign key
+    next_step = relationship("ChainStep", foreign_keys=[next_step_id])
+
+
+class ChainStep(Base):
+    __tablename__ = "chain_steps"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chain_id = Column(
+        Integer, ForeignKey("chains.id"), nullable=False
+    )  # Связь с цепочкой
+    message = Column(String, nullable=False)  # Сообщение на этом шаге
+
+    # Relationship to ChainButton
+    chain_buttons = relationship(
+        "ChainButton",
+        back_populates="step",
+        foreign_keys=[ChainButton.step_id],
+    )
+
+    # Specify foreign_keys argument explicitly to eliminate ambiguity
+    buttons = relationship(
+        "ChainButton",
+        back_populates="step",
+        cascade="all, delete-orphan",
+        foreign_keys=[
+            ChainButton.step_id
+        ],  # Specify here which foreign key to use
+    )
+
+    chain = relationship(
+        "Chain", back_populates="steps", foreign_keys=[chain_id]
+    )
