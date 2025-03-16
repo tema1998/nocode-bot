@@ -1,4 +1,3 @@
-from bot_service.db.db_utils import Base
 from bot_service.models.mixin import TimeStampedMixin
 from sqlalchemy import (
     Column,
@@ -7,6 +6,8 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import relationship
+
+from .base import Base
 
 
 class Button(Base, TimeStampedMixin):

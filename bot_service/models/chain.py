@@ -1,4 +1,3 @@
-from bot_service.db.db_utils import Base
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -7,6 +6,8 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import relationship
+
+from .base import Base
 
 
 class UserState(Base):
