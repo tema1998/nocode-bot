@@ -51,8 +51,7 @@ class WebhookService:
             dict: A status message indicating the result of the operation.
 
         Raises:
-            HTTPException: If the bot is not found or is deactivated.
-            ValueError: If the update data is invalid.
+            HTTPException: If the bot is not found, is deactivated, or the update data is invalid.
         """
         # Fetch the bot from the database
         bot = await self.db_repository.fetch_by_id_joinedload(
@@ -70,7 +69,9 @@ class WebhookService:
         # Convert JSON to Update object
         update = Update.de_json(update_data, application.bot)
         if update is None:
-            raise ValueError("Failed to parse update data.")
+            raise HTTPException(
+                status_code=400, detail="Failed to parse update data."
+            )
 
         # Process the update based on its type
         if update.callback_query is not None:
@@ -80,7 +81,9 @@ class WebhookService:
         elif update.message is not None:
             await self._handle_button_press(bot, update)
         else:
-            raise ValueError("Unsupported update type.")
+            raise HTTPException(
+                status_code=400, detail="Unsupported update type."
+            )
 
         return {"status": "ok"}
 
@@ -96,7 +99,7 @@ class WebhookService:
             chain_id (int): The ID of the chain to start.
 
         Raises:
-            ValueError: If the update has no valid user ID.
+            HTTPException: If the update has no valid user ID or the chain/step is not found.
         """
         if (
             update.callback_query is not None
@@ -108,7 +111,9 @@ class WebhookService:
         ):
             user_id = update.message.from_user.id
         else:
-            raise ValueError("Update has no valid user ID.")
+            raise HTTPException(
+                status_code=400, detail="Update has no valid user ID."
+            )
 
         # Fetch the chain from the database
         chain = await self.db_repository.fetch_by_query_one(
@@ -149,10 +154,13 @@ class WebhookService:
             update (Update): The incoming update from Telegram.
 
         Raises:
-            ValueError: If the callback query or its data is invalid.
+            HTTPException: If the callback query or its data is invalid.
         """
         if update.callback_query is None or update.callback_query.data is None:
-            raise ValueError("Callback query or its data is missing.")
+            raise HTTPException(
+                status_code=400,
+                detail="Callback query or its data is missing.",
+            )
 
         # Parse callback data from the inline button
         callback_data = json.loads(update.callback_query.data)
@@ -160,7 +168,9 @@ class WebhookService:
         user_state_id = callback_data.get("user_state_id")
 
         if button_id is None or user_state_id is None:
-            raise ValueError("Invalid callback data.")
+            raise HTTPException(
+                status_code=400, detail="Invalid callback data."
+            )
 
         # Fetch the user's current state
         user_state = await self.db_repository.fetch_by_query_one(
@@ -210,7 +220,7 @@ class WebhookService:
             user_state (UserState): The user's current state.
 
         Raises:
-            ValueError: If the update has no valid message or callback query.
+            HTTPException: If the update has no valid message or callback query.
         """
         # Fetch buttons for the current step
         buttons = await self.db_repository.fetch_by_query(
@@ -250,7 +260,10 @@ class WebhookService:
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
         else:
-            raise ValueError("Update has no valid message or callback query.")
+            raise HTTPException(
+                status_code=400,
+                detail="Update has no valid message or callback query.",
+            )
 
     async def _handle_start_command(self, bot: Bot, update: Update) -> None:
         """
@@ -261,10 +274,12 @@ class WebhookService:
             update (Update): The incoming update from Telegram.
 
         Raises:
-            ValueError: If the update has no message.
+            HTTPException: If the update has no message.
         """
         if update.message is None:
-            raise ValueError("Update has no message.")
+            raise HTTPException(
+                status_code=400, detail="Update has no message."
+            )
 
         # Create a default keyboard
         keyboard = [
@@ -308,10 +323,12 @@ class WebhookService:
             update (Update): The incoming update from Telegram.
 
         Raises:
-            ValueError: If the update has no message.
+            HTTPException: If the update has no message.
         """
         if update.message is None:
-            raise ValueError("Update has no message.")
+            raise HTTPException(
+                status_code=400, detail="Update has no message."
+            )
 
         # Fetch the button from the database
         button = await self.db_repository.fetch_by_query_one(
