@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Type, Union
 from uuid import UUID
 
@@ -123,6 +124,38 @@ class PostgresAsyncRepository(AsyncDataRepository):
                 conditions.append(getattr(model_class, column) == value)
 
             stmt = select(model_class).where(and_(*conditions))
+
+            result = await session.execute(stmt)
+            item = result.scalars().one_or_none()
+
+            return item
+
+    async def fetch_by_query_one_last_updated(
+        self, model_class: Type[Base], filters: Dict[str, Any]
+    ) -> Union[None, Base]:
+        """
+        Fetch one record based on a set of filters.
+
+        Args:
+            model_class (Type[Base]): The ORM model class to query.
+            filters (Dict[str, Any]): A dictionary of filters to apply to the query.
+
+        Returns:
+            Union[None, Base]: The fetched record or None if none found.
+        """
+        async with self.async_session() as session:
+            conditions = []
+
+            # Build conditions from filters
+            for column, value in filters.items():
+                conditions.append(getattr(model_class, column) == value)
+
+            stmt = (
+                select(model_class)
+                .where(and_(*conditions))
+                .order_by(model_class.updated_at.desc())
+                .limit(1)
+            )
 
             result = await session.execute(stmt)
             item = result.scalars().one_or_none()
@@ -289,6 +322,9 @@ class PostgresAsyncRepository(AsyncDataRepository):
             obj_dict = {
                 c.name: getattr(obj, c.name) for c in obj.__table__.columns
             }
+
+            if "updated_at" in obj_dict:
+                obj_dict["updated_at"] = datetime.now()
 
             stmt = (
                 update(obj.__class__)

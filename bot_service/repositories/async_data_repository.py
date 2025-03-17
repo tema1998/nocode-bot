@@ -34,6 +34,13 @@ class AsyncDataRepository(ABC):
         """Fetch record based on a query from the specified indices (e.g., table, collection)."""
         pass
 
+    @abstractmethod
+    async def fetch_by_query_one_last_updated(
+        self, model_class: Type[Base], filters: Dict[str, Any]
+    ) -> Union[None, Base]:
+        pass
+
+    @abstractmethod
     async def fetch_by_query_joinedload(
         self,
         model_class: Type[Base],
