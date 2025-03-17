@@ -1,5 +1,7 @@
 from sqlalchemy import (
+    JSON,
     BigInteger,
+    Boolean,
     Column,
     ForeignKey,
     Integer,
@@ -19,6 +21,8 @@ class UserState(Base, TimeStampedMixin):
     bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=True)
     step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=True)
+    expects_text_input = Column(Boolean, default=False)
+    result = Column(JSON, nullable=True)
 
     chain = relationship("Chain", foreign_keys=[chain_id])
     step = relationship("ChainStep", foreign_keys=[step_id])
@@ -72,6 +76,8 @@ class ChainStep(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=False)
     message = Column(String, nullable=False)  # Сообщение на этом шаге
+    next_step_id = Column(Integer, ForeignKey("chain_steps.id"))
+    text_input = Column(Boolean, default=False)
 
     chain_buttons = relationship(
         "ChainButton",
@@ -89,3 +95,5 @@ class ChainStep(Base):
     chain = relationship(
         "Chain", back_populates="steps", foreign_keys=[chain_id]
     )
+
+    next_step = relationship("ChainStep", foreign_keys=[next_step_id])

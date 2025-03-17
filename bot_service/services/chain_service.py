@@ -16,7 +16,8 @@ from telegram import (
 
 class ChainService:
     """
-    Service to handle chain-related operations for the bot.
+    Service to handle chain-related operations for the bot, including starting chains,
+    processing steps, handling text input, and sending messages with inline keyboards.
     """
 
     def __init__(self, db_repository: PostgresAsyncRepository):
@@ -42,14 +43,10 @@ class ChainService:
         Raises:
             HTTPException: If the update has no valid user ID or the chain/step is not found.
         """
-        if (
-            update.callback_query is not None
-            and update.callback_query.from_user is not None
-        ):
+        # Extract user ID from the update (either from callback_query or message)
+        if update.callback_query and update.callback_query.from_user:
             user_id = update.callback_query.from_user.id
-        elif (
-            update.message is not None and update.message.from_user is not None
-        ):
+        elif update.message and update.message.from_user:
             user_id = update.message.from_user.id
         else:
             raise HTTPException(
@@ -61,7 +58,7 @@ class ChainService:
             Chain, {"id": chain_id}
         )
         if not chain:
-            if update.message is not None:
+            if update.message:
                 await update.message.reply_text("Цепочка не найдена.")
             return
 
@@ -70,7 +67,7 @@ class ChainService:
             ChainStep, {"id": chain.first_chain_step_id}
         )
         if not first_step:
-            if update.message is not None:
+            if update.message:
                 await update.message.reply_text("Первый шаг цепочки не задан.")
             return
 
@@ -80,24 +77,27 @@ class ChainService:
             bot_id=bot_id,
             chain_id=chain.id,
             step_id=first_step.id,
+            expects_text_input=bool(
+                first_step.text_input
+            ),  # Set expects_text_input based on the step
         )
         await self.db_repository.insert(user_state)
 
         # Send the message and inline buttons for the first step
         await self.send_step_message(update, first_step, user_state)
 
-    async def process_chain_step(self, bot_id: int, update: Update) -> None:
+    async def process_chain_step(self, update: Update) -> None:
         """
         Process the current step in the chain and move to the next step.
 
         Args:
-            bot_id (int): The ID of the bot.
             update (Update): The incoming update from Telegram.
 
         Raises:
             HTTPException: If the callback query or its data is invalid.
         """
-        if update.callback_query is None or update.callback_query.data is None:
+        # Validate that the update contains a callback query and data
+        if not update.callback_query or update.callback_query.data is None:
             raise HTTPException(
                 status_code=400,
                 detail="Callback query or its data is missing.",
@@ -108,26 +108,27 @@ class ChainService:
         button_id = callback_data.get("button_id")
         user_state_id = callback_data.get("user_state_id")
 
+        # Validate that the callback data contains required fields
         if button_id is None or user_state_id is None:
             raise HTTPException(
                 status_code=400, detail="Invalid callback data."
             )
 
-        # Fetch the user's current state
+        # Fetch the user's current state from the database
         user_state = await self.db_repository.fetch_by_query_one(
             UserState, {"id": user_state_id}
         )
         if not user_state:
             return
 
-        # Fetch the button that was pressed
+        # Fetch the button that was pressed from the database
         button = await self.db_repository.fetch_by_query_one(
             ChainButton, {"id": button_id}
         )
         if not button:
             return
 
-        # Acknowledge the callback query
+        # Acknowledge the callback query to Telegram
         await update.callback_query.answer()
 
         # Update the message with the button's callback text
@@ -144,10 +145,63 @@ class ChainService:
 
         # Update the user's state to the next step
         user_state.step_id = next_step.id
+
+        # Set expects_text_input based on the next step's configuration
+        user_state.expects_text_input = bool(next_step.text_input)
+
+        # Save the updated user state to the database
         await self.db_repository.update(user_state)
 
         # Send the message and buttons for the next step
         await self.send_step_message(update, next_step, user_state)
+
+    async def handle_chain_text_input(
+        self, update: Update, user_state: UserState
+    ) -> None:
+        """
+        Handle text input from the user during a chain step.
+
+        Args:
+            update (Update): The incoming update from Telegram.
+            user_state (UserState): The user's current state.
+        """
+        # Get the text input from the user's message
+        if not update.message:
+            return
+        text_input = update.message.text
+
+        # Reply to the user with the text they entered
+        await update.message.reply_text(f"Вы напечатали: {text_input}")
+
+        # TODO: Save the text answer to the result (to be implemented)
+
+        # Fetch the current step from the database
+        current_step = await self.db_repository.fetch_by_id(
+            ChainStep, int(user_state.step_id)
+        )
+        if not current_step:
+            return  # Обработка случая, когда шаг не найден
+
+        # If there is a next step, move to it
+        if current_step.next_step_id:
+            next_step = await self.db_repository.fetch_by_id(
+                ChainStep, current_step.next_step_id
+            )
+            if not next_step:
+                return  # Обработка случая, когда следующий шаг не найден
+
+            # Update the user's state to the next step
+            user_state.step_id = next_step.id
+
+            # Set expects_text_input based on the next step's configuration
+            user_state.expects_text_input = next_step.text_input
+
+            # Send the message and buttons for the next step
+            await self.send_step_message(update, next_step, user_state)
+
+        # Update expects_text_input and save the user's state in the database
+        user_state.expects_text_input = False  # type: ignore
+        await self.db_repository.update(user_state)
 
     async def send_step_message(
         self, update: Update, step: ChainStep, user_state: UserState
@@ -163,13 +217,16 @@ class ChainService:
         Raises:
             HTTPException: If the update has no valid message or callback query.
         """
-        # Fetch buttons for the current step
+        # Fetch buttons for the current step from the database
         buttons = await self.db_repository.fetch_by_query(
             ChainButton, {"step_id": step.id}
         )
 
-        if buttons:
-            # Create inline keyboard buttons
+        # If there are no buttons or the step expects text input, use an empty keyboard
+        if not buttons or step.text_input:
+            keyboard = []
+        else:
+            # Create inline keyboard buttons for the step
             keyboard = [
                 [
                     InlineKeyboardButton(
@@ -184,18 +241,16 @@ class ChainService:
                 ]
                 for button in buttons
             ]
-        else:
-            keyboard = []
 
         # Send the message with inline buttons
-        if update.callback_query is not None and isinstance(
+        if update.callback_query and isinstance(
             update.callback_query.message, Message
         ):
             await update.callback_query.message.reply_text(
                 str(step.message),
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
-        elif update.message is not None:
+        elif update.message:
             await update.message.reply_text(
                 str(step.message),
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -214,5 +269,4 @@ async def get_chain_service() -> ChainService:
     Returns:
         ChainService: An instance of ChainService.
     """
-
     return ChainService(db_repository=PostgresAsyncRepository(dsn=config.dsn))

@@ -1,4 +1,5 @@
 from bot_service.core.configs import config
+from bot_service.models import UserState
 from bot_service.models.bot import Bot
 from bot_service.models.main_menu import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
@@ -66,11 +67,11 @@ class WebhookService:
 
         # Process the update based on its type
         if update.callback_query is not None:
-            await self.chain_service.process_chain_step(bot.id, update)
+            await self.chain_service.process_chain_step(update)
         elif update.message is not None and update.message.text == "/start":
             await self._handle_start_command(bot, update)
         elif update.message is not None:
-            await self._handle_button_press(bot, update)
+            await self._handle_message(bot, update)
         else:
             raise HTTPException(
                 status_code=400, detail="Unsupported update type."
@@ -138,10 +139,9 @@ class WebhookService:
         Raises:
             HTTPException: If the update has no message.
         """
-        if update.message is None:
-            raise HTTPException(
-                status_code=400, detail="Update has no message."
-            )
+
+        if not update.message:
+            return
 
         # Fetch the button from the database
         button = await self.db_repository.fetch_by_query_one(
@@ -168,6 +168,27 @@ class WebhookService:
                 if bot.default_reply
                 else config.bot_default_reply
             )
+
+    async def _handle_message(self, bot: Bot, update: Update) -> None:
+
+        if not update.message or not update.message.from_user:
+            return
+        # Get user state
+        user_state = await self.db_repository.fetch_by_query_one_last_updated(
+            UserState,
+            {
+                "user_id": update.message.from_user.id,
+                "expects_text_input": True,
+            },
+        )
+
+        # Check user.state.expects_text_input
+        if user_state:
+            await self.chain_service.handle_chain_text_input(
+                update, user_state
+            )
+        else:
+            await self._handle_button_press(bot, update)
 
 
 async def get_webhook_service() -> WebhookService:
