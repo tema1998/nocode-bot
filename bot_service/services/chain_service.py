@@ -136,6 +136,11 @@ class ChainService:
             f"You pressed: {button.callback}"
         )
 
+        # Save result to JSON
+        await self._save_chain_step_result(
+            user_state, user_state.step_id, button.callback
+        )
+
         # Fetch the next step in the chain
         next_step = await self.db_repository.fetch_by_id(
             ChainStep, button.next_step_id
@@ -173,14 +178,17 @@ class ChainService:
         # Reply to the user with the text they entered
         await update.message.reply_text(f"Вы напечатали: {text_input}")
 
-        # TODO: Save the text answer to the result (to be implemented)
-
         # Fetch the current step from the database
         current_step = await self.db_repository.fetch_by_id(
             ChainStep, int(user_state.step_id)
         )
         if not current_step:
-            return  # Обработка случая, когда шаг не найден
+            return
+
+        # Save result to JSON
+        await self._save_chain_step_result(
+            user_state, current_step.id, text_input
+        )
 
         # If there is a next step, move to it
         if current_step.next_step_id:
@@ -201,6 +209,41 @@ class ChainService:
 
         # Update expects_text_input and save the user's state in the database
         user_state.expects_text_input = False  # type: ignore
+        await self.db_repository.update(user_state)
+
+    async def _save_chain_step_result(
+        self, user_state: UserState, step_id: int, result: str | None
+    ) -> None:
+        """
+        Save the result of a specific step in the user's state.
+
+        This method updates the result attribute of the provided UserState object
+        by adding or updating the result corresponding to the given step ID.
+        If the result attribute is None, it initializes it as an empty dictionary
+        before updating.
+
+        Parameters:
+        ----------
+        user_state : UserState
+            The current state of the user, containing results of previous steps.
+
+        step_id : int
+            The identifier of the step whose result is being saved.
+
+        result : str
+            The result of the step to be saved.
+
+        Returns
+        -------
+        None
+            This method does not return a value. It updates the user state
+            and saves changes to the database asynchronously.
+        """
+        if user_state.result is None:
+            user_state.result = {}
+
+        user_state.result.update({step_id: result})
+
         await self.db_repository.update(user_state)
 
     async def send_step_message(
