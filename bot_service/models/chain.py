@@ -23,6 +23,7 @@ class UserState(Base, TimeStampedMixin):
     step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=True)
     expects_text_input = Column(Boolean, default=False)
     result = Column(JSON, nullable=True)
+    last_message_id = Column(Integer, nullable=True, default=None)
 
     chain = relationship("Chain", foreign_keys=[chain_id])
     step = relationship("ChainStep", foreign_keys=[step_id])
