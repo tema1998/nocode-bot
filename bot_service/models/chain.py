@@ -34,8 +34,7 @@ class Chain(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
-    name = Column(String, nullable=False)
-    start_message = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     first_chain_step_id = Column(
         Integer, ForeignKey("chain_steps.id"), nullable=True
     )

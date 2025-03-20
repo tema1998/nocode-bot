@@ -7,6 +7,7 @@ from bot_service.repositories.async_pg_repository import get_repository
 from bot_service.routers.v1 import (
     bot,
     button,
+    chain,
     command,
     main_menu,
     webhook,
@@ -85,3 +86,4 @@ app.include_router(
 app.include_router(button.router, prefix="/api/v1/button", tags=["button"])
 app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
 app.include_router(command.router, prefix="/api/v1/command", tags=["command"])
+app.include_router(chain.router, prefix="/api/v1/chain", tags=["chain"])

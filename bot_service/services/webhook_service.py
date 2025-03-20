@@ -5,7 +5,10 @@ from bot_service.models.main_menu import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
 )
-from bot_service.services.chain_service import ChainService, get_chain_service
+from bot_service.services.chain_handler_service import (
+    ChainHandlerService,
+    get_chain_handler_service,
+)
 from fastapi import HTTPException
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import Application
@@ -19,17 +22,17 @@ class WebhookService:
     def __init__(
         self,
         db_repository: PostgresAsyncRepository,
-        chain_service: ChainService,
+        chain_handler_service: ChainHandlerService,
     ):
         """
         Initialize the WebhookService with a database repository and a chain service.
 
         Args:
             db_repository (PostgresAsyncRepository): The repository for database operations.
-            chain_service (ChainService): The service for handling chain-related operations.
+            chain_handler_service (ChainHandlerService): The service for handling chain-related operations.
         """
         self.db_repository = db_repository
-        self.chain_service = chain_service
+        self.chain_handler_service = chain_handler_service
 
     async def handle_webhook(self, bot_id: int, update_data: dict) -> dict:
         """
@@ -67,7 +70,7 @@ class WebhookService:
 
         # Process the update based on its type
         if update.callback_query is not None:
-            await self.chain_service.process_chain_step(update)
+            await self.chain_handler_service.process_chain_step(update)
         elif update.message is not None and update.message.text == "/start":
             await self._handle_start_command(bot, update)
         elif update.message is not None:
@@ -154,7 +157,7 @@ class WebhookService:
 
         if button and button.chain_id:
             # Start a chain if the button is linked to one
-            await self.chain_service.start_chain(
+            await self.chain_handler_service.start_chain(
                 int(bot.id), update, button.chain_id
             )
         elif button and button.reply_text:
@@ -184,7 +187,7 @@ class WebhookService:
 
         # Check user.state.expects_text_input
         if user_state:
-            await self.chain_service.handle_chain_text_input(
+            await self.chain_handler_service.handle_chain_text_input(
                 update, user_state
             )
         else:
@@ -201,5 +204,5 @@ async def get_webhook_service() -> WebhookService:
 
     return WebhookService(
         db_repository=PostgresAsyncRepository(dsn=config.dsn),
-        chain_service=await get_chain_service(),
+        chain_handler_service=await get_chain_handler_service(),
     )
