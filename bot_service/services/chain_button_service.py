@@ -177,6 +177,89 @@ class ChainButtonService:
                 detail="Failed to delete chain button",
             )
 
+    async def set_next_chain_step_to_button(
+        self, button_id: int, next_chain_step_id: int
+    ) -> None:
+        """
+        Set the next chain step for a button.
+
+        Args:
+            button_id (int): The ID of the button to update.
+            next_chain_step_id (int): The ID of the chain step to set as the next step.
+
+        Raises:
+            HTTPException: If the operation fails due to an internal error.
+        """
+        try:
+            # Call the internal method to update the button's next_step_id
+            await self._set_next_step_for_button(
+                button_id=int(button_id),  # Ensure button_id is an integer
+                next_chain_step_id=int(
+                    next_chain_step_id
+                ),  # Ensure next_chain_step_id is an integer
+            )
+        except HTTPException:
+            # Re-raise HTTPException if it was raised in the internal method
+            raise
+        except Exception as e:
+            # Log the error and raise a 500 Internal Server Error for unexpected failures
+            logger.error(f"Failed to set next chain step to button: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to set next chain step to button.",
+            )
+
+    async def _set_next_step_for_button(
+        self, button_id: int, next_chain_step_id: int
+    ) -> None:
+        """
+        Internal method to update the next_step_id for a button.
+
+        Args:
+            button_id (int): The ID of the button to update.
+            next_chain_step_id (int): The ID of the chain step to set as the next step.
+
+        Raises:
+            HTTPException: If the button is not found, or if the next step is invalid.
+        """
+        try:
+            # Fetch the button from the database
+            button = await self.db_repository.fetch_by_id(
+                ChainButton, button_id
+            )
+            if button is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Button with ID {button_id} not found.",
+                )
+
+            # Prevent setting the current step as the next step (infinite loop)
+            if button.step_id == next_chain_step_id:
+                logger.error(
+                    f"Cannot set current step as next step. "
+                    f"step_id = {button.step_id}, button_id = {button.id}, "
+                    f"next_chain_step_id = {next_chain_step_id}"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot set the current step as the next step.",
+                )
+
+            # Update the button's next_step_id
+            button.next_step_id = next_chain_step_id  # type: ignore
+            await self.db_repository.update(button)
+
+        except HTTPException:
+            # Re-raise HTTPException if it was raised in this method
+            raise
+        except Exception as e:
+            # Log the error and raise a 500 Internal Server Error for unexpected failures
+            logger.error(f"Failed to set next step for button: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to set next step for button.",
+            )
+
 
 async def get_chain_button_service() -> ChainButtonService:
     """

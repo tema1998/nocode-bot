@@ -21,3 +21,7 @@ class ChainButtonResponse(BaseModel):
     text: str
     callback: Optional[str]
     next_step_id: Optional[int]
+
+
+class SetNextChainStepForButton(BaseModel):
+    next_chain_step_id: int

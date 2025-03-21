@@ -2,6 +2,7 @@ from bot_service.schemas.chain_button import (
     ChainButtonCreate,
     ChainButtonResponse,
     ChainButtonUpdate,
+    SetNextChainStepForButton,
 )
 from bot_service.services.chain_button_service import (
     ChainButtonService,
@@ -125,3 +126,26 @@ async def delete_chain_button(
     ),
 ) -> None:
     await chain_button_service.delete_chain_button(chain_button_id)
+
+
+@router.post(
+    "/set-next-step/{button_id}",
+    status_code=status.HTTP_200_OK,  # Use 200 OK since this is an update operation, not a creation
+    summary="Set the next chain step for a button",
+    description="Set the next chain step for a button by updating its `next_step_id`. "
+    "This allows linking a button to a specific chain step.",
+    response_description="Confirmation of the update.",
+)
+async def set_next_chain_step_to_button(
+    button_id: int,
+    data: SetNextChainStepForButton,
+    chain_button_service: ChainButtonService = Depends(
+        get_chain_button_service
+    ),
+) -> dict:
+
+    await chain_button_service.set_next_chain_step_to_button(
+        button_id=button_id,
+        next_chain_step_id=data.next_chain_step_id,
+    )
+    return {"message": "Next chain step for button updated successfully"}
