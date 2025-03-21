@@ -36,7 +36,9 @@ class Chain(Base):
     bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
     name = Column(String, nullable=False, unique=True)
     first_chain_step_id = Column(
-        Integer, ForeignKey("chain_steps.id"), nullable=True
+        Integer,
+        ForeignKey("chain_steps.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     first_chain_step = relationship(

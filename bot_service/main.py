@@ -8,6 +8,7 @@ from bot_service.routers.v1 import (
     bot,
     button,
     chain,
+    chain_step,
     command,
     main_menu,
     webhook,
@@ -87,3 +88,6 @@ app.include_router(button.router, prefix="/api/v1/button", tags=["button"])
 app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
 app.include_router(command.router, prefix="/api/v1/command", tags=["command"])
 app.include_router(chain.router, prefix="/api/v1/chain", tags=["chain"])
+app.include_router(
+    chain_step.router, prefix="/api/v1/chain_step", tags=["chain_step"]
+)
