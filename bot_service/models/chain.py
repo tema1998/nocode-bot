@@ -58,9 +58,7 @@ class ChainButton(Base):
     __tablename__ = "chain_buttons"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    step_id = Column(
-        Integer, ForeignKey("chain_steps.id"), nullable=False
-    )  # Связь с шагом
+    step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=False)
     text = Column(String, nullable=False)
     callback = Column(String, nullable=True)
 
@@ -77,7 +75,7 @@ class ChainStep(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=False)
-    message = Column(String, nullable=False)  # Сообщение на этом шаге
+    message = Column(String, nullable=False)
     next_step_id = Column(Integer, ForeignKey("chain_steps.id"))
     text_input = Column(Boolean, default=False)
 
