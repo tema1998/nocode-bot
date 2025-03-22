@@ -1,7 +1,8 @@
 import logging
+from typing import Dict, Optional
 
 from bot_service.core.configs import config
-from bot_service.models.chain import Chain
+from bot_service.models.chain import Chain, ChainButton, ChainStep
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
 )
@@ -171,6 +172,99 @@ class ChainService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete chain",
             )
+
+    async def get_chain_with_steps_and_buttons(
+        self, chain_id: int
+    ) -> Optional[Dict]:
+        """
+        Retrieve a chain with all its steps and buttons.
+
+        Args:
+            chain_id (int): The ID of the chain to retrieve.
+
+        Returns:
+            Optional[Dict]: A dictionary containing the chain data with steps and buttons,
+                            or None if the chain is not found.
+        """
+        # Fetch the chain
+        chain = await self.db_repository.fetch_by_id(Chain, chain_id)
+        if not chain:
+            return None
+
+        # Fetch the first step of the chain
+        first_step = await self.db_repository.fetch_by_id(
+            ChainStep, chain.first_chain_step_id
+        )
+        if not first_step:
+            return {"id": chain.id, "name": chain.name, "first_step": None}
+
+        # Recursively build the step structure
+        first_step_data = await self._build_step(first_step)
+
+        # Return the chain data
+        return {
+            "id": chain.id,
+            "name": chain.name,
+            "first_step": first_step_data,
+        }
+
+    async def _build_step(self, step: ChainStep) -> Optional[Dict]:
+        """
+        Recursively build the structure of a step with its buttons and next steps.
+
+        Args:
+            step (ChainStep): The current step.
+
+        Returns:
+            Optional[Dict]: A dictionary containing the step data with buttons and next steps,
+                            or None if the step does not exist.
+        """
+        if not step:
+            return None
+
+        # Fetch buttons for the current step
+        buttons = await self.db_repository.fetch_by_query(
+            ChainButton, {"step_id": step.id}
+        )
+        if not buttons:
+            buttons = []
+
+        # Recursively build data for each button
+        buttons_data = []
+        for button in buttons:
+            next_step = await self.db_repository.fetch_by_id(
+                ChainStep, button.next_step_id
+            )
+            buttons_data.append(
+                {
+                    "id": button.id,
+                    "text": button.text,
+                    "callback": button.callback,
+                    "next_step": (
+                        await self._build_step(next_step)
+                        if next_step
+                        else None
+                    ),
+                }
+            )
+
+        # Fetch the next step if it exists
+        if step.next_step_id:
+            next_step = await self.db_repository.fetch_by_id(
+                ChainStep, int(step.next_step_id)
+            )
+        else:
+            next_step = None
+
+        return {
+            "id": step.id,
+            "message": step.message,
+            "next_step": (
+                await self._build_step(next_step) if next_step else None
+            ),
+            "text_input": step.text_input,
+            "buttons": buttons_data,
+        }
 
 
 async def get_chain_service() -> ChainService:

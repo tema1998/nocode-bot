@@ -3,7 +3,7 @@ import logging
 from bot_service.models import Chain
 from bot_service.schemas.chain import ChainCreate, ChainResponse, ChainUpdate
 from bot_service.services.chain_service import ChainService, get_chain_service
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
 
@@ -126,3 +126,32 @@ async def delete_chain(
         None: Returns no content on successful deletion.
     """
     await chain_service.delete_chain(chain_id)
+
+
+@router.get("/detail/{chain_id}")
+async def get_chain_with_details(
+    chain_id: int,
+    chain_service: ChainService = Depends(get_chain_service),
+):
+    """
+    Retrieve a chain with all its steps and buttons by its ID.
+
+    Args:
+        chain_id (int): The ID of the chain to retrieve.
+        chain_service (ChainService): The service to handle chain-related operations.
+
+    Returns:
+        Dict: A dictionary containing the chain data with all its steps and buttons.
+
+    Raises:
+        HTTPException: If the chain with the specified ID is not found.
+    """
+    # Fetch the chain data with all its steps and buttons
+    chain_data = await chain_service.get_chain_with_steps_and_buttons(chain_id)
+
+    # If the chain is not found, raise a 404 error
+    if not chain_data:
+        raise HTTPException(status_code=404, detail="Chain not found")
+
+    # Return the chain data
+    return chain_data

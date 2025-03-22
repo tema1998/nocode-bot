@@ -76,6 +76,51 @@ class PostgresAsyncRepository(AsyncDataRepository):
 
             return item
 
+    async def fetch_by_id_joinedload_fields(
+        self,
+        model_class: Type[Base],
+        record_id: Union[str, int],
+        joinedload_fields: List[str],
+    ) -> Optional[Base]:
+        """
+        Fetch a record by its ID and optionally join-load related data.
+
+        Args:
+            model_class (Type[Base]): The ORM model class to fetch from.
+            record_id (Union[str, int]): The ID of the record to fetch.
+            joinedload_fields (List[str]): The fields to joined-load (if any).
+
+        Returns:
+            Optional[Base]: The fetched record with joined-loaded data or None if not found.
+        """
+        async with self.async_session() as session:
+            stmt = select(model_class).where(model_class.id == record_id)
+
+            if joinedload_fields:
+                for field in joinedload_fields:
+                    # Разделяем вложенные поля (например, "steps.chain_buttons")
+                    parts = field.split(".")
+                    current_options = joinedload(
+                        getattr(model_class, parts[0])
+                    )
+
+                    # Добавляем вложенные joinedload
+                    for part in parts[1:]:
+                        # Получаем класс связанной модели
+                        related_model = getattr(
+                            model_class, parts[0]
+                        ).property.mapper.class_
+                        current_options = current_options.joinedload(
+                            getattr(related_model, part)
+                        )
+
+                    stmt = stmt.options(current_options)
+
+            result = await session.execute(stmt)
+            item = result.scalars().first()
+
+            return item
+
     async def fetch_by_query(
         self, model_class: Type[Base], filters: Dict[str, Any]
     ) -> Union[None, List[Base]]:
