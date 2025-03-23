@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 import requests
 from django.conf import settings
@@ -350,3 +350,43 @@ def delete_bot_main_menu_button(button_id: int) -> None:
         raise RequestException(
             f"Failed to delete bot's main menu button: {str(e)}"
         )
+
+
+def get_bot_chain(chain_id: int) -> Dict[str, Any]:
+    """
+    Fetches the details of a bot's chain by the specified chain identifier.
+
+    :param chain_id: The identifier of the chain for which details are to be fetched.
+    :return: A dictionary containing the details of the chain retrieved from the API.
+    :raises RequestException: If the request to the API fails, an exception will be raised.
+    """
+    try:
+        # Make a GET request to the API to retrieve the chain details
+        response = requests.get(
+            f"{BOT_SERVICE_API_URL}chain/detail/{chain_id}"
+        )
+        # Check if the request was successful (status code 200-299)
+        response.raise_for_status()
+
+        # Attempt to parse the JSON response and return it
+        json_response: Union[Dict[str, Any], None] = (
+            response.json()
+        )  # Explicitly specify the expected type
+        if json_response is None:
+            raise ValueError("Received None instead of expected data.")
+        return json_response
+
+    except RequestException as e:
+        # Log the error with details
+        logger.error(
+            f"Failed to fetch bot chain's detail. Chain ID: {chain_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        # Raise an exception to signal that there was a problem
+        raise RequestException(f"Failed to fetch bot chain's detail: {str(e)}")
+
+    except ValueError as e:
+        logger.error(
+            f"Invalid response data for chain ID: {chain_id}. Error: {str(e)}"
+        )
+        raise RequestException(f"Invalid response data: {str(e)}")

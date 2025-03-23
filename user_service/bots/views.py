@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Any, Dict
 
@@ -20,6 +21,7 @@ from .utils import (
     create_main_menu_button,
     delete_bot,
     delete_bot_main_menu_button,
+    get_bot_chain,
     get_bot_details,
     get_bot_main_menu,
     get_bot_main_menu_button,
@@ -680,3 +682,54 @@ class DeleteBotMainMenuButtonView(LoginRequiredMixin, View):
         # If successful, show a success message and redirect
         messages.success(request, "Кнопка успешно удалена.")
         return redirect("bot-main-menu", bot_id=bot_id)
+
+
+class BotChainView(LoginRequiredMixin, View):
+    """
+    A view to display the details of a bot's chain.
+
+    This view requires the user to be logged in and checks if the user
+    is the owner of the bot before fetching its details from an external API.
+    """
+
+    template_name = "bots/chain_details.html"
+
+    def get(self, request, bot_id: int, chain_id: int) -> HttpResponse:
+        """
+        Handle GET requests to retrieve and display the bot's chain details.
+
+        :param request: The HTTP request object.
+        :param bot_id: The identifier of the bot.
+        :param chain_id: The identifier of the chain to fetch.
+        :return: An HttpResponse rendering the bot's chain details.
+        :raises Http404: If the bot is not found or the user is not the owner.
+        """
+
+        # Retrieve the bot from the database, returning a 404 if not found
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("You are not the owner of this bot.")
+
+        try:
+            # Fetch the bot's main menu button from the Bot-Service API
+            chain: Dict[str, Any] = get_bot_chain(chain_id)
+        except Exception as e:
+            # Log the error if the API request fails
+            logger.error(
+                f"Failed to fetch bot's main menu button. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # Return an error response if the request fails
+            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+
+        # Convert the chain data to JSON format for rendering
+        chain_json = json.dumps(chain, default=str)
+
+        # Render the template with bot and main menu button data
+        return render(
+            request,
+            self.template_name,
+            {"bot": bot, "chain_json": chain_json},
+        )

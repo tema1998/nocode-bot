@@ -1,0 +1,341 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}
+Конструктор - @{{bot.bot_username}}
+{% endblock %}
+
+{% block head %}
+<style>
+    /* Стили для шагов */
+    .vis-node {
+        border: 2px solid #4CAF50;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        padding: 20px; /* Увеличиваем размер шагов */
+        width: 200px; /* Фиксированная ширина */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Стили для кнопок (отдельных узлов) */
+    .vis-button-node {
+        border: 2px solid #4CAF50; /* Зеленый цвет для кнопок */
+        border-radius: 10px;
+        background-color: #4CAF50; /* Зеленый фон */
+        color: white; /* Белый текст */
+        padding: 10px; /* Меньше, чем у шагов */
+        width: 150px; /* Фиксированная ширина */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .vis-button-node:hover {
+        background-color: #45a049; /* Темно-зеленый при наведении */
+    }
+
+    /* Стили для графа */
+    #chain-graph {
+        width: 80%; /* Граф занимает 80% ширины */
+        height: 800px;
+        border: 1px solid #ccc;
+        position: relative; /* Для позиционирования кнопки */
+    }
+
+    .node rect {
+        stroke: #4CAF50;
+        stroke-width: 2px;
+        fill: #D2E5FF;
+        rx: 10px;
+        ry: 10px;
+    }
+
+    .edgePath path {
+        stroke: #4CAF50;
+        stroke-width: 2px;
+        fill: none;
+    }
+
+    /* Стили для иконок */
+    .icon {
+        margin-left: 10px;
+        cursor: pointer;
+    }
+
+    .edit-icon {
+        color: white; /* Белый цвет для кнопок */
+    }
+
+    .edit-icon:hover {
+        color: #f0f0f0; /* Светло-серый при наведении */
+    }
+
+    .delete-icon {
+        color: #FF5722; /* Красный цвет для удаления */
+    }
+
+    .delete-icon:hover {
+        color: #E64A19; /* Темно-красный при наведении */
+    }
+
+    .add-icon {
+        color: #4CAF50; /* Зеленый цвет для добавления */
+    }
+
+    .add-icon:hover {
+        color: #45a049; /* Темно-зеленый при наведении */
+    }
+
+    .add-step-icon {
+        color: #00BCD4; /* Голубой цвет для добавления шага */
+    }
+
+    .add-step-icon:hover {
+        color: #0097A7; /* Темно-голубой при наведении */
+    }
+
+    /* Стили для кнопки "Добавить кнопку" */
+    .add-button {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .add-button:hover {
+        background-color: #45a049;
+    }
+
+    /* Стили для текстовой инструкции */
+    .graph-instruction {
+        width: 20%; /* Инструкция занимает 20% ширины */
+        margin-left: 20px;
+        font-size: 16px;
+        color: #333;
+        padding: 10px;
+        border-left: 1px solid #ccc;
+    }
+
+    /* Стили для кнопки "Добавить первый шаг" */
+    .add-first-step-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        font-size: 16px;
+        position: absolute; /* Абсолютное позиционирование */
+        top: 50%; /* По центру по вертикали */
+        left: 50%; /* По центру по горизонтали */
+        transform: translate(-50%, -50%); /* Центрирование */
+    }
+
+    .add-first-step-button:hover {
+        background-color: #45a049;
+    }
+</style>
+
+<!-- Подключаем FontAwesome для иконок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- Подключаем D3.js и Dagre-D3 -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre-d3/0.6.1/dagre-d3.min.js"></script>
+
+{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Chain: <span id="chain-name"></span></h1>
+    <p class="text-muted">Chain ID: <span id="chain-id"></span></p>
+
+    <!-- Контейнер для визуализации графа и инструкции -->
+    <div style="display: flex;">
+        <div style="flex: 4; position: relative;"> <!-- Граф занимает 80% ширины -->
+            <svg id="chain-graph"></svg>
+            <!-- Кнопка "Добавить первый шаг" (будет добавлена через JS, если цепочка пуста) -->
+            <a id="add-first-step-button" href="{% url 'index' %}" class="add-first-step-button" style="display: none;">
+                <i class="fas fa-plus"></i> Добавить первый шаг
+            </a>
+        </div>
+        <div class="graph-instruction" style="flex: 1;"> <!-- Инструкция занимает 20% ширины -->
+            <p><strong>Это инструкция для графа:</strong></p>
+            <ul>
+                <li>Шаги отображаются в виде прямоугольников.</li>
+                <li>Кнопки отображаются в виде зеленых узлов.</li>
+                <li>Используйте иконки для редактирования, удаления и добавления.</li>
+                <li>Конечные кнопки имеют голубую иконку для добавления шага.</li>
+            </ul>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Проверка данных
+        console.log('Chain JSON:', '{{ chain_json|escapejs }}');
+
+        // Преобразуем JSON-строку в JavaScript-объект
+        const chainData = JSON.parse('{{ chain_json|escapejs }}');
+
+        // Проверка данных после парсинга
+        console.log('Parsed Chain Data:', chainData);
+
+        // Если first_step отсутствует, показываем кнопку "Добавить первый шаг"
+        if (!chainData.first_step) {
+            const addFirstStepButton = document.getElementById('add-first-step-button');
+            if (addFirstStepButton) {
+                addFirstStepButton.style.display = 'block'; // Показываем кнопку
+            }
+        }
+
+        // Создаем граф с помощью dagre-d3
+        const graph = new dagreD3.graphlib.Graph()
+            .setGraph({})
+            .setDefaultEdgeLabel(() => ({}));
+
+        // Рекурсивная функция для добавления шагов и кнопок
+        function addStep(step, parentStepId = null, visited = new Set()) {
+            if (!step || !step.id) {
+                console.error('Invalid step:', step);
+                return;
+            }
+
+            // Проверка на циклические ссылки
+            if (visited.has(step.id)) {
+                console.error('Cyclic reference detected for step:', step.id);
+                return;
+            }
+            visited.add(step.id);
+
+            // Добавляем шаг как узел
+            graph.setNode(step.id, {
+                label: `
+                    <div style="text-align: center;">
+                        <strong>Step ${step.id}</strong>
+                        <a href="/" class="icon edit-icon">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        ${(!step.buttons || step.buttons.length === 0) && !step.next_step ? `
+                            <a href="{% url 'index' %}" class="icon delete-icon">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        ` : ''}
+                        <br>
+                        ${step.message || ''}
+                        <div style="margin-top: 10px;">
+                            <a href="{% url 'index' %}" class="add-button">
+                                <i class="fas fa-plus"></i> Добавить кнопку
+                            </a>
+                        </div>
+                    </div>`,
+                labelType: 'html', // Указываем, что label содержит HTML
+                rx: 10,
+                ry: 10,
+                width: 200, // Фиксированная ширина для шагов
+                height: 120, // Фиксированная высота для шагов
+            });
+
+            // Если есть родительский шаг, добавляем связь
+            if (parentStepId !== null) {
+                graph.setEdge(parentStepId, step.id, { label: '' }); // Убираем надпись
+            }
+
+            // Добавляем кнопки как отдельные узлы
+            if (step.buttons && step.buttons.length > 0) {
+                step.buttons.forEach((button, index) => {
+                    if (button && button.text) {
+                        const buttonId = `button-${step.id}-${index}`;
+
+                        // Добавляем кнопку как отдельный узел
+                        graph.setNode(buttonId, {
+                            label: `
+                                <div class="vis-button-node">
+                                    ${button.text}
+                                    <a href="{% url 'index' %}" class="icon edit-icon">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    ${!button.next_step ? `
+                                        <a href="{% url 'index' %}" class="icon delete-icon">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    ` : ''}
+                                </div>
+                                ${!button.next_step ? `
+                                    <div style="text-align: center; margin-top: 10px;">
+                                        <a href="{% url 'index' %}" class="icon add-step-icon">
+                                            <i class="fas fa-plus"></i> Добавить шаг
+                                        </a>
+                                    </div>
+                                ` : ''}`,
+                            labelType: 'html',
+                            rx: 10,
+                            ry: 10,
+                            width: 150, // Фиксированная ширина для кнопок
+                            height: !button.next_step ? 80 : 50, // Увеличиваем высоту, если есть иконка "Добавить шаг"
+                        });
+
+                        // Добавляем связь от шага к кнопке
+                        graph.setEdge(step.id, buttonId, { label: '' }); // Убираем надпись
+
+                        // Если у кнопки есть следующий шаг, добавляем связь от кнопки к следующему шагу
+                        if (button.next_step && button.next_step.id) {
+                            graph.setEdge(buttonId, button.next_step.id, { label: '' }); // Убираем надпись
+                            addStep(button.next_step, buttonId, visited);
+                        }
+                    }
+                });
+            }
+
+            // Добавляем следующий шаг (если есть)
+            if (step.next_step && step.next_step.id) {
+                addStep(step.next_step, step.id, visited);
+            }
+        }
+
+        // Начинаем с первого шага
+        if (chainData.first_step) {
+            addStep(chainData.first_step);
+        } else {
+            console.error('No first_step found in chainData');
+        }
+
+        // Проверка данных перед созданием графа
+        console.log('Graph nodes:', graph.nodes());
+        console.log('Graph edges:', graph.edges());
+
+        // Создаем рендерер
+        const render = new dagreD3.render();
+
+        // Выбираем SVG-контейнер
+        const svg = d3.select('#chain-graph');
+        const svgGroup = svg.append('g');
+
+        // Рендерим граф
+        render(d3.select('svg g'), graph);
+
+        // Настраиваем масштабирование и панорамирование
+        const zoom = d3.zoom().on('zoom', (event) => {
+            svgGroup.attr('transform', event.transform);
+        });
+        svg.call(zoom);
+
+        // Центрируем граф
+        const initialScale = 0.8;
+        svg.call(zoom.transform, d3.zoomIdentity.translate(150, 20).scale(initialScale));
+    });
+</script>
+{% endblock %}

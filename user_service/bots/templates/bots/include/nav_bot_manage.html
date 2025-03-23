@@ -12,9 +12,7 @@
             <a class="collapse-item" href="{% url 'bot-details' bot.id %}">Основное</a>
             <a class="collapse-item" href="{% url 'bot-main-menu' bot.id %}">Главное меню</a>
             <a class="collapse-item" href="{% url 'bot-default-reply' bot.id %}">Ответ по умолчанию</a>
-            <a class="collapse-item" href="">Команды</a>
-            <a class="collapse-item" href="">Кнопки</a>
-            <a class="collapse-item" href="">Digital-воронки</a>
+            <a class="collapse-item" href="{% url 'bot-default-reply' bot.id %}">Цепочки</a>
         </div>
     </div>
 </li>
