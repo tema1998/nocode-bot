@@ -10,6 +10,7 @@ from django.views import View
 from django.views.generic.edit import FormView
 
 from .forms import (
+    BotChainForm,
     BotDefaultReplyForm,
     BotForm,
     BotMainMenuButtonForm,
@@ -18,6 +19,7 @@ from .forms import (
 from .models import Bot
 from .utils import (
     create_bot,
+    create_chain,
     create_main_menu_button,
     delete_bot,
     delete_bot_main_menu_button,
@@ -627,7 +629,7 @@ class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
             # If an API error occurs, show an error message and redirect
             messages.error(
                 request,
-                "Ошибка при создании кнопки. Проверьте формат данных!",
+                "Ошибка при создании кнопки. Проверьте имя цепочка.",
             )
             return redirect("create-bot-main-menu", bot_id=bot.id)
 
@@ -769,3 +771,202 @@ class BotChainView(LoginRequiredMixin, View):
             self.template_name,
             {"bot": bot, "chains": chains["chains"]},
         )
+
+
+class CreateChainView(LoginRequiredMixin, View):
+    """
+    View for creating new chains for a specific bot.
+
+    Attributes:
+        template_name (str): Path to the template used for rendering the form.
+
+    Methods:
+        get: Handles GET requests - displays the chain creation form.
+        post: Handles POST requests - processes the form submission and creates a new chain.
+    """
+
+    template_name = "bots/create_chain.html"
+
+    def get(self, request, bot_id: int) -> HttpResponse:
+        """
+        Handle GET request to display the chain creation form.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot for which the chain is being created
+
+        Returns:
+            HttpResponse: Rendered template with bot context
+
+        Raises:
+            Http404: If bot doesn't exist or user doesn't own the bot
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            logger.warning(
+                f"Unauthorized chain creation attempt. User: {request.user.id}, Bot: {bot_id}"
+            )
+            raise Http404("You are not the owner of this bot.")
+
+        return render(
+            request,
+            self.template_name,
+            {"bot": bot},
+        )
+
+    def post(self, request, bot_id: int) -> HttpResponse:
+        """
+        Handle POST request to create a new chain.
+
+        Args:
+            request: HttpRequest object with form data
+            bot_id: ID of the bot for which the chain is being created
+
+        Returns:
+            HttpResponseRedirect: Redirects to appropriate page with status message
+
+        Raises:
+            Http404: If bot doesn't exist
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+        form = BotChainForm(request.POST)
+
+        if not form.is_valid():
+            messages.error(request, "Please check the entered data.")
+            return redirect("create-chain", bot_id=bot.id)
+
+        name: str = form.cleaned_data["name"]
+
+        try:
+            # Attempt to create chain via API
+            create_chain(bot.bot_id, name)
+            logger.info(
+                f"Chain created successfully. Bot ID: {bot_id}, Chain Name: {name}"
+            )
+            messages.success(request, "Chain created successfully.")
+            return redirect("bot-chains", bot_id=bot.id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to create chain. Bot ID: {bot_id}, Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(
+                request,
+                "Failed to create chain. Please check the chain name and try again.",
+            )
+            return redirect("create-chain", bot_id=bot.id)
+
+
+# class UpdateChainView(LoginRequiredMixin, View):
+#     """
+#     View for handling the update of a bot's main menu button.
+#
+#     This view processes POST requests to modify the attributes of the
+#     main menu button in a specified bot. Users must be logged in to
+#     access this view, and they must have permission to edit the specified bot.
+#
+#     Attributes:
+#         login_url (str): URL where users are redirected for login if they are not authenticated.
+#         redirect_field_name (str): Name of the URL parameter to redirect to after successful login.
+#     """
+#
+#     def post(self, request, bot_id: int, button_id: int) -> HttpResponse:
+#         """
+#         Handle POST requests to update the bot's main menu button.
+#
+#         Args:
+#             request: The HTTP request object.
+#             bot_id (int): The ID of the bot.
+#             button_id (int): The ID of the button to update.
+#
+#         Returns:
+#             HttpResponse: A redirect response based on the result of the update operation.
+#         """
+#         # Retrieve the bot object or return a 404 error if the bot is not found
+#         bot = get_object_or_404(Bot, id=bot_id)
+#
+#         # Validate the form data
+#         form = BotMainMenuButtonForm(request.POST)
+#         if not form.is_valid():
+#             # If the form is invalid, show an error message and redirect
+#             messages.error(request, "Проверьте правильность данных.")
+#             return redirect(
+#                 "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+#             )
+#
+#         # Extract button text and reply text from the form
+#         button_text: str = form.cleaned_data["button_text"]
+#         reply_text: str = form.cleaned_data["reply_text"]
+#
+#         try:
+#             # Update the bot's main menu button in the Bot-Service API
+#             update_main_menu_button(button_id, button_text, reply_text)
+#         except Exception as e:
+#             # Log the error if the API request fails
+#             logger.error(
+#                 f"Failed to update bot's main menu button. Button ID: {button_id}. Error: {str(e)}",
+#                 exc_info=True,
+#             )
+#             # If an API error occurs, show an error message and redirect
+#             messages.error(
+#                 request,
+#                 "Ошибка при обновлении данных. Проверьте формат данных!",
+#             )
+#             return redirect(
+#                 "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+#             )
+#
+#         # If everything is successful, show a success message and redirect
+#         messages.success(request, "Изменения сохранены.")
+#         return redirect("bot-main-menu", bot_id=bot.id)
+#
+#
+# class DeleteChainView(LoginRequiredMixin, View):
+#     """
+#     A view for deleting a main menu button for a bot.
+#
+#     This view handles POST requests to delete a button via the Bot-Service API.
+#     """
+#
+#     def post(self, request, bot_id, button_id):
+#         """
+#         Handles POST requests to delete a bot's main menu button.
+#
+#         Args:
+#             request (HttpRequest): The incoming HTTP request.
+#             bot_id (int): The ID of the bot associated with the button.
+#             button_id (int): The ID of the button to be deleted.
+#
+#         Returns:
+#             HttpResponse: Redirects to the bot's main menu with a success or error message.
+#
+#         Raises:
+#             Http404: If the bot does not exist or the user is not the owner.
+#         """
+#         # Retrieve the bot object or return a 404 error if the bot is not found
+#         bot = get_object_or_404(Bot, id=bot_id)
+#
+#         # Check if the user is the owner of the bot
+#         if bot.user != request.user:
+#             raise Http404("Вы не являетесь владельцем данного бота.")
+#
+#         try:
+#             # Delete the button via the Bot-Service API
+#             delete_bot_main_menu_button(button_id)
+#         except Exception as e:
+#             # Log the error if the API request fails
+#             logger.error(
+#                 f"Failed to delete button. Button ID: {button_id}. Error: {str(e)}",
+#                 exc_info=True,
+#             )
+#             # If an error occurs, show an error message and redirect
+#             messages.error(
+#                 request, "Ошибка при удалении кнопки. Попробуйте позже."
+#             )
+#             return redirect("bot-main-menu", bot_id=bot_id)
+#
+#         # If successful, show a success message and redirect
+#         messages.success(request, "Кнопка успешно удалена.")
+#         return redirect("bot-main-menu", bot_id=bot_id)

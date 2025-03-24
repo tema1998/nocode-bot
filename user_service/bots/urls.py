@@ -11,6 +11,7 @@ from .views import (
     BotMainMenuView,
     BotsView,
     CreateBotMainMenuButtonView,
+    CreateChainView,
     DeleteBotMainMenuButtonView,
     UpdateBotMainMenuButtonView,
 )
@@ -60,5 +61,10 @@ urlpatterns = [
         "chain/<int:bot_id>/<int:chain_id>",
         BotChainDetailView.as_view(),
         name="bot-chain",
+    ),
+    path(
+        "chain/<int:bot_id>",
+        CreateChainView.as_view(),
+        name="create-chain",
     ),
 ]

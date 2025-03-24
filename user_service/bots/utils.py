@@ -422,3 +422,67 @@ def get_bot_chains(bot_id: int) -> Dict[str, Any]:
             f"Invalid response data for getting chains bot ID: {bot_id}. Error: {str(e)}"
         )
         raise RequestException(f"Invalid response data: {str(e)}")
+
+
+def create_chain(bot_id: int, name: str) -> Optional[Dict[str, Any]]:
+    """
+    Create a new chain for a bot via the Bot-Service API.
+
+    Args:
+        bot_id: The ID of the bot to create the chain for
+        name: The name of the new chain
+
+    Returns:
+        Dictionary containing the created chain data if successful, None otherwise
+
+    Raises:
+        RequestException: If the API request fails or returns invalid data
+    """
+    try:
+        # Prepare API request payload
+        payload = {
+            "bot_id": bot_id,
+            "name": name,
+        }
+
+        # Log the attempt to create a chain
+        logger.info(
+            f"Attempting to create chain. Bot ID: {bot_id}, Name: '{name}'"
+        )
+
+        # Make API request
+        response = requests.post(
+            f"{BOT_SERVICE_API_URL}chain/",
+            json=payload,
+            timeout=10,  # Added timeout for better reliability
+        )
+        response.raise_for_status()
+
+        # Parse and validate response
+        data = response.json()
+
+        if not isinstance(data, dict):
+            error_msg = "Invalid response format: expected dictionary, got {type(data)}"
+            logger.error(error_msg)
+            raise RequestException(error_msg)
+
+        # Log successful creation
+        logger.info(
+            f"Successfully created chain. Bot ID: {bot_id}, "
+            f"Chain Name: '{name}', Response: {data}"
+        )
+
+        return data
+
+    except RequestException as e:
+        error_msg = f"API request failed for bot {bot_id}: {str(e)}"
+        logger.error(
+            error_msg,
+            exc_info=True,
+            extra={
+                "bot_id": bot_id,
+                "chain_name": name,
+                "api_endpoint": f"{BOT_SERVICE_API_URL}chain/",
+            },
+        )
+        raise RequestException(error_msg) from e
