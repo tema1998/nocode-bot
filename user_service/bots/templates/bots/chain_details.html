@@ -7,6 +7,13 @@
 
 {% block head %}
 <style>
+    #chain-graph {
+        width: 100%; /* Граф занимает 100% ширины */
+        height: 100%; /* Граф занимает 100% высоты контейнера */
+        border: 1px solid #ccc;
+        position: relative; /* Для правильного позиционирования внутри */
+    }
+
     /* Стили для шагов */
     .vis-node {
         border: 2px solid #4CAF50;
@@ -27,20 +34,36 @@
         width: 150px; /* Фиксированная ширина */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         text-align: center;
+        white-space: normal; /* Разрешаем перенос текста */
+        overflow: hidden; /* Скрываем текст, который не помещается */
     }
 
     .vis-button-node:hover {
         background-color: #45a049; /* Темно-зеленый при наведении */
     }
 
-    /* Стили для графа */
-    #chain-graph {
-        width: 80%; /* Граф занимает 80% ширины */
-        height: 800px;
-        border: 1px solid #ccc;
-        position: relative; /* Для позиционирования кнопки */
+    /* Стили для текста кнопки */
+    .vis-button-node .button-text {
+        display: block;
+        line-height: 1.2; /* Уменьшаем межстрочный интервал */
+        font-size: 12px; /* Уменьшаем размер шрифта */
     }
 
+    .vis-button-node .button-text .first-line {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .vis-button-node .button-text .second-line {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Стили для графа */
     .node rect {
         stroke: #4CAF50;
         stroke-width: 2px;
@@ -57,16 +80,18 @@
 
     /* Стили для иконок */
     .icon {
-        margin-left: 10px;
+        margin-left: 5px; /* Уменьшаем отступ */
         cursor: pointer;
+        display: inline-block; /* Иконки всегда в строке */
+        vertical-align: middle; /* Выравниваем по центру */
     }
 
     .edit-icon {
-        color: white; /* Белый цвет для кнопок */
+        color: #FF9800; /* Оранжевый цвет для кнопок редактирования */
     }
 
     .edit-icon:hover {
-        color: #f0f0f0; /* Светло-серый при наведении */
+        color: #F57C00; /* Темно-оранжевый при наведении */
     }
 
     .delete-icon {
@@ -157,8 +182,8 @@
     <p class="text-muted">Chain ID: <span id="chain-id"></span></p>
 
     <!-- Контейнер для визуализации графа и инструкции -->
-    <div style="display: flex;">
-        <div style="flex: 4; position: relative;"> <!-- Граф занимает 80% ширины -->
+    <div style="display: flex; height: 800px;">
+        <div style="flex: 4; position: relative; height: 100%;">
             <svg id="chain-graph"></svg>
             <!-- Кнопка "Добавить первый шаг" (будет добавлена через JS, если цепочка пуста) -->
             <a id="add-first-step-button" href="{% url 'index' %}" class="add-first-step-button" style="display: none;">
@@ -221,21 +246,26 @@
             }
             visited.add(step.id);
 
+            // Обрезаем название шага до 15 символов
+            const stepName = step.name.length > 15 ? step.name.substring(0, 15) + "..." : step.name;
+
             // Добавляем шаг как узел
             graph.setNode(step.id, {
                 label: `
                     <div style="text-align: center;">
-                        <strong>Step ${step.id}</strong>
-                        <a href="/" class="icon edit-icon">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        ${(!step.buttons || step.buttons.length === 0) && !step.next_step ? `
-                            <a href="{% url 'index' %}" class="icon delete-icon">
-                                <i class="fas fa-trash"></i>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <a href="/" class="icon edit-icon">
+                                <i class="fas fa-edit"></i>
                             </a>
-                        ` : ''}
-                        <br>
-                        ${step.message || ''}
+                            ${(!step.buttons || step.buttons.length === 0) && !step.next_step ? `
+                                <a href="{% url 'index' %}" class="icon delete-icon">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            ` : ''}
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <strong>${stepName}</strong>
+                        </div>
                         <div style="margin-top: 10px;">
                             <a href="{% url 'index' %}" class="add-button">
                                 <i class="fas fa-plus"></i> Добавить кнопку
@@ -260,11 +290,16 @@
                     if (button && button.text) {
                         const buttonId = `button-${step.id}-${index}`;
 
+                        // Обрезаем текст кнопки: первая строка — 15 символов
+                        const firstLine = button.text.length > 15 ? button.text.substring(0, 15) + "..." : button.text;
+
                         // Добавляем кнопку как отдельный узел
                         graph.setNode(buttonId, {
                             label: `
                                 <div class="vis-button-node">
-                                    ${button.text}
+                                    <div class="button-text">
+                                        <span class="first-line">${firstLine}</span>
+                                    </div>
                                     <a href="{% url 'index' %}" class="icon edit-icon">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -285,7 +320,7 @@
                             rx: 10,
                             ry: 10,
                             width: 150, // Фиксированная ширина для кнопок
-                            height: !button.next_step ? 80 : 50, // Увеличиваем высоту, если есть иконка "Добавить шаг"
+                            height: !button.next_step ? 100 : 70, // Увеличиваем высоту для двух строк текста
                         });
 
                         // Добавляем связь от шага к кнопке
