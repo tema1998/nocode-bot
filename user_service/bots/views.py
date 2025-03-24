@@ -22,6 +22,7 @@ from .utils import (
     delete_bot,
     delete_bot_main_menu_button,
     get_bot_chain,
+    get_bot_chains,
     get_bot_details,
     get_bot_main_menu,
     get_bot_main_menu_button,
@@ -684,7 +685,7 @@ class DeleteBotMainMenuButtonView(LoginRequiredMixin, View):
         return redirect("bot-main-menu", bot_id=bot_id)
 
 
-class BotChainView(LoginRequiredMixin, View):
+class BotChainDetailView(LoginRequiredMixin, View):
     """
     A view to display the details of a bot's chain.
 
@@ -731,5 +732,40 @@ class BotChainView(LoginRequiredMixin, View):
         return render(
             request,
             self.template_name,
-            {"bot": bot, "chain_json": chain_json},
+            {"bot": bot, "chain": chain, "chain_json": chain_json},
+        )
+
+
+class BotChainView(LoginRequiredMixin, View):
+    """
+    View to display bot details by making a GET request to the Bot-Service endpoint.
+    """
+
+    template_name = "bots/chains.html"  # Template for rendering bot details
+
+    def get(self, request, bot_id):
+
+        # Retrieve the bot from the database
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Check if the user is the owner of the bot
+        if bot.user != request.user:
+            raise Http404("Вы не являетесь владельцем данного бота.")
+
+        try:
+            # Fetch bot details from the Bot-Service service
+            chains = get_bot_chains(bot.bot_id)
+        except Exception as e:
+            # Log the error
+            logger.error(
+                f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            # Return an error response if the request fails
+            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+
+        return render(
+            request,
+            self.template_name,
+            {"bot": bot, "chains": chains["chains"]},
         )

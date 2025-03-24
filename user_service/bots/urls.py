@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     AddBotView,
+    BotChainDetailView,
     BotChainView,
     BotDefaultReplyView,
     BotDeleteView,
@@ -51,8 +52,13 @@ urlpatterns = [
         name="delete-bot-main-menu-button",
     ),
     path(
-        "chain/<int:bot_id>/<int:chain_id>",
+        "chains/<int:bot_id>/",
         BotChainView.as_view(),
+        name="bot-chains",
+    ),
+    path(
+        "chain/<int:bot_id>/<int:chain_id>",
+        BotChainDetailView.as_view(),
         name="bot-chain",
     ),
 ]

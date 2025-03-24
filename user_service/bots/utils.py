@@ -390,3 +390,35 @@ def get_bot_chain(chain_id: int) -> Dict[str, Any]:
             f"Invalid response data for chain ID: {chain_id}. Error: {str(e)}"
         )
         raise RequestException(f"Invalid response data: {str(e)}")
+
+
+def get_bot_chains(bot_id: int) -> Dict[str, Any]:
+
+    try:
+        # Make a GET request to the API to retrieve the chain details
+        response = requests.get(f"{BOT_SERVICE_API_URL}chain/{bot_id}")
+        # Check if the request was successful (status code 200-299)
+        response.raise_for_status()
+
+        # Attempt to parse the JSON response and return it
+        json_response: Union[Dict[str, Any], None] = (
+            response.json()
+        )  # Explicitly specify the expected type
+        if json_response is None:
+            raise ValueError("Received None instead of expected data.")
+        return json_response
+
+    except RequestException as e:
+        # Log the error with details
+        logger.error(
+            f"Failed to fetch bot's chains. Bot ID: {bot_id}. Error: {str(e)}",
+            exc_info=True,
+        )
+        # Raise an exception to signal that there was a problem
+        raise RequestException(f"Failed to fetch bot's chains: {str(e)}")
+
+    except ValueError as e:
+        logger.error(
+            f"Invalid response data for getting chains bot ID: {bot_id}. Error: {str(e)}"
+        )
+        raise RequestException(f"Invalid response data: {str(e)}")

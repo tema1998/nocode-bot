@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block title %}
-Конструктор - @{{bot.bot_username}}
+Редактирование цепочки {{chain.name}}
 {% endblock %}
 
 {% block head %}
@@ -178,8 +178,8 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Chain: <span id="chain-name"></span></h1>
-    <p class="text-muted">Chain ID: <span id="chain-id"></span></p>
+    <h3 class="mb-3">Бот: <b>{{bot.bot_username}}</b></h3>
+    <h3 class="mb-3">Цепочка: <b>{{chain.name}}</b></h3>
 
     <!-- Контейнер для визуализации графа и инструкции -->
     <div style="display: flex; height: 800px;">
@@ -374,3 +374,4 @@
     });
 </script>
 {% endblock %}
+
