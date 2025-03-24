@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic.edit import FormView
@@ -24,6 +24,7 @@ from .utils import (
     create_main_menu_button,
     delete_bot,
     delete_bot_main_menu_button,
+    delete_chain,
     get_bot_chain,
     get_bot_chains,
     get_bot_details,
@@ -946,50 +947,93 @@ class UpdateChainView(LoginRequiredMixin, View):
             return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
 
 
-# class DeleteChainView(LoginRequiredMixin, View):
-#     """
-#     A view for deleting a main menu button for a bot.
-#
-#     This view handles POST requests to delete a button via the Bot-Service API.
-#     """
-#
-#     def post(self, request, bot_id, button_id):
-#         """
-#         Handles POST requests to delete a bot's main menu button.
-#
-#         Args:
-#             request (HttpRequest): The incoming HTTP request.
-#             bot_id (int): The ID of the bot associated with the button.
-#             button_id (int): The ID of the button to be deleted.
-#
-#         Returns:
-#             HttpResponse: Redirects to the bot's main menu with a success or error message.
-#
-#         Raises:
-#             Http404: If the bot does not exist or the user is not the owner.
-#         """
-#         # Retrieve the bot object or return a 404 error if the bot is not found
-#         bot = get_object_or_404(Bot, id=bot_id)
-#
-#         # Check if the user is the owner of the bot
-#         if bot.user != request.user:
-#             raise Http404("Вы не являетесь владельцем данного бота.")
-#
-#         try:
-#             # Delete the button via the Bot-Service API
-#             delete_bot_main_menu_button(button_id)
-#         except Exception as e:
-#             # Log the error if the API request fails
-#             logger.error(
-#                 f"Failed to delete button. Button ID: {button_id}. Error: {str(e)}",
-#                 exc_info=True,
-#             )
-#             # If an error occurs, show an error message and redirect
-#             messages.error(
-#                 request, "Ошибка при удалении кнопки. Попробуйте позже."
-#             )
-#             return redirect("bot-main-menu", bot_id=bot_id)
-#
-#         # If successful, show a success message and redirect
-#         messages.success(request, "Кнопка успешно удалена.")
-#         return redirect("bot-main-menu", bot_id=bot_id)
+class DeleteChainView(LoginRequiredMixin, View):
+    """
+    View for deleting a chain via the Bot-Service API.
+
+    Handles POST requests to delete a chain after verifying ownership and API communication.
+
+    Attributes:
+        None (inherits from LoginRequiredMixin and View)
+
+    Methods:
+        post: Handles the chain deletion request
+    """
+
+    def post(
+        self, request, bot_id: int, chain_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle chain deletion request.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot owning the chain
+            chain_id: ID of the chain to delete
+
+        Returns:
+            HttpResponseRedirect: Redirects to chains list with status message
+
+        Raises:
+            Http404: If bot doesn't exist or user doesn't own it
+        """
+        # Validate and get bot object
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Verify ownership
+        if bot.user != request.user:
+            logger.warning(
+                f"Unauthorized chain deletion attempt. User: {request.user.id}, Bot: {bot_id}"
+            )
+            raise Http404("Вы не являетесь владельцем данного бота.")
+
+        try:
+            # Log deletion attempt
+            logger.info(
+                f"Attempting to delete chain. Bot ID: {bot_id}, Chain ID: {chain_id}"
+            )
+
+            # Call API to delete chain
+            delete_chain(chain_id)
+
+            # Log success
+            logger.info(
+                f"Successfully deleted chain. Bot ID: {bot_id}, Chain ID: {chain_id}"
+            )
+
+            messages.success(request, "Цепочка успешно удалена.")
+            return redirect("bot-chains", bot_id=bot_id)
+
+        except RequestException as e:
+            # Handle API communication errors
+            logger.error(
+                f"API error deleting chain. Bot ID: {bot_id}, Chain ID: {chain_id}, Error: {str(e)}",
+                exc_info=True,
+                extra={
+                    "bot_id": bot_id,
+                    "chain_id": chain_id,
+                    "user_id": request.user.id,
+                },
+            )
+            messages.error(
+                request,
+                "Ошибка при удалении цепочки. Пожалуйста, попробуйте позже.",
+            )
+            return redirect("bot-chains", bot_id=bot_id)
+
+        except Exception as e:
+            # Handle unexpected errors
+            logger.critical(
+                f"Unexpected error deleting chain. Bot ID: {bot_id}, Chain ID: {chain_id}, Error: {str(e)}",
+                exc_info=True,
+                extra={
+                    "bot_id": bot_id,
+                    "chain_id": chain_id,
+                    "user_id": request.user.id,
+                },
+            )
+            messages.error(
+                request,
+                "Произошла непредвиденная ошибка при удалении. Пожалуйста, свяжитесь с поддержкой.",
+            )
+            return redirect("bot-chains", bot_id=bot_id)

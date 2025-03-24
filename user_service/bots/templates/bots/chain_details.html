@@ -265,11 +265,14 @@
 
                     <!-- Быстрые действия -->
                     <div class="mt-4">
-                        <a href="{% url 'index' %}"
-                           class="btn btn-danger btn-sm btn-block"
-                           onclick="return confirm('Удалить цепочку? Все шаги будут потеряны.');">
-                            <i class="fas fa-trash mr-2"></i> Удалить цепочку
-                        </a>
+                        <form method="post" action="{% url 'delete-chain' bot.id chain.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-danger btn-sm btn-block"
+                                    onclick="return confirm('Удалить цепочку? Все шаги будут потеряны.');">
+                                <i class="fas fa-trash mr-2"></i> Удалить цепочку
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

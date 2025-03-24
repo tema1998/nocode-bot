@@ -557,3 +557,75 @@ def update_chain(chain_id: int, new_name: str) -> Optional[Dict[str, Any]]:
         )
         logger.error(error_msg, exc_info=True)
         raise RequestException(error_msg) from e
+
+
+def delete_chain(chain_id: int) -> bool:
+    """
+    Deletes a chain via the Bot-Service API.
+
+    Args:
+        chain_id: ID of the chain to delete
+
+    Returns:
+        bool: True if deletion was successful, False otherwise
+
+    Raises:
+        RequestException: If the API request fails
+        ValueError: If invalid chain_id is provided
+
+    """
+    if not isinstance(chain_id, int) or chain_id <= 0:
+        error_msg = f"Invalid chain_id: {chain_id}. Must be positive integer"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    try:
+        logger.info(f"Attempting to delete chain. Chain ID: {chain_id}")
+
+        response = requests.delete(
+            f"{BOT_SERVICE_API_URL}chain/{chain_id}",
+            headers={
+                "Content-Type": "application/json",
+            },
+            timeout=10,
+        )
+
+        if response.status_code == 204:
+            logger.info(f"Successfully deleted chain. Chain ID: {chain_id}")
+            return True
+
+        # Если код ответа не 204, обрабатываем как ошибку
+        response.raise_for_status()
+
+        # Этот код выполнится только если API вернул неожиданный успешный код
+        logger.warning(
+            f"Unexpected success status code: {response.status_code}"
+        )
+        return True
+
+    except requests.Timeout as e:
+        error_msg = f"Timeout while deleting chain {chain_id}"
+        logger.error(error_msg)
+        raise RequestException(error_msg) from e
+
+    except requests.ConnectionError as e:
+        error_msg = f"Connection error while deleting chain {chain_id}"
+        logger.error(error_msg)
+        raise RequestException(error_msg) from e
+
+    except requests.HTTPError as e:
+        status_code = (
+            e.response.status_code if hasattr(e, "response") else None
+        )
+        error_msg = (
+            f"HTTP error deleting chain {chain_id}. Status: {status_code}"
+        )
+        logger.error(
+            f"{error_msg}. Response: {e.response.text if hasattr(e, 'response') else 'None'}"
+        )
+        raise RequestException(error_msg) from e
+
+    except Exception as e:
+        error_msg = f"Unexpected error deleting chain {chain_id}"
+        logger.error(f"{error_msg}: {str(e)}", exc_info=True)
+        raise RequestException(error_msg) from e
