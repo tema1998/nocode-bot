@@ -19,3 +19,7 @@ class ChainResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ChainsResponse(BaseModel):
+    chains: list[ChainResponse]

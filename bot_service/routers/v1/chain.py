@@ -1,7 +1,12 @@
 import logging
 
 from bot_service.models import Chain
-from bot_service.schemas.chain import ChainCreate, ChainResponse, ChainUpdate
+from bot_service.schemas.chain import (
+    ChainCreate,
+    ChainResponse,
+    ChainsResponse,
+    ChainUpdate,
+)
 from bot_service.services.chain_service import ChainService, get_chain_service
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
@@ -43,33 +48,39 @@ async def create_chain(
 
 
 @router.get(
-    "/{chain_id}",
-    response_model=ChainResponse,
-    summary="Get chain details by ID",
-    description="Retrieve details of a chain by its ID.",
-    response_description="The chain's details.",
+    "/{bot_id}",
+    response_model=ChainsResponse,
+    summary="Get chains by bot's ID",
+    description="Retrieve chains by bot's ID.",
+    response_description="The list of chains.",
     status_code=status.HTTP_200_OK,
 )
-async def get_chain(
-    chain_id: int,
+async def get_chains(
+    bot_id: int,
     chain_service: ChainService = Depends(get_chain_service),
-) -> ChainResponse:
+) -> ChainsResponse:
     """
-    Retrieve details of a chain by its ID.
+    Retrieve chains associated with a specific bot ID.
 
-    Args:
-        chain_id (int): The ID of the chain to retrieve.
-        chain_service (ChainService): The service for bot-related operations.
+    This endpoint allows you to fetch all chains that belong to the specified
+    bot by its unique identifier. The chains are returned as a list within
+    the ChainsResponse model.
+
+    Parameters:
+    - bot_id (int): The unique identifier for the bot whose chains are to be retrieved.
+    - chain_service (ChainService): A dependency providing chain-related services
+      (automatically injected by FastAPI).
 
     Returns:
-        ChainResponse: The chain's details.
+    ChainsResponse: A response object containing a list of ChainResponse
+    objects, representing the chains associated with the specified bot ID.
+
+    Raises:
+    HTTPException: If no chains are found for the given bot ID, a 404 status
+    (Not Found) will be raised.
     """
-    chain = await chain_service.get_chain(chain_id)
-    return ChainResponse(
-        id=int(chain.id),
-        bot_id=int(chain.bot_id),
-        name=str(chain.name),
-    )
+    chains = await chain_service.get_chains(bot_id)
+    return chains
 
 
 @router.patch(

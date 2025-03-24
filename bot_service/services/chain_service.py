@@ -6,7 +6,11 @@ from bot_service.models.chain import Chain, ChainButton, ChainStep
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
 )
-from bot_service.schemas.chain import ChainUpdate
+from bot_service.schemas.chain import (
+    ChainResponse,
+    ChainsResponse,
+    ChainUpdate,
+)
 from fastapi import HTTPException, status
 
 
@@ -61,34 +65,46 @@ class ChainService:
                 detail="Failed to create chain",
             )
 
-    async def get_chain(self, chain_id: int) -> Chain:
+    async def get_chains(self, bot_id: int) -> ChainsResponse:
         """
-        Retrieve a chain by its ID.
+        Fetch chains associated with a specific bot ID from the database.
 
-        Args:
-            chain_id (int): The ID of the chain to retrieve.
+        This asynchronous method queries the database for chains linked to the
+        specified bot identifier. If chains are found, it converts them into
+        ChainResponse objects, which are then wrapped into a ChainsResponse
+        object before being returned.
+
+        Parameters:
+        - bot_id (int): The unique identifier for the bot whose chains are to be retrieved.
 
         Returns:
-            Chain: The retrieved chain.
+        ChainsResponse: A response object containing a list of ChainResponse
+        objects, representing the chains associated with the specified bot ID.
 
         Raises:
-            HTTPException: If the chain is not found or if there is an error fetching the chain.
+        HTTPException:
+            - If no chains are found or if there is an error during the
+              fetching process, an internal server error (500) is raised.
         """
         try:
-            chain = await self.db_repository.fetch_by_id(Chain, chain_id)
-            if chain is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Chain with ID {chain_id} not found",
-                )
-            return chain  # type: ignore
+            chains = await self.db_repository.fetch_by_query(
+                Chain, {"bot_id": bot_id}
+            )
+            chain_responses = (
+                [ChainResponse.model_validate(chain) for chain in chains]
+                if chains
+                else []
+            )
+
+            # Return the wrapped response with chains
+            return ChainsResponse(chains=chain_responses)
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Failed to fetch chain: {str(e)}")
+            logger.error(f"Failed to fetch chains: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to fetch chain",
+                detail="Failed to fetch chains",
             )
 
     async def update_chain(
