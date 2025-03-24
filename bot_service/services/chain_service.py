@@ -258,6 +258,7 @@ class ChainService:
 
         return {
             "id": step.id,
+            "name": step.name,
             "message": step.message,
             "next_step": (
                 await self._build_step(next_step) if next_step else None

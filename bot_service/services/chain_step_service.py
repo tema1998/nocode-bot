@@ -46,6 +46,7 @@ class ChainStepService:
             # Create a new ChainStep instance from the provided data
             db_chain_step = ChainStep(
                 chain_id=chain_step.chain_id,
+                name=chain_step.name,
                 message=chain_step.message,
                 next_step_id=chain_step.next_step_id,
                 text_input=chain_step.text_input,
@@ -136,6 +137,8 @@ class ChainStepService:
                 )
 
             # Update the chain step fields if provided
+            if chain_step_update.name is not None:
+                chain_step.name = chain_step_update.name
             if chain_step_update.message is not None:
                 chain_step.message = chain_step_update.message
             if chain_step_update.next_step_id is not None:

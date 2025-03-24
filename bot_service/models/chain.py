@@ -75,6 +75,7 @@ class ChainStep(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=False)
+    name = Column(String, nullable=False)
     message = Column(String, nullable=False)
     next_step_id = Column(Integer, ForeignKey("chain_steps.id"))
     text_input = Column(Boolean, default=False)

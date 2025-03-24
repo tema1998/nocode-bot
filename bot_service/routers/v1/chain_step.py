@@ -34,6 +34,7 @@ async def create_chain_step(
 
     return ChainStepResponse(
         id=int(created_chain_step.id),
+        name=str(created_chain_step.name),
         chain_id=int(created_chain_step.chain_id),
         message=str(created_chain_step.message),
         next_step_id=(
@@ -60,6 +61,7 @@ async def get_chain_step(
     chain_step = await chain_step_service.get_chain_step(chain_step_id)
     return ChainStepResponse(
         id=int(chain_step.id),
+        name=str(chain_step.name),
         chain_id=int(chain_step.chain_id),
         message=str(chain_step.message),
         next_step_id=(
@@ -87,6 +89,7 @@ async def update_chain_step(
     )
     return ChainStepResponse(
         id=int(updated_chain_step.id),
+        name=str(updated_chain_step.name),
         chain_id=int(updated_chain_step.chain_id),
         message=str(updated_chain_step.message),
         next_step_id=(

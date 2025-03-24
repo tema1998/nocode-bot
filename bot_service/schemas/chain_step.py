@@ -5,6 +5,7 @@ from pydantic import BaseModel, model_validator
 
 class ChainStepCreate(BaseModel):
     chain_id: int
+    name: str
     message: str
     set_as_next_step_for_button_id: Optional[int] = None
     is_first_step_of_chain: bool = False
@@ -30,6 +31,7 @@ class ChainStepCreate(BaseModel):
 
 
 class ChainStepUpdate(BaseModel):
+    name: Optional[str] = None
     message: Optional[str] = None
     next_step_id: Optional[int] = None
     text_input: Optional[bool] = None
@@ -38,6 +40,7 @@ class ChainStepUpdate(BaseModel):
 class ChainStepResponse(BaseModel):
     id: int
     chain_id: int
+    name: str
     message: str
     next_step_id: Optional[int]
     text_input: bool
