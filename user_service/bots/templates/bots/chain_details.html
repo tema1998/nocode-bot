@@ -178,29 +178,104 @@
 {% endblock %}
 
 {% block content %}
-    <h3 class="mb-3">Бот: <b>{{bot.bot_username}}</b></h3>
-    <h3 class="mb-3">Цепочка: <b>{{chain.name}}</b></h3>
-
-    <!-- Контейнер для визуализации графа и инструкции -->
-    <div style="display: flex; height: 800px;">
-        <div style="flex: 4; position: relative; height: 100%;">
-            <svg id="chain-graph"></svg>
-            <!-- Кнопка "Добавить первый шаг" (будет добавлена через JS, если цепочка пуста) -->
-            <a id="add-first-step-button" href="{% url 'index' %}" class="add-first-step-button" style="display: none;">
-                <i class="fas fa-plus"></i> Добавить первый шаг
-            </a>
-        </div>
-        <div class="graph-instruction" style="flex: 1;"> <!-- Инструкция занимает 20% ширины -->
-            <p><strong>Это инструкция для графа:</strong></p>
-            <ul>
-                <li>Шаги отображаются в виде прямоугольников.</li>
-                <li>Кнопки отображаются в виде зеленых узлов.</li>
-                <li>Используйте иконки для редактирования, удаления и добавления.</li>
-                <li>Конечные кнопки имеют голубую иконку для добавления шага.</li>
-            </ul>
+<div class="container-fluid">
+    <!-- Заголовок и хлебные крошки -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-link mr-2"></i>Редактирование цепочки
+        </h1>
+        <div>
+            <span class="badge badge-primary mr-2">
+                <i class="fas fa-robot"></i> {{bot.bot_username}}
+            </span>
+            <span class="badge badge-success">
+                <i class="fas fa-project-diagram"></i> {{chain.name}}
+            </span>
         </div>
     </div>
 
+    <!-- Основной контейнер -->
+    <div class="row">
+        <!-- Граф цепочки (80% ширины) -->
+        <div class="col-lg-9">
+            <div class="card shadow h-100">
+                <div class="card-body position-relative" style="min-height: 700px;">
+                    <div style="flex: 4; position: relative; height: 100%;">
+                        <svg id="chain-graph"></svg>
+                        <!-- Кнопка "Добавить первый шаг" (будет добавлена через JS, если цепочка пуста) -->
+                        <a id="add-first-step-button" href="{% url 'index' %}" class="add-first-step-button" style="display: none;">
+                            <i class="fas fa-plus"></i> Добавить первый шаг
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Боковая панель (20% ширины) -->
+        <div class="col-lg-3">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <!-- Кнопка возврата -->
+                    <a href="{% url 'bot-chains' bot.id %}" class="btn btn-outline-secondary btn-block mb-4">
+                        <i class="fas fa-arrow-left mr-2"></i> К списку цепочек
+                    </a>
+
+                    <!-- Форма изменения имени -->
+                    <div class="border-bottom pb-3 mb-3">
+                        <h5 class="font-weight-bold text-primary mb-3">
+                            <i class="fas fa-pencil-alt mr-2"></i>Название цепочки
+                        </h5>
+                        <form method="post" action="{% url 'update-chain' bot.id chain.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <input type="text" name="name" value="{{ chain.name }}"
+                                       class="form-control form-control-sm" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm btn-block">
+                                <i class="fas fa-save mr-2"></i> Сохранить
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Сообщения системы -->
+                    {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-dismissible alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Инструкция -->
+                    <div class="bg-light p-3 rounded">
+                        <h5 class="font-weight-bold text-info">
+                            <i class="fas fa-info-circle mr-2"></i>Инструкция
+                        </h5>
+                        <ul class="mt-3 pl-3" style="list-style-type: circle;">
+                            <li class="mb-2">Кликните на шаг для редактирования</li>
+                            <li class="mb-2">Добавляйте новые кнопки и шаги</li>
+                            <li class="mb-2">Перетаскивайте граф для навигации</li>
+                            <li>Используйте колесо мыши для масштабирования</li>
+                        </ul>
+                    </div>
+
+                    <!-- Быстрые действия -->
+                    <div class="mt-4">
+                        <a href="{% url 'index' %}"
+                           class="btn btn-danger btn-sm btn-block"
+                           onclick="return confirm('Удалить цепочку? Все шаги будут потеряны.');">
+                            <i class="fas fa-trash mr-2"></i> Удалить цепочку
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block sidebar-nav %}

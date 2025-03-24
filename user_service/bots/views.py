@@ -8,6 +8,7 @@ from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic.edit import FormView
+from requests import RequestException
 
 from .forms import (
     BotChainForm,
@@ -29,6 +30,7 @@ from .utils import (
     get_bot_main_menu,
     get_bot_main_menu_button,
     update_bot,
+    update_chain,
     update_main_menu,
     update_main_menu_button,
 )
@@ -833,7 +835,10 @@ class CreateChainView(LoginRequiredMixin, View):
         form = BotChainForm(request.POST)
 
         if not form.is_valid():
-            messages.error(request, "Please check the entered data.")
+            messages.error(
+                request,
+                "Проверьте название цепочки, возможно цепочка с таким названием уже существует.",
+            )
             return redirect("create-chain", bot_id=bot.id)
 
         name: str = form.cleaned_data["name"]
@@ -844,7 +849,7 @@ class CreateChainView(LoginRequiredMixin, View):
             logger.info(
                 f"Chain created successfully. Bot ID: {bot_id}, Chain Name: {name}"
             )
-            messages.success(request, "Chain created successfully.")
+            messages.success(request, "Цепочка успешно создана.")
             return redirect("bot-chains", bot_id=bot.id)
 
         except Exception as e:
@@ -854,75 +859,93 @@ class CreateChainView(LoginRequiredMixin, View):
             )
             messages.error(
                 request,
-                "Failed to create chain. Please check the chain name and try again.",
+                "Проверьте название цепочки, возможно цепочка с таким названием уже существует.",
             )
-            return redirect("create-chain", bot_id=bot.id)
+            return redirect("bot-chains", bot_id=bot.id)
 
 
-# class UpdateChainView(LoginRequiredMixin, View):
-#     """
-#     View for handling the update of a bot's main menu button.
-#
-#     This view processes POST requests to modify the attributes of the
-#     main menu button in a specified bot. Users must be logged in to
-#     access this view, and they must have permission to edit the specified bot.
-#
-#     Attributes:
-#         login_url (str): URL where users are redirected for login if they are not authenticated.
-#         redirect_field_name (str): Name of the URL parameter to redirect to after successful login.
-#     """
-#
-#     def post(self, request, bot_id: int, button_id: int) -> HttpResponse:
-#         """
-#         Handle POST requests to update the bot's main menu button.
-#
-#         Args:
-#             request: The HTTP request object.
-#             bot_id (int): The ID of the bot.
-#             button_id (int): The ID of the button to update.
-#
-#         Returns:
-#             HttpResponse: A redirect response based on the result of the update operation.
-#         """
-#         # Retrieve the bot object or return a 404 error if the bot is not found
-#         bot = get_object_or_404(Bot, id=bot_id)
-#
-#         # Validate the form data
-#         form = BotMainMenuButtonForm(request.POST)
-#         if not form.is_valid():
-#             # If the form is invalid, show an error message and redirect
-#             messages.error(request, "Проверьте правильность данных.")
-#             return redirect(
-#                 "bot-main-menu-button", bot_id=bot.id, button_id=button_id
-#             )
-#
-#         # Extract button text and reply text from the form
-#         button_text: str = form.cleaned_data["button_text"]
-#         reply_text: str = form.cleaned_data["reply_text"]
-#
-#         try:
-#             # Update the bot's main menu button in the Bot-Service API
-#             update_main_menu_button(button_id, button_text, reply_text)
-#         except Exception as e:
-#             # Log the error if the API request fails
-#             logger.error(
-#                 f"Failed to update bot's main menu button. Button ID: {button_id}. Error: {str(e)}",
-#                 exc_info=True,
-#             )
-#             # If an API error occurs, show an error message and redirect
-#             messages.error(
-#                 request,
-#                 "Ошибка при обновлении данных. Проверьте формат данных!",
-#             )
-#             return redirect(
-#                 "bot-main-menu-button", bot_id=bot.id, button_id=button_id
-#             )
-#
-#         # If everything is successful, show a success message and redirect
-#         messages.success(request, "Изменения сохранены.")
-#         return redirect("bot-main-menu", bot_id=bot.id)
-#
-#
+class UpdateChainView(LoginRequiredMixin, View):
+    """
+    View for updating an existing chain's name for a specific bot.
+
+    This view handles POST requests to update the name of a chain via the Bot-Service API.
+    It requires authentication and performs several validations before processing the update.
+
+    Attributes:
+        None (inherits from LoginRequiredMixin and View)
+
+    Methods:
+        post: Handles the POST request for updating chain information
+    """
+
+    def post(self, request, bot_id: int, chain_id: int) -> HttpResponse:
+        """
+        Handle POST request to update a chain's name.
+
+        Args:
+            request: HttpRequest object containing form data
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain to be updated
+
+        Returns:
+            HttpResponseRedirect: Redirects to appropriate page with status message
+
+        Raises:
+            Http404: If the bot doesn't exist or user doesn't own it
+        """
+
+        # Retrieve the bot object or return 404
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        # Verify user owns the bot
+        if bot.user != request.user:
+            logger.warning(
+                f"Unauthorized chain update attempt. User: {request.user.id}, Bot: {bot_id}"
+            )
+            raise Http404("You don't have permission to update this chain.")
+
+        # Validate form data
+        form = BotChainForm(request.POST)
+        if not form.is_valid():
+            messages.error(request, "Проверьте правильность введенных данных.")
+            return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
+
+        new_name: str = form.cleaned_data["name"]
+
+        try:
+            # Attempt to update chain via API
+            update_chain(chain_id, new_name)
+            logger.info(
+                f"Chain updated successfully. Bot ID: {bot_id}, Chain ID: {chain_id}, New Name: '{new_name}'"
+            )
+            messages.success(request, "Цепочка успешно обновлена.")
+            return redirect("bot-chain", bot_id=bot.id, chain_id=chain_id)
+
+        except RequestException as e:
+            # Handle API request errors
+            logger.error(
+                f"API request failed during chain update. Bot ID: {bot_id}, Chain ID: {chain_id}, Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(
+                request,
+                "Ошибка при обновлении цепочки. Пожалуйста, попробуйте позже.",
+            )
+            return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
+
+        except Exception as e:
+            # Handle unexpected errors
+            logger.critical(
+                f"Unexpected error during chain update. Bot ID: {bot_id}, Chain ID: {chain_id}, Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(
+                request,
+                "Произошла непредвиденная ошибка. Пожалуйста, свяжитесь с поддержкой.",
+            )
+            return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
+
+
 # class DeleteChainView(LoginRequiredMixin, View):
 #     """
 #     A view for deleting a main menu button for a bot.

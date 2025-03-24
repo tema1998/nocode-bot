@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Any, Dict, Optional, Union
 
@@ -485,4 +486,74 @@ def create_chain(bot_id: int, name: str) -> Optional[Dict[str, Any]]:
                 "api_endpoint": f"{BOT_SERVICE_API_URL}chain/",
             },
         )
+        raise RequestException(error_msg) from e
+
+
+def update_chain(chain_id: int, new_name: str) -> Optional[Dict[str, Any]]:
+    """
+    Updates an existing chain via the Bot-Service API.
+
+    Makes a PATCH request to update the chain's name and returns the updated chain data.
+
+    Args:
+        chain_id: The ID of the chain to update
+        new_name: The new name for the chain
+
+    Returns:
+        Optional[Dict[str, Any]]: The updated chain data if successful, None otherwise
+
+    Raises:
+        RequestException: If the API request fails or returns invalid data
+
+    """
+    try:
+        # Prepare API request payload with new chain name
+        payload = {
+            "name": new_name,
+        }
+
+        logger.info(
+            f"Attempting to update chain. Chain ID: {chain_id}, New name: '{new_name}'"
+        )
+
+        # Make authenticated PATCH request to update chain
+        response = requests.patch(
+            f"{BOT_SERVICE_API_URL}chain/{chain_id}",
+            json=payload,
+            timeout=10,  # 10 seconds timeout
+        )
+        response.raise_for_status()  # Raises for 4XX/5XX status codes
+
+        # Parse and validate response
+        data = response.json()
+
+        if not isinstance(data, dict):
+            error_msg = f"Invalid response format: expected dictionary, got {type(data)}"
+            logger.error(error_msg)
+            raise RequestException(error_msg)
+
+        logger.info(
+            f"Successfully updated chain. Chain ID: {chain_id}, Response: {data}"
+        )
+        return data
+
+    except RequestException as e:
+        error_msg = f"API request failed for chain {chain_id}: {str(e)}"
+        logger.error(
+            error_msg,
+            exc_info=True,
+            extra={
+                "chain_id": chain_id,
+                "new_name": new_name,
+                "api_endpoint": f"{BOT_SERVICE_API_URL}chain/{chain_id}",
+                "status_code": getattr(e.response, "status_code", None),
+            },
+        )
+        raise RequestException(error_msg) from e
+
+    except json.JSONDecodeError as e:
+        error_msg = (
+            f"Failed to parse JSON response for chain {chain_id}: {str(e)}"
+        )
+        logger.error(error_msg, exc_info=True)
         raise RequestException(error_msg) from e
