@@ -9,88 +9,120 @@
 <div class="container-fluid">
 
     <!-- Page Heading -->
-    <h1 class="h3 mb-2 text-gray-800">Настройка приветствия и кнопок главного меню</h1>
-    <p class="mb-4">Здесь вы можете настроить кнопки главного меню и приветствие (отображается при выполнении команды /start)</p>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Настройка главного меню @{{bot.bot_username}}</h1>
+        <a href="{% url 'create-bot-main-menu-button' bot.id %}" class="btn btn-primary">
+            <i class="fas fa-plus mr-2"></i>Добавить кнопку
+        </a>
+    </div>
 
-    <!-- DataTales Example -->
+    <!-- Welcome Message Card -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary"></h6>
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-comment-dots mr-2"></i>Приветственное сообщение
+            </h6>
         </div>
         <div class="card-body">
-
-            <div class="container mt-5">
-                <h1>Telegram Bot @{{ bot.bot_username }}</h1>
-                <div class="card">
-                    <div class="card-body">
-                        <form id="botForm" method="post" action="{% url 'bot-main-menu' bot.id %}">
-                            {% csrf_token %}
-
-                            <p class="card-text h3">
-                                <strong>Приветственное сообщение:</strong>
-                            </p>
-
-                            <textarea name="welcome_message" class="form-control" rows="9" maxlength="3000" oninput="updateCharCount(this)">{{ bot_main_menu.welcome_message }}</textarea><br>
-
-                            <div id="charCount">
-                                Осталось символов: <span id="remainingChars">3000</span>/3000
-                            </div>
-
-                            <div class="d-flex justify-content-center gap-2">
-                                <button type="submit" class="btn btn-success">Сохранить изменения</button>
-                            </div>
-                        </form>
-
-                            {% if bot_main_menu.buttons %}
-                                <p class="card-text h3">
-                                    <strong>Кнопки главного меню:</strong>
-                                </p>
-                                {% for button in bot_main_menu.buttons %}
-                                    <div class="button-container mb-4">
-                                        <!-- Main button that, when clicked, shows the edit menu -->
-                                        <button type="button" class="btn btn-outline-info btn-lg dropdown-toggle" data-toggle="collapse" data-target="#editMenu{{ button.id }}" aria-expanded="false" aria-controls="editMenu{{ button.id }}">
-                                            {{ button.button_text }}
-                                        </button>
-
-                                        <!-- Collapse area for editing and deleting button -->
-                                        <div class="collapse" id="editMenu{{ button.id }}">
-                                            <div class="card card-body mt-2">
-                                                <div class="d-flex">
-                                                    <a href="{% url 'bot-main-menu-button' bot.id button.id %}" class="btn btn-primary">Редактировать</a>
-                                                    <!-- Form for deleting the button -->
-                                                    <form action="{% url 'delete-bot-main-menu-button' bot.id button.id %}" method="POST" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger ml-2" onclick="return confirm('Вы уверены, что хотите удалить эту кнопку?');">Удалить</button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <p>Кнопок нет.</p>
-                            {% endif %}
-
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{% url 'create-bot-main-menu-button' bot.id %}">
-                                    <button type="button" class="btn btn-info btn-lg mb-4">Добавить кнопку</button>
-                                </a>
-                            </div>
-
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
-                                        {{ message }}
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-
-                    </div>
+            <form id="botForm" method="post" action="{% url 'bot-main-menu' bot.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Сообщение при команде /start</label>
+                    <textarea name="welcome_message" class="form-control" rows="6"
+                              maxlength="3000" oninput="updateCharCount(this)"
+                              placeholder="Введите текст приветствия...">{{ bot_main_menu.welcome_message }}</textarea>
+                    <small class="text-muted float-right">
+                        <span id="charCount">3000</span> символов осталось
+                    </small>
                 </div>
-            </div>
-
+                <button type="submit" class="btn btn-success mt-3">
+                    <i class="fas fa-save mr-2"></i>Сохранить
+                </button>
+            </form>
         </div>
     </div>
+
+    <!-- Menu Buttons Card -->
+    <div class="card shadow">
+        <div class="card-header py-3 bg-info text-white">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-bars mr-2"></i>Кнопки меню
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if bot_main_menu.buttons %}
+            <div class="list-group">
+                {% for button in bot_main_menu.buttons %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <span class="color-square mr-3" style="background-color: {{ button.color|default:'#007bff' }}"></span>
+                        <div>
+                            <h6 class="mb-0">{{ button.button_text }}</h6>
+                            {% if button.description %}
+                            <small class="text-muted">{{ button.description }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{% url 'bot-main-menu-button' bot.id button.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteButton{{ button.id }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Delete Modal -->
+                <div class="modal fade" id="deleteButton{{ button.id }}" tabindex="-1" role="dialog">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title">Удаление кнопки</h5>
+                                <button type="button" class="close" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Удалить кнопку "{{ button.button_text }}"?</p>
+                                <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Это действие нельзя отменить!</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                                <form method="post" action="{% url 'delete-bot-main-menu-button' bot.id button.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Удалить</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-inbox fa-3x text-gray-300 mb-3"></i>
+                <h5 class="text-gray-800">Нет кнопок меню</h5>
+                <p class="text-muted">Добавьте кнопки для навигации пользователей</p>
+                <a href="{% url 'create-bot-main-menu-button' bot.id %}" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Добавить кнопку
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mt-4">
+        {% for message in messages %}
+        <div class="alert alert-dismissible {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}
@@ -99,6 +131,37 @@
     {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
 {% endblock %}
 
+{% block styles %}
+<style>
+    .color-square {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
-    <script src="{% static 'bootstrap/js/main-menu-field-counter.js' %}"></script>
+    <script>
+        // Character counter
+        function updateCharCount(textarea) {
+            const max = 3000;
+            const remaining = max - textarea.value.length;
+            const counter = $('#charCount');
+
+            counter.text(remaining);
+            counter.toggleClass('text-danger', remaining < 50);
+            counter.toggleClass('text-warning', remaining >= 50 && remaining < 100);
+        }
+
+        // Initialize counter
+        $(document).ready(function() {
+            const textarea = $('textarea[name="welcome_message"]');
+            if (textarea.length) {
+                updateCharCount(textarea[0]);
+            }
+        });
+    </script>
 {% endblock %}

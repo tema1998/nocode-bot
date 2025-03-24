@@ -9,67 +9,152 @@
 <div class="container-fluid">
 
     <!-- Page Heading -->
-    <h1 class="h3 mb-2 text-gray-800">Базовые настройки вашего бота</h1>
-    <p class="mb-4">Здесь вы можете активировать/деактивировать вашего бота и изменить токен.</p>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Настройки бота @{{bot.bot_username}}</h1>
+    </div>
+    <p class="mb-4">Основные параметры и настройки вашего Telegram бота</p>
 
-    <!-- DataTales Example -->
+    <!-- Main Card -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary"></h6>
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">Основные параметры</h6>
         </div>
         <div class="card-body">
 
-            <div class="container mt-5">
-                <h1>Telegram Bot @{{ bot.bot_username }}</h1>
-                <div class="card">
-                    <div class="card-body">
-                        <form id="botForm" method="post" action="{% url 'bot-details' bot.id %}">
-                            {% csrf_token %}
-                            <p class="card-text h3">
-                                <strong>Имя пользователя:</strong> <a href="https://t.me/{{bot.bot_username}}" target="_blank"> @{{ bot_data.username }} </a><br>
-                                <strong>Имя:</strong> {{bot_data.name}}<br>
-
-                                <div class="d-flex">
-                                    <strong class="card-text h3">Активен:</strong>
-                                    <div class="form-check form-switch">
-                                        <input class="" type="checkbox" id="is_active" name="is_active"
-                                               style="transform: scale(2);" {% if bot_data.is_active %}checked{% endif %}>
-                                    </div>
-                                </div><br>
-
-                                <div class="d-flex align-items-center">
-                                    <strong class="card-text h3 me-10">Token:</strong>
-                                    <div class="input-group mb-3">
-                                        <input type="text" class="form-control" id="tokenInput" name="token" value="{{ bot_data.token }}" style="display: none;">
-                                        <button type="button" id="showTokenBtn" class="btn btn-primary btn-sm">Показать</button>
-                                    </div>
-                                </div><br>
-                            </p>
-
-                            {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                            {% endif %}
-                            <div class="d-flex justify-content-center gap-2">
-                                <button type="submit" class="btn btn-success">Сохранить изменения</button>
-                            </div>
-                        </form>
-
-                        <div class="d-flex justify-content-center gap-2">
-                            <form id="deleteBotForm" method="post" action="{% url 'bot-delete' bot.id %}" style="margin-top: 20px;">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <form id="botForm" method="post" action="{% url 'bot-details' bot.id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены, что хотите удалить этого бота? Это действие нельзя отменить.');">
-                                    Удалить бота
-                                </button>
+
+                                <!-- Bot Info Section -->
+                                <div class="mb-4">
+                                    <h4 class="text-primary mb-3">
+                                        <i class="fas fa-robot mr-2"></i>Информация о боте
+                                    </h4>
+                                    <div class="pl-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="font-weight-bold mr-2" style="min-width: 150px;">Username:</span>
+                                            <a href="https://t.me/{{bot.bot_username}}" target="_blank" class="text-info">
+                                                @{{ bot_data.username }} <i class="fas fa-external-link-alt ml-1"></i>
+                                            </a>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="font-weight-bold mr-2" style="min-width: 150px;">Имя бота:</span>
+                                            <span>{{bot_data.name}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Active Status -->
+                                <div class="mb-4">
+                                    <h4 class="text-primary mb-3">
+                                        <i class="fas fa-power-off mr-2"></i>Статус бота
+                                    </h4>
+                                    <div class="pl-4 d-flex align-items-center">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="is_active"
+                                                   name="is_active" {% if bot_data.is_active %}checked{% endif %}>
+                                            <label class="custom-control-label" for="is_active">
+                                                {% if bot_data.is_active %}
+                                                    <span class="text-success">Бот активен</span>
+                                                {% else %}
+                                                    <span class="text-danger">Бот неактивен</span>
+                                                {% endif %}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-4">
+
+                                <!-- Token Section -->
+                                <div class="mb-4">
+                                    <h4 class="text-primary mb-3">
+                                        <i class="fas fa-key mr-2"></i>Токен доступа
+                                    </h4>
+                                    <div class="pl-4">
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="tokenInput"
+                                                   name="token" value="{{ bot_data.token }}">
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" id="toggleTokenBtn">
+                                                    <i class="fas fa-eye mr-1"></i> Показать
+                                                </button>
+                                                <button class="btn btn-outline-info" type="button" id="copyTokenBtn">
+                                                    <i class="fas fa-copy mr-1"></i> Копировать
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Никому не передавайте ваш токен — это может привести к компрометации бота
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Messages -->
+                                {% if messages %}
+                                <div class="mt-4">
+                                    {% for message in messages %}
+                                    <div class="alert alert-dismissible {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %} mr-2"></i>
+                                        {{ message }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-between mt-5">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save mr-2"></i> Сохранить изменения
+                                    </button>
+
+                                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteBotModal">
+                                        <i class="fas fa-trash-alt mr-2"></i> Удалить бота
+                                    </button>
+                                </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Delete Bot Modal -->
+    <div class="modal fade" id="deleteBotModal" tabindex="-1" role="dialog" aria-labelledby="deleteBotModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteBotModalLabel">Подтверждение удаления</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы действительно хотите удалить бота <strong>@{{bot.bot_username}}</strong>?</p>
+                    <p class="text-danger"><i class="fas fa-exclamation-triangle mr-2"></i>Все данные бота будут безвозвратно удалены!</p>
+                    <p>Для подтверждения введите имя бота:</p>
+                    <input type="text" class="form-control" id="confirmBotName" placeholder="@{{bot.bot_username}}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <form method="post" action="{% url 'bot-delete' bot.id %}" id="deleteBotForm">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                            <i class="fas fa-trash-alt mr-2"></i> Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -81,5 +166,52 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="{% static 'bootstrap/js/bot-details.js' %}"></script>
+    <script>
+        // Confirm bot name before deletion
+        $(document).ready(function() {
+            $('#confirmBotName').on('input', function() {
+                if ($(this).val() === '@{{bot.bot_username}}') {
+                    $('#confirmDeleteBtn').prop('disabled', false);
+                } else {
+                    $('#confirmDeleteBtn').prop('disabled', true);
+                }
+            });
+
+            // Toggle token visibility
+            $('#toggleTokenBtn').click(function() {
+                const tokenInput = $('#tokenInput');
+                const icon = $(this).find('i');
+
+                if (tokenInput.attr('type') === 'password') {
+                    tokenInput.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                    $(this).html('<i class="fas fa-eye-slash mr-1"></i> Скрыть');
+                } else {
+                    tokenInput.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                    $(this).html('<i class="fas fa-eye mr-1"></i> Показать');
+                }
+            });
+
+            // Copy token to clipboard
+            $('#copyTokenBtn').click(function() {
+                const tokenInput = $('#tokenInput');
+                tokenInput.select();
+                document.execCommand('copy');
+
+                // Show temporary tooltip
+                const originalTitle = $(this).attr('data-original-title');
+                $(this).attr('data-original-title', 'Скопировано!')
+                       .tooltip('show');
+
+                setTimeout(() => {
+                    $(this).attr('data-original-title', originalTitle)
+                           .tooltip('hide');
+                }, 1000);
+            }).tooltip({
+                trigger: 'hover',
+                title: 'Копировать токен'
+            });
+        });
+    </script>
 {% endblock %}

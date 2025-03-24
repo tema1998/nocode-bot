@@ -1,42 +1,107 @@
 {% extends 'index.html' %}
+{% load static %}
 
 {% block title %}
-Bot
+Добавление бота
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
 
-    <h1 class="h3 mb-2 text-gray-800">Как создать телеграм-бота и получить token?</h1>
-    <ol>
-        <li>Перейдите по ссылке на официальный телеграм канал <a href="https://t.me/BotFather">@BotFather</a>.</li>
-        <li>Нажмите <code>Начать</code>/<code>Start</code></li>
-        <li>Введите команду <code>/newbot</code>.</li>
-        <li>Введите название(name) вашего бота <code>qwerty</code>.</li>
-        <li>Введите имя пользователя(username) вашего бота(обратите внимание, что в слово bot в конце обязательно, например <code>TetrisBot</code> или <code>tetris_bot</code>) .</li>
-        <li>Скопируйте ваш token(пример token'а <code>1234567890:QWERTYUIOPasdfghjklZXCVBNMqwertyuio</code>)</li>
-    </ol>
-    <!-- DataTales Example -->
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Добавление нового Telegram бота</h1>
+    </div>
+
+    <!-- Instructions Card -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary"></h6>
+        <div class="card-header py-3 bg-info text-white">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-question-circle mr-2"></i>Как создать бота и получить токен?
+            </h6>
         </div>
         <div class="card-body">
+            <div class="alert alert-info">
+                <ol class="mb-0 pl-3">
+                    <li class="mb-2">Перейдите в <a href="https://t.me/BotFather" target="_blank" class="font-weight-bold">@BotFather</a> в Telegram</li>
+                    <li class="mb-2">Нажмите <span class="badge badge-primary">Начать</span> или <span class="badge badge-primary">Start</span></li>
+                    <li class="mb-2">Введите команду <code class="bg-light p-1 rounded">/newbot</code></li>
+                    <li class="mb-2">Укажите название бота (например: <code class="bg-light p-1 rounded">My Awesome Bot</code>)</li>
+                    <li class="mb-2">Придумайте username (должен оканчиваться на <code class="bg-light p-1 rounded">bot</code>, например: <code class="bg-light p-1 rounded">MyAwesomeBot</code>)</li>
+                    <li>Скопируйте полученный токен (выглядит примерно так: <code class="bg-light p-1 rounded">1234567890:ABCdefGHIJKlmnOpQRSTuvwXYZ</code>)</li>
+                </ol>
+            </div>
+        </div>
+    </div>
 
-                <div class="container mt-5">
-                    <h1>Добавить нового бота</h1>
-                    <form method="post">
+    <!-- Add Bot Form Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">
+                <i class="fas fa-plus-circle mr-2"></i>Добавить бота
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary">Добавить</button>
-                    </form>
-                    {% if error %}
-                        <div class="alert alert-danger mt-3">{{ error }}</div>
-                    {% endif %}
-                </div>
 
+                        <div class="form-group">
+                            <label for="{{ form.token.id_for_label }}" class="font-weight-bold">
+                                <i class="fas fa-key mr-2"></i>Токен бота
+                            </label>
+                            {{ form.token }}
+                            <small class="form-text text-muted">Введите токен, полученный от @BotFather</small>
+                            {% if form.token.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.token.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if error %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>{{ error }}
+                        </div>
+                        {% endif %}
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-success btn-icon-split">
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                                <span class="text">Добавить бота</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Добавляем стили для невалидных полей
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        // Получаем все формы, которым нужна валидация
+        var forms = document.getElementsByClassName('needs-validation');
+        // Проходим по формам и предотвращаем отправку
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
 {% endblock %}
