@@ -232,11 +232,11 @@ class ChainStepService:
         """
         try:
             # Fetch the button and update its next_step_id
-            previous_button = await self.db_repository.fetch_by_id(
+            button = await self.db_repository.fetch_by_id(
                 ChainButton, button_id
             )
-            previous_button.next_step_id = next_chain_step_id  # type:ignore
-            await self.db_repository.update(previous_button)
+            button.next_step_id = next_chain_step_id  # type:ignore
+            await self.db_repository.update(button)
         except Exception as e:
             logger.error(
                 f"Failed to set step as next step for button: {str(e)}"

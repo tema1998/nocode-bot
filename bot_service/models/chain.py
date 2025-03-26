@@ -61,12 +61,16 @@ class ChainButton(Base):
     step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=False)
     text = Column(String, nullable=False)
     callback = Column(String, nullable=True)
+    next_step_id = Column(
+        Integer,
+        ForeignKey("chain_steps.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     step = relationship(
         "ChainStep", back_populates="chain_buttons", foreign_keys=[step_id]
     )
 
-    next_step_id = Column(Integer, ForeignKey("chain_steps.id"))
     next_step = relationship("ChainStep", foreign_keys=[next_step_id])
 
 
@@ -77,7 +81,11 @@ class ChainStep(Base):
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=False)
     name = Column(String, nullable=False)
     message = Column(String, nullable=False)
-    next_step_id = Column(Integer, ForeignKey("chain_steps.id"))
+    next_step_id = Column(
+        Integer,
+        ForeignKey("chain_steps.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     text_input = Column(Boolean, default=False)
 
     chain_buttons = relationship(
