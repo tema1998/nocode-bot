@@ -629,3 +629,192 @@ def delete_chain(chain_id: int) -> bool:
         error_msg = f"Unexpected error deleting chain {chain_id}"
         logger.error(f"{error_msg}: {str(e)}", exc_info=True)
         raise RequestException(error_msg) from e
+
+
+def get_chain_step(step_id: int) -> Dict[str, Any]:
+    """
+    Retrieve a chain step by its ID from the API.
+
+    Args:
+        step_id: The ID of the step to retrieve
+
+    Returns:
+        Dictionary containing the step data
+
+    Raises:
+        RequestException: If API request fails or response is invalid
+        ValueError: If input validation fails
+    """
+    if not isinstance(step_id, int) or step_id <= 0:
+        error_msg = f"Invalid step_id: {step_id}. Must be positive integer"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    try:
+        response = requests.get(
+            f"{BOT_SERVICE_API_URL}chain-step/{step_id}", timeout=10
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        if not isinstance(data, dict):
+            raise ValueError(f"Expected dictionary, got {type(data)}")
+
+        return data
+
+    except RequestException as e:
+        logger.error(
+            f"Failed to fetch chain step {step_id}. Error: {str(e)}",
+            exc_info=True,
+            extra={"step_id": step_id},
+        )
+        raise RequestException(f"API request failed: {str(e)}") from e
+    except json.JSONDecodeError as e:
+        logger.error(
+            f"Invalid JSON response for step {step_id}", exc_info=True
+        )
+        raise RequestException("Invalid API response format") from e
+
+
+def create_chain_step(
+    chain_id: int,
+    name: str,
+    message: str,
+    is_first_step_of_chain: bool,
+    set_as_next_step_for_button_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Create a new chain step via API.
+
+    Args:
+        chain_id: ID of the parent chain
+        name: Step name
+        message: Step message content
+        is_first_step_of_chain: Whether this is the chain's first step
+        set_as_next_step_for_button_id: Optional button ID to link this step to
+
+    Returns:
+        Dictionary containing created step data
+
+    Raises:
+        RequestException: If API request fails
+        ValueError: For invalid input parameters
+    """
+    if not isinstance(chain_id, int) or chain_id <= 0:
+        raise ValueError("chain_id must be positive integer")
+
+    payload = {
+        "chain_id": chain_id,
+        "name": name,
+        "message": message,
+        "is_first_step_of_chain": is_first_step_of_chain,
+    }
+
+    if set_as_next_step_for_button_id:
+        if (
+            not isinstance(set_as_next_step_for_button_id, int)
+            or set_as_next_step_for_button_id <= 0
+        ):
+            raise ValueError("button_id must be positive integer")
+        payload["set_as_next_step_for_button_id"] = (
+            set_as_next_step_for_button_id
+        )
+
+    try:
+        response = requests.post(
+            f"{BOT_SERVICE_API_URL}chain-step", json=payload, timeout=10
+        )
+        response.raise_for_status()
+        response_data = response.json()
+        if not isinstance(response_data, dict):
+            raise ValueError("Expected dictionary response from API")
+
+        return response_data
+
+    except RequestException as e:
+        logger.error(
+            f"Failed to create step in chain {chain_id}. Error: {str(e)}",
+            exc_info=True,
+            extra={"chain_id": chain_id, "payload": payload},
+        )
+        raise RequestException(f"Step creation failed: {str(e)}") from e
+
+
+def update_chain_step(step_id: int, name: str, message: str) -> Dict[str, Any]:
+    """
+    Update an existing chain step.
+
+    Args:
+        step_id: ID of the step to update
+        name: New step name
+        message: New message content
+
+    Returns:
+        Updated step data
+
+    Raises:
+        RequestException: If API request fails
+        ValueError: For invalid parameters
+    """
+    if not isinstance(step_id, int) or step_id <= 0:
+        raise ValueError("step_id must be positive integer")
+
+    payload = {"name": name, "message": message}
+
+    try:
+        response = requests.patch(
+            f"{BOT_SERVICE_API_URL}chain-step/{step_id}",
+            json=payload,
+            timeout=10,
+        )
+        response.raise_for_status()
+        response_data = response.json()
+        if not isinstance(response_data, dict):
+            raise ValueError("Expected dictionary response from API")
+
+        return response_data
+
+    except RequestException as e:
+        logger.error(
+            f"Failed to update step {step_id}. Error: {str(e)}",
+            exc_info=True,
+            extra={"step_id": step_id, "payload": payload},
+        )
+        raise RequestException(f"Step update failed: {str(e)}") from e
+
+
+def delete_chain_step(step_id: int) -> bool:
+    """
+    Delete a chain step via API.
+
+    Args:
+        step_id: ID of the step to delete
+
+    Returns:
+        bool: True if deletion was successful
+
+    Raises:
+        RequestException: If API request fails
+        ValueError: For invalid step_id
+    """
+    if not isinstance(step_id, int) or step_id <= 0:
+        raise ValueError("step_id must be positive integer")
+
+    try:
+        response = requests.delete(
+            f"{BOT_SERVICE_API_URL}chain-step/{step_id}", timeout=10
+        )
+
+        if response.status_code == 204:
+            return True
+
+        response.raise_for_status()
+        return False
+
+    except RequestException as e:
+        logger.error(
+            f"Failed to delete step {step_id}. Status: {getattr(e.response, 'status_code', 'unknown')}. Error: {str(e)}",
+            exc_info=True,
+            extra={"step_id": step_id},
+        )
+        raise RequestException(f"Step deletion failed: {str(e)}") from e

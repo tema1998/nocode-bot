@@ -332,13 +332,21 @@
                 label: `
                     <div style="text-align: center;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <a href="/" class="icon edit-icon">
+                            <a href="/bots/update-chain-step/{{bot.id}}/{{chain.id}}/${step.id}" class="icon edit-icon">
                                 <i class="fas fa-edit"></i>
                             </a>
                             ${(!step.buttons || step.buttons.length === 0) && !step.next_step ? `
-                                <a href="{% url 'index' %}" class="icon delete-icon">
+                                <a href="#"
+                                   onclick="event.preventDefault(); document.getElementById('delete-form-${step.id}').submit();"
+                                   class="icon delete-icon">
                                     <i class="fas fa-trash"></i>
                                 </a>
+                                <form id="delete-form-${step.id}"
+                                      action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
+                                      method="POST"
+                                      style="display: none;">
+                                    {% csrf_token %}
+                                </form>
                             ` : ''}
                         </div>
                         <div style="margin-top: 10px;">
@@ -389,9 +397,20 @@
                                 </div>
                                 ${!button.next_step ? `
                                     <div style="text-align: center; margin-top: 10px;">
-                                        <a href="{% url 'index' %}" class="icon add-step-icon">
+
+                                        <a href="#"
+                                           onclick="event.preventDefault(); document.getElementById('create-form-${step.id}').submit();"
+                                           class="icon add-step-icon">
                                             <i class="fas fa-plus"></i> Добавить шаг
                                         </a>
+                                        <form id="create-form-${step.id}"
+                                              action="/bots/create-chain-step/{{bot.id}}/{{chain.id}}"
+                                              method="POST"
+                                              style="display: none;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="set_as_next_step_for_button_id" value="${button.id}">
+                                        </form>
+
                                     </div>
                                 ` : ''}`,
                             labelType: 'html',

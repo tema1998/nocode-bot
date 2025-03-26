@@ -21,17 +21,21 @@ from .models import Bot
 from .utils import (
     create_bot,
     create_chain,
+    create_chain_step,
     create_main_menu_button,
     delete_bot,
     delete_bot_main_menu_button,
     delete_chain,
+    delete_chain_step,
     get_bot_chain,
     get_bot_chains,
     get_bot_details,
     get_bot_main_menu,
     get_bot_main_menu_button,
+    get_chain_step,
     update_bot,
     update_chain,
+    update_chain_step,
     update_main_menu,
     update_main_menu_button,
 )
@@ -1037,3 +1041,180 @@ class DeleteChainView(LoginRequiredMixin, View):
                 "Произошла непредвиденная ошибка при удалении. Пожалуйста, свяжитесь с поддержкой.",
             )
             return redirect("bot-chains", bot_id=bot_id)
+
+
+class CreateChainStepView(LoginRequiredMixin, View):
+    """View for creating new chain steps in conversation flows."""
+
+    def post(
+        self, request, bot_id: int, chain_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle step creation request.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain to add step to
+
+        Returns:
+            Redirect to chain view or error page
+
+        Raises:
+            Http404: If user doesn't own the bot or other access violation
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            create_chain_step(
+                chain_id=chain_id,
+                name="<Не задано>",
+                message="<Не задано>",
+                is_first_step_of_chain=request.POST.get(
+                    "is_first_step_of_chain"
+                )
+                == "true",
+                set_as_next_step_for_button_id=request.POST.get(
+                    "set_as_next_step_for_button_id"
+                ),
+            )
+            messages.success(
+                request,
+                "Шаг успешно создан. Отредактируйте его содержимое и добавьте к нему кнопки с вариантами ответа для пользователя.",
+            )
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to create chain step. Chain ID: {chain_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, f"Ошибка при создании шага: {str(e)}")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+
+class UpdateChainStepView(LoginRequiredMixin, View):
+    """View for updating existing chain steps in conversation flows."""
+
+    template_name = "bots/update_chain_step.html"
+
+    def get(
+        self, request, bot_id: int, chain_id: int, step_id: int
+    ) -> HttpResponse:
+        """
+        Render step editing form.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain containing the step
+            step_id: ID of the step to edit
+
+        Returns:
+            Rendered template with step data
+
+        Raises:
+            Http404: If user doesn't own the bot or step not found
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        step = get_chain_step(step_id)
+        return render(
+            request,
+            self.template_name,
+            {
+                "bot": bot,
+                "chain_id": chain_id,
+                "step": step,
+            },
+        )
+
+    def post(
+        self, request, bot_id: int, chain_id: int, step_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle step update request.
+
+        Args:
+            request: HttpRequest with updated step data
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain containing the step
+            step_id: ID of the step to update
+
+        Returns:
+            Redirect to chain view or back to edit form on error
+
+        Raises:
+            Http404: If user doesn't own the bot
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            update_chain_step(
+                step_id=step_id,
+                name=request.POST.get("name"),
+                message=request.POST.get("message"),
+            )
+            messages.success(request, "Шаг успешно обновлен.")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to update chain step. Step ID: {step_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, f"Ошибка при обновлении шага: {str(e)}")
+            return redirect(
+                "update-chain-step",
+                bot_id=bot_id,
+                chain_id=chain_id,
+                step_id=step_id,
+            )
+
+
+class DeleteChainStepView(LoginRequiredMixin, View):
+    """View for deleting chain steps from conversation flows."""
+
+    def post(
+        self, request, bot_id: int, chain_id: int, step_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle step deletion request.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain containing the step
+            step_id: ID of the step to delete
+
+        Returns:
+            Redirect to chain view
+
+        Raises:
+            Http404: If user doesn't own the bot
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            delete_chain_step(step_id)
+            messages.success(request, "Шаг успешно удален.")
+        except Exception as e:
+            logger.error(
+                f"Failed to delete chain step. Step ID: {step_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, "Ошибка при удалении шага.")
+
+        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
