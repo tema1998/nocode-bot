@@ -10,6 +10,7 @@ class ChainCreate(BaseModel):
 
 class ChainUpdate(BaseModel):
     name: Optional[str] = None
+    first_chain_step_id: Optional[int] = None
 
 
 class ChainResponse(BaseModel):

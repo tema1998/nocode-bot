@@ -150,6 +150,9 @@ class ChainService:
             if chain_update.name is not None:
                 chain.name = chain_update.name
 
+            if chain_update.first_chain_step_id is not None:
+                chain.first_chain_step_id = chain_update.first_chain_step_id
+
             await self.db_repository.update(chain)
             return chain  # type: ignore
         except HTTPException:
