@@ -1,7 +1,7 @@
 {% extends 'index.html' %}
 
 {% block title %}
-{% if form_type == 'create' %}Создание{% else %}Редактирование{% endif %} шага - {{chain.name}}
+Редактирование шага
 {% endblock %}
 
 {% block content %}
@@ -9,7 +9,7 @@
     <div class="card shadow mb-4">
         <div class="card-header py-3 bg-primary text-white">
             <h6 class="m-0 font-weight-bold">
-                {% if form_type == 'create' %}Создание{% else %}Редактирование{% endif %} шага
+                Редактирование шага
             </h6>
         </div>
         <div class="card-body">
@@ -48,19 +48,4 @@
     </div>
 </div>
 
-{% if form_type == 'create' %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const firstStepCheckbox = document.getElementById('is_first_step');
-    const buttonSelector = document.getElementById('button-selector');
-    
-    firstStepCheckbox.addEventListener('change', function() {
-        buttonSelector.style.display = this.checked ? 'none' : 'block';
-    });
-    
-    // Initial state
-    buttonSelector.style.display = firstStepCheckbox.checked ? 'none' : 'block';
-});
-</script>
-{% endif %}
 {% endblock %}
