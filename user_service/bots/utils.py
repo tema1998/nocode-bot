@@ -711,12 +711,7 @@ def create_chain_step(
     }
 
     if set_as_next_step_for_button_id:
-        if (
-            not isinstance(set_as_next_step_for_button_id, int)
-            or set_as_next_step_for_button_id <= 0
-        ):
-            raise ValueError("button_id must be positive integer")
-        payload["set_as_next_step_for_button_id"] = (
+        payload["set_as_next_step_for_button_id"] = int(
             set_as_next_step_for_button_id
         )
 
@@ -818,3 +813,199 @@ def delete_chain_step(step_id: int) -> bool:
             extra={"step_id": step_id},
         )
         raise RequestException(f"Step deletion failed: {str(e)}") from e
+
+
+def create_chain_button(
+    step_id: int, text: str, callback: str, next_step_id: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Creates a new button in a conversation chain step.
+
+    Args:
+        step_id: ID of the parent step this button belongs to
+        text: Display text for the button
+        callback: Callback data for button interactions
+        next_step_id: Optional ID of the next step this button links to
+
+    Returns:
+        Dictionary containing the created button data
+
+    Raises:
+        RequestException: If API communication fails
+        ValueError: For invalid input parameters
+    """
+    if not isinstance(step_id, int) or step_id <= 0:
+        raise ValueError("step_id must be a positive integer")
+
+    payload = {"step_id": step_id, "text": text, "callback": callback}
+
+    if next_step_id is not None:
+        if not isinstance(next_step_id, int) or next_step_id <= 0:
+            raise ValueError("next_step_id must be a positive integer")
+        payload["next_step_id"] = next_step_id
+
+    try:
+        response = requests.post(
+            f"{BOT_SERVICE_API_URL}chain-button", json=payload, timeout=10
+        )
+        response.raise_for_status()
+
+        response_data = response.json()
+        if not isinstance(response_data, dict):
+            raise ValueError(
+                "API response format invalid - expected dictionary"
+            )
+
+        return response_data
+
+    except RequestException as e:
+        logger.error(
+            "Button creation failed for step %d. Error: %s. Payload: %s",
+            step_id,
+            str(e),
+            payload,
+            exc_info=True,
+        )
+        raise RequestException(f"Button creation failed: {str(e)}") from e
+
+
+def get_chain_button(button_id: int) -> Dict[str, Any]:
+    """
+    Retrieves details of a specific chain button.
+
+    Args:
+        button_id: Unique identifier of the button
+
+    Returns:
+        Dictionary containing button configuration
+
+    Raises:
+        RequestException: If API request fails
+        ValueError: For invalid ID format or response data
+    """
+    if not isinstance(button_id, int) or button_id <= 0:
+        raise ValueError("button_id must be a positive integer")
+
+    try:
+        response = requests.get(
+            f"{BOT_SERVICE_API_URL}chain-button/{button_id}", timeout=10
+        )
+        response.raise_for_status()
+
+        response_data = response.json()
+        if not isinstance(response_data, dict):
+            raise ValueError(
+                "API response format invalid - expected dictionary"
+            )
+
+        return response_data
+
+    except RequestException as e:
+        logger.error(
+            "Failed to retrieve button %d. Error: %s",
+            button_id,
+            str(e),
+            exc_info=True,
+        )
+        raise RequestException(f"Button retrieval failed: {str(e)}") from e
+
+
+def update_chain_button(
+    button_id: int,
+    text: Optional[str] = None,
+    callback: Optional[str] = None,
+    next_step_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Updates configuration of an existing chain button.
+
+    Args:
+        button_id: ID of the button to update
+        text: New display text (optional)
+        callback: New callback data (optional)
+        next_step_id: New target step ID (optional)
+
+    Returns:
+        Updated button configuration
+
+    Raises:
+        RequestException: If update operation fails
+        ValueError: For invalid parameters
+    """
+    if not isinstance(button_id, int) or button_id <= 0:
+        raise ValueError("button_id must be a positive integer")
+
+    payload = {}
+    if text is not None:
+        payload["text"] = text
+    if callback is not None:
+        payload["callback"] = callback
+    if next_step_id is not None:
+        if not isinstance(next_step_id, int) or next_step_id <= 0:
+            raise ValueError("next_step_id must be a positive integer")
+        payload["next_step_id"] = int(next_step_id)  # type: ignore
+
+    try:
+        response = requests.patch(
+            f"{BOT_SERVICE_API_URL}chain-button/{button_id}",
+            json=payload,
+            timeout=10,
+        )
+        response.raise_for_status()
+
+        response_data = response.json()
+        if not isinstance(response_data, dict):
+            raise ValueError(
+                "API response format invalid - expected dictionary"
+            )
+
+        return response_data
+
+    except RequestException as e:
+        logger.error(
+            "Failed to update button %d. Error: %s. Changes: %s",
+            button_id,
+            str(e),
+            payload,
+            exc_info=True,
+        )
+        raise RequestException(f"Button update failed: {str(e)}") from e
+
+
+def delete_chain_button(button_id: int) -> bool:
+    """
+    Permanently removes a chain button.
+
+    Args:
+        button_id: ID of the button to delete
+
+    Returns:
+        bool: True if deletion was successful, False otherwise
+
+    Raises:
+        RequestException: If deletion operation fails
+        ValueError: For invalid button ID
+    """
+    if not isinstance(button_id, int) or button_id <= 0:
+        raise ValueError("button_id must be a positive integer")
+
+    try:
+        response = requests.delete(
+            f"{BOT_SERVICE_API_URL}chain-button/{button_id}", timeout=10
+        )
+
+        if response.status_code == 204:
+            return True
+
+        response.raise_for_status()
+        return False
+
+    except RequestException as e:
+        logger.error(
+            "Failed to delete button %d. Status: %s. Error: %s",
+            button_id,
+            getattr(e.response, "status_code", "N/A"),
+            str(e),
+            exc_info=True,
+        )
+        raise RequestException(f"Button deletion failed: {str(e)}") from e

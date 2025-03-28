@@ -21,20 +21,24 @@ from .models import Bot
 from .utils import (
     create_bot,
     create_chain,
+    create_chain_button,
     create_chain_step,
     create_main_menu_button,
     delete_bot,
     delete_bot_main_menu_button,
     delete_chain,
+    delete_chain_button,
     delete_chain_step,
     get_bot_chain,
     get_bot_chains,
     get_bot_details,
     get_bot_main_menu,
     get_bot_main_menu_button,
+    get_chain_button,
     get_chain_step,
     update_bot,
     update_chain,
+    update_chain_button,
     update_chain_step,
     update_main_menu,
     update_main_menu_button,
@@ -1069,6 +1073,7 @@ class CreateChainStepView(LoginRequiredMixin, View):
             raise Http404("You don't have permission to modify this bot.")
 
         try:
+
             create_chain_step(
                 chain_id=chain_id,
                 name="<Не задано>",
@@ -1216,5 +1221,161 @@ class DeleteChainStepView(LoginRequiredMixin, View):
                 exc_info=True,
             )
             messages.error(request, "Ошибка при удалении шага.")
+
+        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+
+class CreateChainButtonView(LoginRequiredMixin, View):
+    """View for creating new chain buttons"""
+
+    def post(
+        self, request, bot_id: int, chain_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle button creation request
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain
+
+        Returns:
+            Redirect to chain view or error page
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            create_chain_button(
+                step_id=int(request.POST.get("step_id")),
+                text="<Не задано>",
+                callback="<Не задано>",
+            )
+
+            messages.success(request, "Кнопка успешно создана.")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to create chain button. Step ID: {request.POST.get("step_id", "")}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, f"Ошибка при создании кнопки: {str(e)}")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+
+class UpdateChainButtonView(LoginRequiredMixin, View):
+    """View for updating existing chain buttons"""
+
+    template_name = "bots/update_chain_button.html"
+
+    def get(
+        self, request, bot_id: int, chain_id: int, button_id: int
+    ) -> HttpResponse:
+        """
+        Render step editing form.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain containing the step
+            button_id: ID of the button to edit
+
+        Returns:
+            Rendered template with button data
+
+        Raises:
+            Http404: If user doesn't own the bot or button not found
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        button = get_chain_button(button_id)
+        return render(
+            request,
+            self.template_name,
+            {
+                "bot": bot,
+                "chain_id": chain_id,
+                "button": button,
+            },
+        )
+
+    def post(
+        self, request, bot_id: int, chain_id: int, button_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle button update request
+
+        Args:
+            request: HttpRequest with updated button data
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain
+            button_id: ID of the button to update
+
+        Returns:
+            Redirect to step edit view
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            update_chain_button(
+                button_id=button_id,
+                text=request.POST.get("text"),
+                callback=request.POST.get("callback"),
+            )
+            messages.success(request, "Кнопка успешно обновлена.")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to update chain button. Button ID: {button_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, f"Ошибка при обновлении кнопки: {str(e)}")
+            return redirect(
+                "update-chain-step", bot_id=bot_id, chain_id=chain_id
+            )
+
+
+class DeleteChainButtonView(LoginRequiredMixin, View):
+    """View for deleting chain buttons"""
+
+    def post(
+        self, request, bot_id: int, chain_id: int, button_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle button deletion request
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain
+            button_id: ID of the button to delete
+
+        Returns:
+            Redirect to step edit view
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            delete_chain_button(button_id)
+            messages.success(request, "Кнопка успешно удалена.")
+        except Exception as e:
+            logger.error(
+                f"Failed to delete chain button. Button ID: {button_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, "Ошибка при удалении кнопки.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)

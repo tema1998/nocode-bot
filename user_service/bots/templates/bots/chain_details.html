@@ -337,11 +337,11 @@
                             </a>
                             ${(!step.buttons || step.buttons.length === 0) && !step.next_step ? `
                                 <a href="#"
-                                   onclick="event.preventDefault(); document.getElementById('delete-form-${step.id}').submit();"
+                                   onclick="event.preventDefault(); document.getElementById('delete-step-${step.id}').submit();"
                                    class="icon delete-icon">
                                     <i class="fas fa-trash"></i>
                                 </a>
-                                <form id="delete-form-${step.id}"
+                                <form id="delete-step-${step.id}"
                                       action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
                                       method="POST"
                                       style="display: none;">
@@ -353,9 +353,20 @@
                             <strong>${stepName}</strong>
                         </div>
                         <div style="margin-top: 10px;">
-                            <a href="{% url 'index' %}" class="add-button">
+
+                            <a href="#"
+                               onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
+                               class="add-button">
                                 <i class="fas fa-plus"></i> Добавить кнопку
                             </a>
+                            <form id="create-button-${step.id}"
+                                  action="/bots/create-chain-button/{{bot.id}}/{{chain.id}}"
+                                  method="POST"
+                                  style="display: none;">
+                                {% csrf_token %}
+                                <input type="hidden" name="step_id" value="${step.id}">
+                            </form>
+
                         </div>
                     </div>`,
                 labelType: 'html', // Указываем, что label содержит HTML
@@ -386,24 +397,35 @@
                                     <div class="button-text">
                                         <span class="first-line">${firstLine}</span>
                                     </div>
-                                    <a href="{% url 'index' %}" class="icon edit-icon">
+                                    <a href="/bots/update-chain-button/{{bot.id}}/{{chain.id}}/${button.id}" class="icon edit-icon">
                                         <i class="fas fa-edit"></i>
                                     </a>
+
                                     ${!button.next_step ? `
-                                        <a href="{% url 'index' %}" class="icon delete-icon">
+
+                                        <a href="#"
+                                           onclick="event.preventDefault(); document.getElementById('delete-button-${button.id}').submit();"
+                                           class="icon delete-icon">
                                             <i class="fas fa-trash"></i>
                                         </a>
+                                        <form id="delete-button-${button.id}"
+                                              action="/bots/delete-chain-button/{{bot.id}}/{{chain.id}}/${button.id}"
+                                              method="POST"
+                                              style="display: none;">
+                                            {% csrf_token %}
+                                        </form>
+
                                     ` : ''}
                                 </div>
                                 ${!button.next_step ? `
                                     <div style="text-align: center; margin-top: 10px;">
 
                                         <a href="#"
-                                           onclick="event.preventDefault(); document.getElementById('create-form-${step.id}').submit();"
+                                           onclick="event.preventDefault(); document.getElementById('create-step-${button.id}').submit();"
                                            class="icon add-step-icon">
                                             <i class="fas fa-plus"></i> Добавить шаг
                                         </a>
-                                        <form id="create-form-${step.id}"
+                                        <form id="create-step-${button.id}"
                                               action="/bots/create-chain-step/{{bot.id}}/{{chain.id}}"
                                               method="POST"
                                               style="display: none;">

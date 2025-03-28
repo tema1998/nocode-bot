@@ -1,0 +1,40 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Редактирование кнопки
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Кнопка</label>
+                    <input type="text" name="text" class="form-control"
+                           value="{{ button.text }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Callback</label>
+                    <textarea name="callback" class="form-control" rows="5" required>{{ button.callback }}</textarea>
+                </div>
+
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save mr-2"></i> Сохранить
+                </button>
+                <a href="{% url 'bot-chain' bot.id chain_id %}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-2"></i> Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

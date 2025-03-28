@@ -11,12 +11,15 @@ from .views import (
     BotMainMenuView,
     BotsView,
     CreateBotMainMenuButtonView,
+    CreateChainButtonView,
     CreateChainStepView,
     CreateChainView,
     DeleteBotMainMenuButtonView,
+    DeleteChainButtonView,
     DeleteChainStepView,
     DeleteChainView,
     UpdateBotMainMenuButtonView,
+    UpdateChainButtonView,
     UpdateChainStepView,
     UpdateChainView,
 )
@@ -96,5 +99,20 @@ urlpatterns = [
         "delete-chain-step/<int:bot_id>/<int:chain_id>/<int:step_id>",
         DeleteChainStepView.as_view(),
         name="delete-chain-step",
+    ),
+    path(
+        "create-chain-button/<int:bot_id>/<int:chain_id>",
+        CreateChainButtonView.as_view(),
+        name="create-chain-button",
+    ),
+    path(
+        "update-chain-button/<int:bot_id>/<int:chain_id>/<int:button_id>",
+        UpdateChainButtonView.as_view(),
+        name="update-chain-button",
+    ),
+    path(
+        "delete-chain-button/<int:bot_id>/<int:chain_id>/<int:button_id>",
+        DeleteChainButtonView.as_view(),
+        name="delete-chain-button",
     ),
 ]
