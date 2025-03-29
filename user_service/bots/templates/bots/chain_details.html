@@ -145,27 +145,6 @@
         padding: 10px;
         border-left: 1px solid #ccc;
     }
-
-    /* Стили для кнопки "Добавить первый шаг" */
-    .add-first-step-button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        text-align: center;
-        font-size: 16px;
-        position: absolute; /* Абсолютное позиционирование */
-        top: 50%; /* По центру по вертикали */
-        left: 50%; /* По центру по горизонтали */
-        transform: translate(-50%, -50%); /* Центрирование */
-    }
-
-    .add-first-step-button:hover {
-        background-color: #45a049;
-    }
 </style>
 
 <!-- Подключаем FontAwesome для иконок -->
@@ -202,10 +181,6 @@
                 <div class="card-body position-relative" style="min-height: 700px;">
                     <div style="flex: 4; position: relative; height: 100%;">
                         <svg id="chain-graph"></svg>
-                        <!-- Кнопка "Добавить первый шаг" (будет добавлена через JS, если цепочка пуста) -->
-                        <a id="add-first-step-button" href="{% url 'index' %}" class="add-first-step-button" style="display: none;">
-                            <i class="fas fa-plus"></i> Добавить первый шаг
-                        </a>
                     </div>
                 </div>
             </div>
@@ -297,12 +272,30 @@
         // Проверка данных после парсинга
         console.log('Parsed Chain Data:', chainData);
 
-        // Если first_step отсутствует, показываем кнопку "Добавить первый шаг"
-        if (!chainData.first_step) {
-            const addFirstStepButton = document.getElementById('add-first-step-button');
-            if (addFirstStepButton) {
-                addFirstStepButton.style.display = 'block'; // Показываем кнопку
+        // Функция для подсчета общего количества шагов
+        function countSteps(step, visited = new Set()) {
+            if (!step || !step.id || visited.has(step.id)) {
+                return 0;
             }
+            visited.add(step.id);
+
+            let count = 1; // текущий шаг
+
+            // Считаем шаги в кнопках
+            if (step.buttons) {
+                for (const button of step.buttons) {
+                    if (button.next_step) {
+                        count += countSteps(button.next_step, visited);
+                    }
+                }
+            }
+
+            // Считаем следующий шаг
+            if (step.next_step) {
+                count += countSteps(step.next_step, visited);
+            }
+
+            return count;
         }
 
         // Создаем граф с помощью dagre-d3
@@ -327,6 +320,9 @@
             // Обрезаем название шага до 15 символов
             const stepName = step.name.length > 15 ? step.name.substring(0, 15) + "..." : step.name;
 
+            // Проверяем, является ли шаг единственным
+            const isSingleStep = countSteps(chainData.first_step) === 1;
+
             // Добавляем шаг как узел
             graph.setNode(step.id, {
                 label: `
@@ -335,7 +331,7 @@
                             <a href="/bots/update-chain-step/{{bot.id}}/{{chain.id}}/${step.id}" class="icon edit-icon">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            ${(!step.buttons || step.buttons.length === 0) && !step.next_step ? `
+                            ${(!isSingleStep && (!step.buttons || step.buttons.length === 0) && !step.next_step) ? `
                                 <a href="#"
                                    onclick="event.preventDefault(); document.getElementById('delete-step-${step.id}').submit();"
                                    class="icon delete-icon">
@@ -353,7 +349,6 @@
                             <strong>${stepName}</strong>
                         </div>
                         <div style="margin-top: 10px;">
-
                             <a href="#"
                                onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
                                class="add-button">
@@ -366,19 +361,18 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="step_id" value="${step.id}">
                             </form>
-
                         </div>
                     </div>`,
-                labelType: 'html', // Указываем, что label содержит HTML
+                labelType: 'html',
                 rx: 10,
                 ry: 10,
-                width: 200, // Фиксированная ширина для шагов
-                height: 120, // Фиксированная высота для шагов
+                width: 200,
+                height: 120,
             });
 
             // Если есть родительский шаг, добавляем связь
             if (parentStepId !== null) {
-                graph.setEdge(parentStepId, step.id, { label: '' }); // Убираем надпись
+                graph.setEdge(parentStepId, step.id, { label: '' });
             }
 
             // Добавляем кнопки как отдельные узлы
@@ -400,9 +394,7 @@
                                     <a href="/bots/update-chain-button/{{bot.id}}/{{chain.id}}/${button.id}" class="icon edit-icon">
                                         <i class="fas fa-edit"></i>
                                     </a>
-
                                     ${!button.next_step ? `
-
                                         <a href="#"
                                            onclick="event.preventDefault(); document.getElementById('delete-button-${button.id}').submit();"
                                            class="icon delete-icon">
@@ -414,12 +406,10 @@
                                               style="display: none;">
                                             {% csrf_token %}
                                         </form>
-
                                     ` : ''}
                                 </div>
                                 ${!button.next_step ? `
                                     <div style="text-align: center; margin-top: 10px;">
-
                                         <a href="#"
                                            onclick="event.preventDefault(); document.getElementById('create-step-${button.id}').submit();"
                                            class="icon add-step-icon">
@@ -432,22 +422,21 @@
                                             {% csrf_token %}
                                             <input type="hidden" name="set_as_next_step_for_button_id" value="${button.id}">
                                         </form>
-
                                     </div>
                                 ` : ''}`,
                             labelType: 'html',
                             rx: 10,
                             ry: 10,
-                            width: 150, // Фиксированная ширина для кнопок
-                            height: !button.next_step ? 100 : 70, // Увеличиваем высоту для двух строк текста
+                            width: 150,
+                            height: !button.next_step ? 100 : 70,
                         });
 
                         // Добавляем связь от шага к кнопке
-                        graph.setEdge(step.id, buttonId, { label: '' }); // Убираем надпись
+                        graph.setEdge(step.id, buttonId, { label: '' });
 
                         // Если у кнопки есть следующий шаг, добавляем связь от кнопки к следующему шагу
                         if (button.next_step && button.next_step.id) {
-                            graph.setEdge(buttonId, button.next_step.id, { label: '' }); // Убираем надпись
+                            graph.setEdge(buttonId, button.next_step.id, { label: '' });
                             addStep(button.next_step, buttonId, visited);
                         }
                     }
@@ -493,4 +482,3 @@
     });
 </script>
 {% endblock %}
-
