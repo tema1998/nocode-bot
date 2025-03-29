@@ -40,6 +40,10 @@ async def create_chain(
     """
     db_chain = Chain(bot_id=chain.bot_id, name=chain.name)
     created_chain = await chain_service.create_chain(db_chain)
+
+    # Create and set first chain's step
+    await chain_service.create_and_set_first_step(int(created_chain.id))
+
     return ChainResponse(
         id=int(created_chain.id),
         bot_id=int(created_chain.bot_id),

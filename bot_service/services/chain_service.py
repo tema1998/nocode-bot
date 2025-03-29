@@ -286,6 +286,48 @@ class ChainService:
             "buttons": buttons_data,
         }
 
+    async def create_and_set_first_step(self, chain_id: int) -> Chain:
+        """
+        Create and set first chain's step by chain's ID.
+
+        Args:
+            chain_id (int): The ID of the chain to set first step.
+
+        Returns:
+            Chain: The updated chain.
+
+        Raises:
+            HTTPException: If the chain is not found.
+        """
+        try:
+            chain = await self.db_repository.fetch_by_id(Chain, chain_id)
+            if chain is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Chain with ID {chain_id} not found",
+                )
+
+            # Create first step for chain
+            first_step_for_chain = ChainStep(
+                name="Первый шаг", message="Начало цепочки", chain_id=chain_id
+            )
+            created_first_step_for_chain = await self.db_repository.insert(
+                first_step_for_chain
+            )
+            # Set first step for chain
+            chain.first_chain_step_id = created_first_step_for_chain.id
+            await self.db_repository.update(chain)
+
+            return chain  # type: ignore
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to set first chain's step: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to set first chain's step.",
+            )
+
 
 async def get_chain_service() -> ChainService:
     """
