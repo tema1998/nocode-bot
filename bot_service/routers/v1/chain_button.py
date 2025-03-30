@@ -36,11 +36,6 @@ async def create_chain_button(
         id=int(created_chain_button.id),
         step_id=int(created_chain_button.step_id),
         text=str(created_chain_button.text),
-        callback=(
-            str(created_chain_button.callback)
-            if created_chain_button.callback
-            else None
-        ),
         next_step_id=(
             int(created_chain_button.next_step_id)
             if created_chain_button.next_step_id
@@ -68,7 +63,6 @@ async def get_chain_button(
         id=int(chain_button.id),
         step_id=int(chain_button.step_id),
         text=str(chain_button.text),
-        callback=str(chain_button.callback) if chain_button.callback else None,
         next_step_id=(
             int(chain_button.next_step_id)
             if chain_button.next_step_id
@@ -81,7 +75,7 @@ async def get_chain_button(
     "/{chain_button_id}",
     response_model=ChainButtonResponse,
     summary="Update chain button details by ID",
-    description="Update chain button details such as text, callback, and next_step_id.",
+    description="Update chain button details such as text and next_step_id.",
     response_description="The updated chain button details.",
     status_code=status.HTTP_200_OK,
 )
@@ -99,11 +93,6 @@ async def update_chain_button(
         id=int(updated_chain_button.id),
         step_id=int(updated_chain_button.step_id),
         text=str(updated_chain_button.text),
-        callback=(
-            str(updated_chain_button.callback)
-            if updated_chain_button.callback
-            else None
-        ),
         next_step_id=(
             int(updated_chain_button.next_step_id)
             if updated_chain_button.next_step_id

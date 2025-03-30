@@ -50,7 +50,6 @@ class ChainButtonService:
             db_chain_button = ChainButton(
                 step_id=chain_button.step_id,
                 text=chain_button.text,
-                callback=chain_button.callback,
             )
             # Insert the new chain button into the database
             created_chain_button = await self.db_repository.insert(
@@ -128,8 +127,6 @@ class ChainButtonService:
             # Update the chain button fields if provided
             if chain_button_update.text is not None:
                 chain_button.text = chain_button_update.text
-            if chain_button_update.callback is not None:
-                chain_button.callback = chain_button_update.callback
             if chain_button_update.next_step_id is not None:
                 chain_button.next_step_id = chain_button_update.next_step_id
 

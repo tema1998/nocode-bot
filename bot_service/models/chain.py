@@ -60,7 +60,6 @@ class ChainButton(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=False)
     text = Column(String, nullable=False)
-    callback = Column(String, nullable=True)
     next_step_id = Column(
         Integer,
         ForeignKey("chain_steps.id", ondelete="SET NULL"),

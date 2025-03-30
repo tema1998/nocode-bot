@@ -1,6 +1,7 @@
 import json
 from typing import Any, Optional
 
+import telegram
 from bot_service.core.configs import config
 from bot_service.models.chain import Chain, ChainButton, ChainStep, UserState
 from bot_service.repositories.async_pg_repository import (
@@ -77,14 +78,14 @@ class ChainHandlerService:
         if not user_state or not button:
             return
 
-        await self._acknowledge_callback_query(update, button)
+        await self._acknowledge_callback_query(update)
         await self._save_chain_step_result(
             user_state,
-            user_state.step_id.value,
-            button.callback.value,
+            user_state.step_id,
+            button.text,
         )
 
-        next_step = await self._fetch_next_step(button.next_step_id.value)
+        next_step = await self._fetch_next_step(button.next_step_id)
         if not next_step:
             return
 
@@ -111,14 +112,12 @@ class ChainHandlerService:
             return
 
         await self._save_chain_step_result(
-            user_state, current_step.id.value, text_input
+            user_state, current_step.message, text_input
         )
         await self.remove_reply_buttons(update, user_state)
 
         if current_step.next_step_id:
-            next_step = await self._fetch_next_step(
-                current_step.next_step_id.value
-            )
+            next_step = await self._fetch_next_step(current_step.next_step_id)
             if next_step:
                 await self._update_user_state_and_send_next_step(
                     update, user_state, next_step
@@ -130,27 +129,25 @@ class ChainHandlerService:
     async def remove_reply_buttons(
         self, update: Update, user_state: UserState
     ) -> None:
-        """
-        Remove reply buttons from the last message sent by the bot.
 
-        Args:
-            update (Update): The incoming update from Telegram.
-            user_state (UserState): The user's current state.
-
-        Raises:
-            HTTPException: If the update has no valid message or the last_message_id is not set.
-        """
         if not update.message or not user_state.last_message_id:
             raise HTTPException(
                 status_code=400,
                 detail="Update has no valid message or last_message_id is not set.",
             )
 
-        await update.get_bot().edit_message_reply_markup(
-            chat_id=update.message.chat_id,
-            message_id=user_state.last_message_id.value,
-            reply_markup=None,
-        )
+        try:
+            await update.get_bot().edit_message_reply_markup(
+                chat_id=int(update.message.chat_id),
+                message_id=int(user_state.last_message_id),
+                reply_markup=None,
+            )
+        except telegram.error.BadRequest as e:
+
+            if "Message is not modified" not in str(
+                e
+            ) and "Message to edit not found" not in str(e):
+                raise
 
     async def send_step_message(
         self, update: Update, step: ChainStep, user_state: UserState
@@ -166,11 +163,11 @@ class ChainHandlerService:
         Raises:
             HTTPException: If the update has no valid message or callback query.
         """
-        buttons = await self._fetch_buttons_for_step(int(step.id.value))
+        buttons = await self._fetch_buttons_for_step(int(step.id))
         keyboard = self._create_keyboard(buttons, user_state)
 
         message = await self._send_or_edit_message(
-            update, str(step.message.value), keyboard
+            update, str(step.message), keyboard
         )
         if message:
             user_state.last_message_id = message.message_id  # type: ignore
@@ -196,7 +193,7 @@ class ChainHandlerService:
             bot_id=bot_id,
             chain_id=chain.id,
             step_id=first_step.id,
-            expects_text_input=bool(first_step.text_input.value),
+            expects_text_input=bool(first_step.text_input),
         )
         await self.db_repository.insert(user_state)
         return user_state
@@ -230,20 +227,20 @@ class ChainHandlerService:
         return callback_data
 
     async def _save_chain_step_result(
-        self, user_state: UserState, step_id: int, result: str | None
+        self, user_state: UserState, message: str, result: str | None
     ) -> None:
         """
         Save the result of a specific step in the user's state.
 
         Args:
             user_state (UserState): The user's current state.
-            step_id (int): The ID of the step.
+            message (str): The text of the step.
             result (str | None): The result to save.
         """
         if user_state.result is None:
             user_state.result = {}
 
-        user_state.result.update({step_id: result})
+        user_state.result.update({message: result})
         await self.db_repository.update(user_state)
 
     async def _fetch_chain_and_first_step(self, chain_id: int):
@@ -276,7 +273,7 @@ class ChainHandlerService:
     async def _fetch_current_step(self, user_state: UserState):
         """Fetch the current step from the database."""
         return await self.db_repository.fetch_by_id(
-            ChainStep, user_state.step_id.value
+            ChainStep, int(user_state.step_id)
         )
 
     async def _fetch_buttons_for_step(self, step_id: int):
@@ -289,20 +286,24 @@ class ChainHandlerService:
         self, buttons: list[ChainButton], user_state: UserState
     ):
         """Create an inline keyboard for the step."""
-        return [
+        return (
             [
-                InlineKeyboardButton(
-                    button.text.value,
-                    callback_data=json.dumps(
-                        {
-                            "button_id": button.id.value,
-                            "user_state_id": user_state.id.value,
-                        }
-                    ),
-                )
+                [
+                    InlineKeyboardButton(
+                        str(button.text),
+                        callback_data=json.dumps(
+                            {
+                                "button_id": button.id,
+                                "user_state_id": user_state.id,
+                            }
+                        ),
+                    )
+                ]
+                for button in buttons
             ]
-            for button in buttons
-        ]
+            if buttons
+            else []
+        )
 
     async def _send_or_edit_message(
         self, update: Update, message_text: str, keyboard: list
@@ -337,22 +338,26 @@ class ChainHandlerService:
         if update.message:
             await update.message.reply_text("Цепочка не найдена.")
 
-    async def _acknowledge_callback_query(
-        self, update: Update, button: ChainButton
-    ) -> None:
+    async def _acknowledge_callback_query(self, update: Update) -> None:
         """Acknowledge the callback query and update the message."""
-        if update.callback_query:  # Проверка на None
-            await update.callback_query.answer()
-            await update.callback_query.edit_message_reply_markup(
-                reply_markup=None
-            )
+        if update.callback_query:
+            try:
+                await update.callback_query.answer()
+                await update.callback_query.edit_message_reply_markup(
+                    reply_markup=None
+                )
+            except telegram.error.BadRequest as e:
+                if "Query is too old" in str(e):
+                    pass
+                else:
+                    raise
 
     async def _update_user_state_and_send_next_step(
         self, update: Update, user_state: UserState, next_step: ChainStep
     ) -> None:
         """Update the user's state and send the message for the next step."""
         user_state.step_id = next_step.id
-        user_state.expects_text_input = next_step.text_input.value
+        user_state.expects_text_input = next_step.text_input
         await self.db_repository.update(user_state)
         await self.send_step_message(update, next_step, user_state)
 

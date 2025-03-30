@@ -258,7 +258,6 @@ class ChainService:
                 {
                     "id": button.id,
                     "text": button.text,
-                    "callback": button.callback,
                     "next_step": (
                         await self._build_step(next_step)
                         if next_step
