@@ -19,7 +19,7 @@
         border: 2px solid #4CAF50;
         border-radius: 10px;
         background-color: #f9f9f9;
-        padding: 20px; /* Увеличиваем размер шагов */
+        padding: 50px; /* Увеличиваем размер шагов */
         width: 200px; /* Фиксированная ширина */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
@@ -231,10 +231,15 @@
                             <i class="fas fa-info-circle mr-2"></i>Инструкция
                         </h5>
                         <ul class="mt-3 pl-3" style="list-style-type: circle;">
-                            <li class="mb-2">Кликните на шаг для редактирования</li>
-                            <li class="mb-2">Добавляйте новые кнопки и шаги</li>
-                            <li class="mb-2">Перетаскивайте граф для навигации</li>
+                            <li class="mb-2">Цепочки используются для взаимодействия с аудиторией</li>
+                            <li class="mb-2">Добавляйте новые шаги и кнопки с ответами</li>
+                            <li class="mb-2">Используйте значки <i class="fas fa-edit edit-icon"></i> (редактировать)
+                                и <i class="fas fa-trash delete-icon"></i> (удалить) шаги/кнопки</li>
+                            <li class="mb-2"><i class="fas fa-trash delete-icon"></i> Удалить можно только шаги/кнопки которые не имеют связей</li>
+
+                            <li class="mb-2">Используйте текстовый ввод вместо кнопок при необходимости получить индивидуальный ответ от пользователя</li>
                             <li>Используйте колесо мыши для масштабирования</li>
+                            <li>При удалении цепочки все результаты взаимодействия с пользователями будут удалены</li>
                         </ul>
                     </div>
 
@@ -326,48 +331,66 @@
             // Добавляем шаг как узел
             graph.setNode(step.id, {
                 label: `
-                    <div style="text-align: center;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <a href="/bots/update-chain-step/{{bot.id}}/{{chain.id}}/${step.id}" class="icon edit-icon">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            ${(!isSingleStep && (!step.buttons || step.buttons.length === 0) && !step.next_step) ? `
-                                <a href="#"
-                                   onclick="event.preventDefault(); document.getElementById('delete-step-${step.id}').submit();"
-                                   class="icon delete-icon">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                                <form id="delete-step-${step.id}"
-                                      action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
-                                      method="POST"
-                                      style="display: none;">
-                                    {% csrf_token %}
-                                </form>
-                            ` : ''}
+
+                <div style="text-align: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <!-- Левая иконка (всегда есть) -->
+                        <a href="/bots/update-chain-step/{{bot.id}}/{{chain.id}}/${step.id}" class="icon edit-icon">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <!-- Центральная надпись "Шаг" -->
+                        <div style="flex-grow: 1; text-align: center; margin: 0 10px;">
+                            <div style="display: inline-block;
+                                      padding: 3px 12px;
+                                      border-radius: 15px;
+                                      background-color: #4285F4;
+                                      color: white;
+                                      font-size: 12px;
+                                      font-weight: bold;
+                                      text-transform: uppercase;
+                                      letter-spacing: 1px;
+                                      box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+                                      line-height: 1.5;">
+                                Шаг
+                            </div>
                         </div>
-                        <div style="margin-top: 10px;">
-                            <strong>${stepName}</strong>
-                        </div>
-                        <div style="margin-top: 10px;">
+
+                        <!-- Правая иконка (условно отображается) -->
+                        ${(!isSingleStep && (!step.buttons || step.buttons.length === 0) && !step.next_step) ? `
                             <a href="#"
-                               onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
-                               class="add-button">
-                                <i class="fas fa-plus"></i> Добавить кнопку
+                               onclick="event.preventDefault(); document.getElementById('delete-step-${step.id}').submit();"
+                               class="icon delete-icon">
+                                <i class="fas fa-trash"></i>
                             </a>
-                            <form id="create-button-${step.id}"
-                                  action="/bots/create-chain-button/{{bot.id}}/{{chain.id}}"
-                                  method="POST"
-                                  style="display: none;">
-                                {% csrf_token %}
-                                <input type="hidden" name="step_id" value="${step.id}">
-                            </form>
-                        </div>
-                    </div>`,
+                        ` : '<div style="width: 24px;"></div>'} <!-- Заполнитель для выравнивания -->
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <strong>${stepName}</strong>
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <a href="#"
+                           onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
+                           class="add-button">
+                            <i class="fas fa-plus"></i> Добавить кнопку
+                        </a>
+                        <form id="create-button-${step.id}"
+                              action="/bots/create-chain-button/{{bot.id}}/{{chain.id}}"
+                              method="POST"
+                              style="display: none;">
+                            {% csrf_token %}
+                            <input type="hidden" name="step_id" value="${step.id}">
+                        </form>
+                    </div>
+                </div>
+                    `,
                 labelType: 'html',
                 rx: 10,
                 ry: 10,
-                width: 200,
-                height: 120,
+                width: 300,
+                height: 150,
             });
 
             // Если есть родительский шаг, добавляем связь
@@ -386,49 +409,74 @@
 
                         // Добавляем кнопку как отдельный узел
                         graph.setNode(buttonId, {
-                            label: `
-                                <div class="vis-button-node">
-                                    <div class="button-text">
-                                        <span class="first-line">${firstLine}</span>
+                            label:
+                                    `
+
+                                <div style="text-align: center;">
+                                    <!-- Верхняя строка с иконками и надписью -->
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <!-- Левая иконка редактирования -->
+                                        <a href="/bots/update-chain-button/{{bot.id}}/{{chain.id}}/${button.id}" class="icon edit-icon">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <!-- Центральная надпись "Кнопка" -->
+                                        <div style="flex-grow: 1; text-align: center; margin: 0 10px;">
+                                            <div style="display: inline-block;
+                                                      padding: 3px 12px;
+                                                      border-radius: 15px;
+                                                      background-color: #34A853;
+                                                      color: white;
+                                                      font-size: 12px;
+                                                      font-weight: bold;
+                                                      text-transform: uppercase;
+                                                      letter-spacing: 1px;
+                                                      box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+                                                      line-height: 1.5;">
+                                                Кнопка
+                                            </div>
+                                        </div>
+
+                                        <!-- Правая иконка удаления (или заполнитель) -->
+                                        ${!button.next_step ? `
+                                            <a href="#"
+                                               onclick="event.preventDefault(); document.getElementById('delete-button-${button.id}').submit();"
+                                               class="icon delete-icon">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        ` : '<div style="width: 24px;"></div>'}
                                     </div>
-                                    <a href="/bots/update-chain-button/{{bot.id}}/{{chain.id}}/${button.id}" class="icon edit-icon">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+
+                                    <!-- Основное содержимое кнопки -->
+                                    <div class="vis-button-node">
+                                        <div class="button-text">
+                                            <span class="first-line">${firstLine}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Блок "Добавить шаг" (если нужно) -->
                                     ${!button.next_step ? `
-                                        <a href="#"
-                                           onclick="event.preventDefault(); document.getElementById('delete-button-${button.id}').submit();"
-                                           class="icon delete-icon">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                        <form id="delete-button-${button.id}"
-                                              action="/bots/delete-chain-button/{{bot.id}}/{{chain.id}}/${button.id}"
-                                              method="POST"
-                                              style="display: none;">
-                                            {% csrf_token %}
-                                        </form>
-                                    ` : ''}
-                                </div>
-                                ${!button.next_step ? `
-                                    <div style="text-align: center; margin-top: 10px;">
-                                        <a href="#"
-                                           onclick="event.preventDefault(); document.getElementById('create-step-${button.id}').submit();"
-                                           class="icon add-step-icon">
-                                            <i class="fas fa-plus"></i> Добавить шаг
-                                        </a>
-                                        <form id="create-step-${button.id}"
-                                              action="/bots/create-chain-step/{{bot.id}}/{{chain.id}}"
-                                              method="POST"
-                                              style="display: none;">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="set_as_next_step_for_button_id" value="${button.id}">
-                                        </form>
+                                        <div style="text-align: center; margin-top: 10px;">
+                                            <a href="#"
+                                               onclick="event.preventDefault(); document.getElementById('create-step-${button.id}').submit();"
+                                               class="icon add-step-icon">
+                                                <i class="fas fa-plus"></i> Добавить шаг
+                                            </a>
+                                            <form id="create-step-${button.id}"
+                                                  action="/bots/create-chain-step/{{bot.id}}/{{chain.id}}"
+                                                  method="POST"
+                                                  style="display: none;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="set_as_next_step_for_button_id" value="${button.id}">
+                                            </form>
                                     </div>
+
                                 ` : ''}`,
                             labelType: 'html',
                             rx: 10,
                             ry: 10,
                             width: 150,
-                            height: !button.next_step ? 100 : 70,
+                            height: !button.next_step ? 130 : 100,
                         });
 
                         // Добавляем связь от шага к кнопке
