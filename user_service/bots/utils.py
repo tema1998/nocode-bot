@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 from django.conf import settings
@@ -1008,3 +1008,67 @@ def delete_chain_button(button_id: int) -> bool:
             exc_info=True,
         )
         raise RequestException(f"Button deletion failed: {str(e)}") from e
+
+
+def get_chain_results(chain_id: int) -> List[Dict[str, Any]]:
+    """
+    Retrieves chain completion results from the bot service API.
+
+    Args:
+        chain_id: The ID of the chain to fetch results for (must be positive integer)
+
+    Returns:
+        List of dictionaries containing user completion data:
+        [
+            {
+                "user_id": int,
+                "username": str,
+                "answers": Dict[str, str],
+                ...
+            },
+            ...
+        ]
+
+    Raises:
+        ValueError: If chain_id is invalid
+        RequestException: For API request failures or invalid responses
+        JSONDecodeError: If response contains invalid JSON
+    """
+    # Validate input parameters
+    if not isinstance(chain_id, int) or chain_id <= 0:
+        error_msg = f"Invalid chain_id: {chain_id}. Must be positive integer"
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    try:
+        # Make API request with timeout
+        response = requests.get(
+            f"{BOT_SERVICE_API_URL}chain/results/{chain_id}", timeout=10
+        )
+        response.raise_for_status()
+
+        # Parse and validate response
+        data = response.json()
+        if not isinstance(data, list):
+            raise ValueError(f"Expected list of results, got {type(data)}")
+
+        return data
+
+    except requests.RequestException as e:
+        logger.error(
+            "Failed to fetch chain results from API",
+            exc_info=True,
+            extra={
+                "chain_id": chain_id,
+                "api_url": f"{BOT_SERVICE_API_URL}chain/results/{chain_id}",
+            },
+        )
+        raise RequestException(
+            f"Chain results API request failed: {str(e)}"
+        ) from e
+    except json.JSONDecodeError as e:
+        logger.error(
+            f"Invalid JSON response for chain's results, chain_id= {chain_id}",
+            exc_info=True,
+        )
+        raise RequestException("Invalid API response format") from e

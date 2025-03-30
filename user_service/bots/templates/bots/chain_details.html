@@ -234,7 +234,7 @@
                         <a href="{% url 'bot-chains' bot.id %}" class="btn btn-outline-secondary btn-block mb-2">
                             <i class="fas fa-arrow-left mr-2"></i> К списку цепочек
                         </a>
-                        <a href="#" class="btn btn-outline-info btn-block">
+                        <a href="{% url 'chain-results' bot.id chain.id %}" class="btn btn-outline-info btn-block">
                             <i class="fas fa-chart-line mr-2"></i> Результаты
                         </a>
                     </div>

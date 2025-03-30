@@ -1,0 +1,96 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Результаты цепочки
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">
+                Результаты прохождения цепочки
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if not results %}
+                <div class="alert alert-info">Нет данных о прохождении цепочки</div>
+            {% else %}
+                <div class="row">
+                    {% for result in results %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex align-items-center">
+                                <img src="{{ result.photo }}"
+                                     class="rounded-circle mr-3"
+                                     width="50"
+                                     height="50"
+                                     alt="Фото {{ result.first_name }}"
+                                     onerror="this.onerror=null;this.src='https://via.placeholder.com/50'">
+                                <div>
+                                    <h5 class="mb-0">{{ result.first_name }}</h5>
+                                    <small class="text-muted">
+                                        @{{ result.username }} (ID: {{ result.user_id }})
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="font-weight-bold mb-3">Ответы:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Шаг</th>
+                                                <th>Ответ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for step, answer in result.answers.items %}
+                                            <tr>
+                                                <td>{{ step }}</td>
+                                                <td class="{% if answer == '<Не задано>' %}text-muted{% endif %}">
+                                                    {{ answer|default:"Не задано" }}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer text-muted small">
+                                Последняя активность: {{ result.last_interaction }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: all 0.3s ease;
+        border-radius: 8px;
+    }
+    .card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transform: translateY(-3px);
+    }
+    .table th {
+        white-space: nowrap;
+        background-color: #f8f9fa;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .rounded-circle {
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}

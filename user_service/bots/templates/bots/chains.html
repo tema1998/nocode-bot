@@ -31,7 +31,7 @@
                                             <a href="{% url 'bot-chain' bot.id chain.id %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-edit"></i> Редактировать
                                             </a>
-                                            <a href="#" class="btn btn-sm btn-outline-success">
+                                            <a href="{% url 'chain-results' bot.id chain.id %}" class="btn btn-sm btn-outline-success">
                                                 <i class="fas fa-chart-bar"></i> Результаты
                                             </a>
                                             <form method="post" action="{% url 'delete-chain' bot.id chain.id %}" class="d-inline">

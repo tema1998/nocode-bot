@@ -4,7 +4,11 @@ from typing import Any, Dict
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpResponse,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.views.generic.edit import FormView
@@ -35,6 +39,7 @@ from .utils import (
     get_bot_main_menu,
     get_bot_main_menu_button,
     get_chain_button,
+    get_chain_results,
     get_chain_step,
     update_bot,
     update_chain,
@@ -1477,3 +1482,44 @@ class DeleteChainButtonView(LoginRequiredMixin, View):
             messages.error(request, "Ошибка при удалении кнопки.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+
+class ChainResultsView(LoginRequiredMixin, View):
+    """View for displaying user completion results for a specific chain."""
+
+    template_name = "bots/chain_results.html"
+
+    def get(self, request, bot_id: int, chain_id: int) -> HttpResponse:
+        """
+        Render chain completion results page.
+
+        Args:
+            request: The incoming HTTP request
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain to show results for
+
+        Returns:
+            HttpResponse: Rendered template with chain results data
+
+        Raises:
+            Http404: If either:
+                - The bot doesn't exist
+                - User doesn't own the bot
+                - Chain doesn't exist
+        """
+        # Validate bot ownership
+        bot = get_object_or_404(Bot, id=bot_id)
+        if bot.user != request.user:
+            raise Http404("Permission denied - you don't own this bot")
+
+        # Fetch and render results
+        results = get_chain_results(chain_id)
+        return render(
+            request,
+            self.template_name,
+            {
+                "bot": bot,
+                "chain": chain_id,
+                "results": results,
+            },
+        )
