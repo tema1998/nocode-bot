@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from bot_service.models import Chain
 from bot_service.schemas.chain import (
@@ -143,7 +144,14 @@ async def delete_chain(
     await chain_service.delete_chain(chain_id)
 
 
-@router.get("/detail/{chain_id}")
+@router.get(
+    "/detail/{chain_id}",
+    summary="Get full chain structure with steps and buttons",
+    description="Retrieves a complete chain including all steps and their associated buttons. "
+    "Provides the hierarchical structure needed for chain visualization and navigation.",
+    response_description="Chain object with nested steps and buttons data",
+    status_code=200,
+)
 async def get_chain_with_details(
     chain_id: int,
     chain_service: ChainService = Depends(get_chain_service),
@@ -159,14 +167,46 @@ async def get_chain_with_details(
         Dict: A dictionary containing the chain data with all its steps and buttons.
 
     Raises:
-        HTTPException: If the chain with the specified ID is not found.
+        HTTPException: If the chain with the specified ID is not found (404).
     """
-    # Fetch the chain data with all its steps and buttons
     chain_data = await chain_service.get_chain_with_steps_and_buttons(chain_id)
-
-    # If the chain is not found, raise a 404 error
     if not chain_data:
         raise HTTPException(status_code=404, detail="Chain not found")
-
-    # Return the chain data
     return chain_data
+
+
+@router.get(
+    "/results/{chain_id}",
+    summary="Get chain completion results",
+    description="Retrieves all user responses for a specific chain including "
+    "profile information, answers, and interaction timestamps.",
+    response_description="List of user completion results",
+    status_code=200,
+)
+async def get_chain_results(
+    chain_id: int,
+    chain_service: ChainService = Depends(get_chain_service),
+) -> List:
+    """
+    Retrieve completion results for a specific chain.
+
+    Returns a list of user responses including:
+    - User profile information (name, username, photo)
+    - Answers to chain questions
+    - Interaction timestamps
+    - Current progress in the chain
+
+    Args:
+        chain_id: The ID of the chain to get results for
+        chain_service: Dependency injection of chain service
+
+    Returns:
+        List[Dict]: List of user result dictionaries
+
+    Raises:
+        HTTPException: 404 if no results found for this chain
+    """
+    results = await chain_service.get_chain_results(chain_id)
+    if not results:
+        return []
+    return results

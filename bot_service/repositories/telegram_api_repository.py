@@ -1,5 +1,7 @@
 import logging
+from typing import Any, Dict, Optional
 
+import telegram
 from bot_service.core.configs import config
 from fastapi import HTTPException
 from telegram.error import TelegramError
@@ -142,6 +144,66 @@ class TelegramApiRepository:
                 status_code=400,
                 detail=f"Failed to fetch bot name: {str(e)}",
             )
+
+    async def get_user_info(
+        self, bot_token: str, user_id: int
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves Telegram user information including profile details and avatar.
+
+        Args:
+            bot_token: Telegram bot token for API access
+            user_id: Telegram user ID to look up
+
+        Returns:
+            Dictionary with user information or None if failed
+        """
+        try:
+            application = Application.builder().token(bot_token).build()
+            await application.initialize()
+
+            try:
+                user = await application.bot.get_chat(user_id)
+
+                user_info = {
+                    "id": user.id,
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "photo_url": None,
+                    "profile_link": f"tg://user?id={user.id}",
+                }
+
+                # Get profile photo if available
+                try:
+                    photos = await application.bot.get_user_profile_photos(
+                        user_id, limit=1
+                    )
+                    if photos and photos.photos:
+                        file = await application.bot.get_file(
+                            photos.photos[0][-1].file_id
+                        )
+                        user_info["photo_url"] = f"{file.file_path}"
+                except telegram.error.TelegramError as photo_error:
+                    logger.debug(
+                        f"Profile photo unavailable for user {user_id}: {photo_error}"
+                    )
+
+                return user_info
+
+            finally:
+                await application.shutdown()
+
+        except telegram.error.TelegramError as tg_error:
+            logger.warning(
+                f"Telegram API error for user {user_id}: {tg_error}"
+            )
+        except Exception as e:
+            logger.error(
+                f"Error getting user info {user_id}: {e}", exc_info=True
+            )
+
+        return None
 
 
 def get_telegram_api_repository() -> TelegramApiRepository:

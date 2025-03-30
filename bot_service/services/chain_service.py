@@ -1,10 +1,14 @@
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from bot_service.core.configs import config
-from bot_service.models.chain import Chain, ChainButton, ChainStep
+from bot_service.models import Bot
+from bot_service.models.chain import Chain, ChainButton, ChainStep, UserState
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
+)
+from bot_service.repositories.telegram_api_repository import (
+    TelegramApiRepository,
 )
 from bot_service.schemas.chain import (
     ChainResponse,
@@ -26,6 +30,7 @@ class ChainService:
             db_repository (PostgresAsyncRepository): The repository for database operations.
         """
         self.db_repository = db_repository
+        self.telegram_api_repository = TelegramApiRepository()
 
     async def create_chain(self, chain: Chain) -> Chain:
         """
@@ -326,6 +331,90 @@ class ChainService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to set first chain's step.",
             )
+
+    async def get_chain_results(self, chain_id: int) -> Optional[List[Dict]]:
+        """
+        Retrieves chain completion results with user information for frontend display.
+
+        Fetches all user states for a specific chain, enriches them with Telegram user data,
+        and formats the results for frontend consumption.
+
+        Args:
+            chain_id: The ID of the chain to get results for
+
+        Returns:
+            A list of dictionaries containing user results, or None if no data found.
+            Each dictionary contains:
+            - user_id: Telegram user ID
+            - username: Telegram username (may be None)
+            - first_name: User's first name
+            - last_name: User's last name (may be None)
+            - photo: URL to user's profile photo (may be None)
+            - answers: Dictionary of user's answers
+            - last_interaction: ISO formatted timestamp of last activity
+            - current_step: ID of the current chain step
+
+        Raises:
+            Does not explicitly raise exceptions but logs errors during processing
+        """
+        # Fetch chain and associated bot from database
+        chain = await self.db_repository.fetch_by_id(Chain, chain_id)
+        if not chain:
+            return None
+
+        bot = await self.db_repository.fetch_by_id(Bot, chain.bot_id)
+
+        # Get all user states for this chain
+        user_states = await self.db_repository.fetch_by_query(
+            UserState, {"chain_id": chain_id}
+        )
+
+        if not user_states or not bot:
+            return None
+
+        results = []
+
+        for user_state in user_states:
+            try:
+                # Get Telegram user profile information
+                user_info = await self.telegram_api_repository.get_user_info(
+                    bot_token=bot.token, user_id=user_state.user_id
+                )
+
+                # Skip if we couldn't retrieve user info
+                if not user_info:
+                    logger.warning(
+                        f"Skipping user {user_state.user_id} - info unavailable"
+                    )
+                    continue
+
+                # Format data for frontend response
+                user_data = {
+                    "user_id": user_state.user_id,
+                    "username": user_info.get("username"),
+                    "first_name": user_info.get(
+                        "first_name", ""
+                    ),  # Ensure non-None
+                    "last_name": user_info.get("last_name"),
+                    "photo": user_info.get("photo_url"),  # May be None
+                    "answers": user_state.result
+                    or {},  # Ensure dict even if None
+                    "last_interaction": user_state.updated_at.isoformat(),
+                    "current_step": user_state.step_id,
+                }
+                results.append(user_data)
+
+            except Exception as e:
+                # Log error but continue processing other users
+                logger.error(
+                    f"Error processing user {user_state.user_id}: {str(e)}",
+                    exc_info=True,
+                )
+                continue
+
+        return (
+            results if results else None
+        )  # Explicit None if empty after processing
 
 
 async def get_chain_service() -> ChainService:
