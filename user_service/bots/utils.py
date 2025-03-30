@@ -820,7 +820,7 @@ def delete_chain_step(step_id: int) -> bool:
 
 
 def create_chain_button(
-    step_id: int, text: str, callback: str, next_step_id: Optional[int] = None
+    step_id: int, text: str, next_step_id: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Creates a new button in a conversation chain step.
@@ -828,7 +828,6 @@ def create_chain_button(
     Args:
         step_id: ID of the parent step this button belongs to
         text: Display text for the button
-        callback: Callback data for button interactions
         next_step_id: Optional ID of the next step this button links to
 
     Returns:
@@ -841,7 +840,7 @@ def create_chain_button(
     if not isinstance(step_id, int) or step_id <= 0:
         raise ValueError("step_id must be a positive integer")
 
-    payload = {"step_id": step_id, "text": text, "callback": callback}
+    payload = {"step_id": step_id, "text": text}
 
     if next_step_id is not None:
         if not isinstance(next_step_id, int) or next_step_id <= 0:
@@ -917,7 +916,6 @@ def get_chain_button(button_id: int) -> Dict[str, Any]:
 def update_chain_button(
     button_id: int,
     text: Optional[str] = None,
-    callback: Optional[str] = None,
     next_step_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
@@ -926,7 +924,6 @@ def update_chain_button(
     Args:
         button_id: ID of the button to update
         text: New display text (optional)
-        callback: New callback data (optional)
         next_step_id: New target step ID (optional)
 
     Returns:
@@ -942,8 +939,6 @@ def update_chain_button(
     payload = {}
     if text is not None:
         payload["text"] = text
-    if callback is not None:
-        payload["callback"] = callback
     if next_step_id is not None:
         if not isinstance(next_step_id, int) or next_step_id <= 0:
             raise ValueError("next_step_id must be a positive integer")

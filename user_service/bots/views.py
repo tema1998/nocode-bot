@@ -1352,7 +1352,6 @@ class CreateChainButtonView(LoginRequiredMixin, View):
             create_chain_button(
                 step_id=int(request.POST.get("step_id")),
                 text="<Не задано>",
-                callback="<Не задано>",
             )
 
             messages.success(request, "Кнопка успешно создана.")
@@ -1428,9 +1427,7 @@ class UpdateChainButtonView(LoginRequiredMixin, View):
 
         try:
             update_chain_button(
-                button_id=button_id,
-                text=request.POST.get("text"),
-                callback=request.POST.get("callback"),
+                button_id=button_id, text=request.POST.get("text")
             )
             messages.success(request, "Кнопка успешно обновлена.")
             return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)

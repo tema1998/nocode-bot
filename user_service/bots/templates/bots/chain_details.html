@@ -229,10 +229,30 @@
         <div class="col-lg-3">
             <div class="card shadow h-100">
                 <div class="card-body">
-                    <!-- Кнопка возврата -->
-                    <a href="{% url 'bot-chains' bot.id %}" class="btn btn-outline-secondary btn-block mb-4">
-                        <i class="fas fa-arrow-left mr-2"></i> К списку цепочек
-                    </a>
+                    <!-- Кнопки возврата и результатов -->
+                    <div class="d-flex flex-column mb-4">
+                        <a href="{% url 'bot-chains' bot.id %}" class="btn btn-outline-secondary btn-block mb-2">
+                            <i class="fas fa-arrow-left mr-2"></i> К списку цепочек
+                        </a>
+                        <a href="#" class="btn btn-outline-info btn-block">
+                            <i class="fas fa-chart-line mr-2"></i> Результаты
+                        </a>
+                    </div>
+
+                    <!-- Информация о запуске цепочки -->
+                    <div class="alert alert-info mb-3">
+                        <h5 class="font-weight-bold mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Как запустить цепочку?
+                        </h5>
+                        <p class="mb-1">Для запуска пользователями цепочки:</p>
+                        <ol class="pl-3 mb-0">
+                            <li>Добавьте кнопку в главном меню бота</li>
+                            <li>Назначьте ей запуск этой цепочки</li>
+                        </ol>
+                        <a href="{% url 'bot-main-menu' bot.id %}" class="btn btn-sm btn-info btn-block mt-2">
+                            <i class="fas fa-edit mr-2"></i> Редактировать главное меню
+                        </a>
+                    </div>
 
                     <!-- Форма изменения имени -->
                     <div class="border-bottom pb-3 mb-3">
@@ -275,7 +295,6 @@
                             <li class="mb-2">Используйте значки <i class="fas fa-edit edit-icon"></i> (редактировать)
                                 и <i class="fas fa-trash delete-icon"></i> (удалить) шаги/кнопки</li>
                             <li class="mb-2"><i class="fas fa-trash delete-icon"></i> Удалить можно только шаги/кнопки которые не имеют связей</li>
-
                             <li class="mb-2">Используйте текстовый ввод вместо кнопок при необходимости получить индивидуальный ответ от пользователя</li>
                             <li>Используйте колесо мыши для масштабирования</li>
                             <li>При удалении цепочки все результаты взаимодействия с пользователями будут удалены</li>
@@ -299,6 +318,7 @@
     </div>
 </div>
 {% endblock %}
+
 
 {% block sidebar-nav %}
     {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
