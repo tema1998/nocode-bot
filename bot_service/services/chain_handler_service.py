@@ -78,10 +78,16 @@ class ChainHandlerService:
         if not user_state or not button:
             return
 
+        step = await self.db_repository.fetch_by_id(
+            ChainStep, user_state.step_id
+        )
+        if not step:
+            return
+
         await self._acknowledge_callback_query(update)
         await self._save_chain_step_result(
             user_state,
-            user_state.step_id,
+            step.message,
             button.text,
         )
 
