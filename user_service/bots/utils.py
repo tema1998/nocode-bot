@@ -680,7 +680,6 @@ def create_chain_step(
     chain_id: int,
     name: str,
     message: str,
-    is_first_step_of_chain: bool,
     set_as_next_step_for_button_id: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
@@ -690,7 +689,6 @@ def create_chain_step(
         chain_id: ID of the parent chain
         name: Step name
         message: Step message content
-        is_first_step_of_chain: Whether this is the chain's first step
         set_as_next_step_for_button_id: Optional button ID to link this step to
 
     Returns:
@@ -703,46 +701,40 @@ def create_chain_step(
     if not isinstance(chain_id, int) or chain_id <= 0:
         raise ValueError("chain_id must be positive integer")
 
-    payload = {
-        "chain_id": chain_id,
-        "name": name,
-        "message": message,
-        "is_first_step_of_chain": is_first_step_of_chain,
-    }
+    payload = {"chain_id": chain_id, "name": name, "message": message}
 
     if set_as_next_step_for_button_id:
         payload["set_as_next_step_for_button_id"] = int(
             set_as_next_step_for_button_id
         )
 
-    try:
-        response = requests.post(
-            f"{BOT_SERVICE_API_URL}chain-step", json=payload, timeout=10
-        )
-        response.raise_for_status()
-        response_data = response.json()
-        if not isinstance(response_data, dict):
-            raise ValueError("Expected dictionary response from API")
+    response = requests.post(
+        f"{BOT_SERVICE_API_URL}chain-step", json=payload, timeout=10
+    )
+    response.raise_for_status()
+    response_data = response.json()
+    if not isinstance(response_data, dict):
+        raise ValueError("Expected dictionary response from API")
 
-        return response_data
-
-    except RequestException as e:
-        logger.error(
-            f"Failed to create step in chain {chain_id}. Error: {str(e)}",
-            exc_info=True,
-            extra={"chain_id": chain_id, "payload": payload},
-        )
-        raise RequestException(f"Step creation failed: {str(e)}") from e
+    return response_data
 
 
-def update_chain_step(step_id: int, name: str, message: str) -> Dict[str, Any]:
+def update_chain_step(
+    step_id: int,
+    name: Optional[str] = None,
+    message: Optional[str] = None,
+    next_step_id: Optional[int] = None,
+    text_input: Optional[bool] = None,
+) -> Dict[str, Any]:
     """
-    Update an existing chain step.
+    Update an existing chain step with optional parameters.
 
     Args:
-        step_id: ID of the step to update
-        name: New step name
-        message: New message content
+        step_id: ID of the step to update (required)
+        name: New step name (optional)
+        message: New message content (optional)
+        next_step_id: Next step ID for text input flow (optional)
+        text_input: Enable/disable text input after step (optional)
 
     Returns:
         Updated step data
@@ -754,7 +746,19 @@ def update_chain_step(step_id: int, name: str, message: str) -> Dict[str, Any]:
     if not isinstance(step_id, int) or step_id <= 0:
         raise ValueError("step_id must be positive integer")
 
-    payload = {"name": name, "message": message}
+    # Build payload dynamically with only provided parameters
+    payload = {}
+    if name is not None:
+        payload["name"] = name
+    if message is not None:
+        payload["message"] = message
+    if next_step_id is not None:
+        payload["next_step_id"] = str(next_step_id)
+    if text_input is not None:
+        payload["text_input"] = str(text_input)
+
+    if not payload:
+        raise ValueError("At least one parameter must be provided for update")
 
     try:
         response = requests.patch(

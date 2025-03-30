@@ -1078,14 +1078,61 @@ class CreateChainStepView(LoginRequiredMixin, View):
                 chain_id=chain_id,
                 name="<Не задано>",
                 message="<Не задано>",
-                is_first_step_of_chain=request.POST.get(
-                    "is_first_step_of_chain"
-                )
-                == "true",
                 set_as_next_step_for_button_id=request.POST.get(
                     "set_as_next_step_for_button_id"
                 ),
             )
+            messages.success(
+                request,
+                "Шаг успешно создан. Отредактируйте его содержимое и добавьте к нему кнопки с вариантами ответа для пользователя.",
+            )
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to create chain step. Chain ID: {chain_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, f"Ошибка при создании шага: {str(e)}")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+
+class CreateChainStepTextinputView(LoginRequiredMixin, View):
+    """View for creating new chain steps after text input."""
+
+    def post(
+        self, request, bot_id: int, chain_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Handle step creation request for textinput field.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain to add step to
+
+        Returns:
+            Redirect to chain view or error page
+
+        Raises:
+            Http404: If user doesn't own the bot or other access violation
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+
+            response = create_chain_step(
+                chain_id=chain_id, name="<Не задано>", message="<Не задано>"
+            )
+
+            update_chain_step(
+                step_id=int(request.POST.get("set_as_next_step_for_step_id")),
+                next_step_id=int(response["id"]),
+            )
+
             messages.success(
                 request,
                 "Шаг успешно создан. Отредактируйте его содержимое и добавьте к нему кнопки с вариантами ответа для пользователя.",

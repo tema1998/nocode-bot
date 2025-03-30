@@ -38,25 +38,46 @@
         overflow: hidden; /* Скрываем текст, который не помещается */
     }
 
+    /* Стили для текстового ввода */
+    .vis-textinput-node {
+        border: 2px solid #9C27B0; /* Фиолетовый цвет для текстового ввода */
+        border-radius: 10px;
+        background-color: #9C27B0; /* Фиолетовый фон */
+        color: white; /* Белый текст */
+        padding: 10px; /* Меньше, чем у шагов */
+        width: 150px; /* Фиксированная ширина */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        white-space: normal;
+        overflow: hidden;
+    }
+
     .vis-button-node:hover {
         background-color: #45a049; /* Темно-зеленый при наведении */
     }
 
+    .vis-textinput-node:hover {
+        background-color: #7B1FA2; /* Темно-фиолетовый при наведении */
+    }
+
     /* Стили для текста кнопки */
-    .vis-button-node .button-text {
+    .vis-button-node .button-text,
+    .vis-textinput-node .button-text {
         display: block;
         line-height: 1.2; /* Уменьшаем межстрочный интервал */
         font-size: 12px; /* Уменьшаем размер шрифта */
     }
 
-    .vis-button-node .button-text .first-line {
+    .vis-button-node .button-text .first-line,
+    .vis-textinput-node .button-text .first-line {
         display: block;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    .vis-button-node .button-text .second-line {
+    .vis-button-node .button-text .second-line,
+    .vis-textinput-node .button-text .second-line {
         display: block;
         white-space: nowrap;
         overflow: hidden;
@@ -331,7 +352,6 @@
             // Добавляем шаг как узел
             graph.setNode(step.id, {
                 label: `
-
                 <div style="text-align: center;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <!-- Левая иконка (всегда есть) -->
@@ -363,6 +383,12 @@
                                class="icon delete-icon">
                                 <i class="fas fa-trash"></i>
                             </a>
+                            <form id="delete-step-${step.id}"
+                                      action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
+                                      method="POST"
+                                      style="display: none;">
+                                    {% csrf_token %}
+                            </form>
                         ` : '<div style="width: 24px;"></div>'} <!-- Заполнитель для выравнивания -->
                     </div>
 
@@ -371,21 +397,23 @@
                     </div>
 
                     <div style="margin-top: 10px;">
-                        <a href="#"
-                           onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
-                           class="add-button">
-                            <i class="fas fa-plus"></i> Добавить кнопку
-                        </a>
-                        <form id="create-button-${step.id}"
-                              action="/bots/create-chain-button/{{bot.id}}/{{chain.id}}"
-                              method="POST"
-                              style="display: none;">
-                            {% csrf_token %}
-                            <input type="hidden" name="step_id" value="${step.id}">
-                        </form>
+                        ${step.text_input ? '' : `
+                            <a href="#"
+                               onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
+                               class="add-button">
+                                <i class="fas fa-plus"></i> Добавить кнопку
+                            </a>
+                            <form id="create-button-${step.id}"
+                                  action="/bots/create-chain-button/{{bot.id}}/{{chain.id}}"
+                                  method="POST"
+                                  style="display: none;">
+                                {% csrf_token %}
+                                <input type="hidden" name="step_id" value="${step.id}">
+                            </form>
+                        `}
                     </div>
                 </div>
-                    `,
+                `,
                 labelType: 'html',
                 rx: 10,
                 ry: 10,
@@ -409,9 +437,7 @@
 
                         // Добавляем кнопку как отдельный узел
                         graph.setNode(buttonId, {
-                            label:
-                                    `
-
+                            label: `
                                 <div style="text-align: center;">
                                     <!-- Верхняя строка с иконками и надписью -->
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -444,6 +470,12 @@
                                                class="icon delete-icon">
                                                 <i class="fas fa-trash"></i>
                                             </a>
+                                            <form id="delete-button-${button.id}"
+                                                  action="/bots/delete-chain-button/{{bot.id}}/{{chain.id}}/${button.id}"
+                                                  method="POST"
+                                                  style="display: none;">
+                                                {% csrf_token %}
+                                            </form>
                                         ` : '<div style="width: 24px;"></div>'}
                                     </div>
 
@@ -469,9 +501,10 @@
                                                 {% csrf_token %}
                                                 <input type="hidden" name="set_as_next_step_for_button_id" value="${button.id}">
                                             </form>
-                                    </div>
-
-                                ` : ''}`,
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `,
                             labelType: 'html',
                             rx: 10,
                             ry: 10,
@@ -491,9 +524,89 @@
                 });
             }
 
+            // Добавляем текстовый ввод, если он включен
+            if (step.text_input) {
+                const textInputId = `textinput-${step.id}`;
+
+                // Добавляем текстовый ввод как отдельный узел
+                graph.setNode(textInputId, {
+                    label: `
+                        <div style="text-align: center;">
+                            <!-- Верхняя строка с иконками и надписью -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+
+
+                                <!-- Центральная надпись "Текстовый ввод" -->
+                                <div style="flex-grow: 1; text-align: center; margin: 0 10px;">
+                                    <div style="display: inline-block;
+                                              padding: 3px 12px;
+                                              border-radius: 15px;
+                                              background-color: #9C27B0;
+                                              color: white;
+                                              font-size: 12px;
+                                              font-weight: bold;
+                                              text-transform: uppercase;
+                                              letter-spacing: 1px;
+                                              box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+                                              line-height: 1.5;">
+                                        Текстовый ввод
+                                    </div>
+                                </div>
+
+                                <!-- Правая иконка удаления (или заполнитель) -->
+                                ${!step.next_step ? `
+                                    <a href="#"
+                                       onclick="event.preventDefault(); document.getElementById('delete-text-input-${step.id}').submit();"
+                                       class="icon delete-icon">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    <form id="delete-text-input-${step.id}"
+                                          action="/bots/delete-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
+                                          method="POST"
+                                          style="display: none;">
+                                        {% csrf_token %}
+                                    </form>
+                                ` : '<div style="width: 24px;"></div>'}
+                            </div>
+
+                            <!-- Блок "Добавить шаг" (если нужно) -->
+                            ${!step.next_step ? `
+                                <div style="text-align: center; margin-top: 10px;">
+                                    <a href="#"
+                                       onclick="event.preventDefault(); document.getElementById('create-step-textinput-${step.id}').submit();"
+                                       class="icon add-step-icon">
+                                        <i class="fas fa-plus"></i> Добавить шаг
+                                    </a>
+                                    <form id="create-step-textinput-${step.id}"
+                                          action="/bots/create-chain-step-textinput/{{bot.id}}/{{chain.id}}"
+                                          method="POST"
+                                          style="display: none;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="set_as_next_step_for_step_id" value="${step.id}">
+                                    </form>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `,
+                    labelType: 'html',
+                    rx: 10,
+                    ry: 10,
+                    width: 250,
+                    height: !step.next_step ? 100 : 70,
+                });
+
+                // Добавляем связь от шага к текстовому вводу
+                graph.setEdge(step.id, textInputId, { label: '' });
+
+                // Если у текстового ввода есть следующий шаг, добавляем связь
+                if (step.next_step && step.next_step.id) {
+                    graph.setEdge(textInputId, step.next_step.id, { label: '' });
+                }
+            }
+
             // Добавляем следующий шаг (если есть)
             if (step.next_step && step.next_step.id) {
-                addStep(step.next_step, step.id, visited);
+                addStep(step.next_step, step.text_input ? `textinput-${step.id}` : step.id, visited);
             }
         }
 
