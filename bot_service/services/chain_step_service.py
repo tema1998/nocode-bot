@@ -1,7 +1,7 @@
 import logging
 
 from bot_service.core.configs import config
-from bot_service.models.chain import Chain, ChainButton, ChainStep
+from bot_service.models.chain import ChainButton, ChainStep
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
 )
@@ -53,26 +53,22 @@ class ChainStepService:
             )
             # Insert the new chain step into the database
             created_chain_step = await self.db_repository.insert(db_chain_step)
+
             if not isinstance(created_chain_step, ChainStep):
                 raise ValueError("Unexpected return type from insert method")
+
+            # If the step comes after the button - set this step as the next for the button
+            if chain_step.set_as_next_step_for_button_id:
+                await self._set_step_as_next_step_for_button(
+                    button_id=int(chain_step.set_as_next_step_for_button_id),  # type: ignore
+                    next_chain_step_id=int(created_chain_step.id),
+                )
+
         except Exception as e:
             logger.error(f"Failed to create chain step: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to create chain step",
-            )
-
-        # If the step is marked as the first step of the chain, update the chain's first_step_id
-        if chain_step.is_first_step_of_chain:
-            await self._set_step_as_first_step_for_chain(
-                chain_id=chain_step.chain_id,
-                next_chain_step_id=int(created_chain_step.id),
-            )
-        # Otherwise, set this step as the next step for a specific button
-        else:
-            await self._set_step_as_next_step_for_button(
-                button_id=int(chain_step.set_as_next_step_for_button_id),  # type: ignore
-                next_chain_step_id=int(created_chain_step.id),
             )
 
         return created_chain_step
@@ -188,33 +184,6 @@ class ChainStepService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete chain step",
-            )
-
-    async def _set_step_as_first_step_for_chain(
-        self, chain_id: int, next_chain_step_id: int
-    ) -> None:
-        """
-        Set a chain step as the first step of a chain.
-
-        Args:
-            chain_id (int): The ID of the chain.
-            next_chain_step_id (int): The ID of the chain step to set as the first step.
-
-        Raises:
-            HTTPException: If the chain is not found or the update fails.
-        """
-        try:
-            # Fetch the chain and update its first_chain_step_id
-            chain = await self.db_repository.fetch_by_id(Chain, chain_id)
-            chain.first_chain_step_id = next_chain_step_id  # type:ignore
-            await self.db_repository.update(chain)
-        except Exception as e:
-            logger.error(
-                f"Failed to set step as first step for chain: {str(e)}"
-            )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to set step as first step for chain",
             )
 
     async def _set_step_as_next_step_for_button(
