@@ -1148,6 +1148,60 @@ class CreateChainStepTextinputView(LoginRequiredMixin, View):
             return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
 
+class EditTextinputView(LoginRequiredMixin, View):
+    """View for turn off/on text input of the step."""
+
+    def post(
+        self, request, bot_id: int, chain_id: int, step_id: int
+    ) -> HttpResponseRedirect:
+        """
+        Turn off/on text input of the step.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot that owns the chain
+            chain_id: ID of the chain
+            step_id: ID of the step
+
+        Returns:
+            Redirect to chain view or error page
+
+        Raises:
+            Http404: If user doesn't own the bot or other access violation
+        """
+        bot = get_object_or_404(Bot, id=bot_id)
+
+        if bot.user != request.user:
+            raise Http404("You don't have permission to modify this bot.")
+
+        try:
+            text_input = request.POST.get("text_input") == "on"
+            update_chain_step(
+                step_id=int(step_id),
+                text_input=text_input,
+            )
+
+            if text_input:
+                messages.success(
+                    request,
+                    "Текстовый ввод успешно создан. Для продолжения его цепочки - добавить к нему следующий шаг.",
+                )
+            else:
+                messages.success(
+                    request,
+                    "Текстовый ввод успешно удален.",
+                )
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+        except Exception as e:
+            logger.error(
+                f"Failed to turn off/on text input. Chain ID: {chain_id}, Step ID: {step_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            messages.error(request, f"Ошибка операции: {str(e)}")
+            return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+
+
 class UpdateChainStepView(LoginRequiredMixin, View):
     """View for updating existing chain steps in conversation flows."""
 

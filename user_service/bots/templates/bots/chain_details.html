@@ -157,6 +157,24 @@
         background-color: #45a049;
     }
 
+    /* Стили для кнопки "Добавить текстовый ввод" */
+    .add-textinput-button {
+        display: inline-block;
+        margin-top: 5px;
+        padding: 5px 10px;
+        background-color: #9C27B0;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .add-textinput-button:hover {
+        background-color: #7B1FA2;
+    }
+
     /* Стили для текстовой инструкции */
     .graph-instruction {
         width: 20%; /* Инструкция занимает 20% ширины */
@@ -349,6 +367,9 @@
             // Проверяем, является ли шаг единственным
             const isSingleStep = countSteps(chainData.first_step) === 1;
 
+            // Проверяем, есть ли у шага кнопки
+            const hasButtons = step.buttons && step.buttons.length > 0;
+
             // Добавляем шаг как узел
             graph.setNode(step.id, {
                 label: `
@@ -384,10 +405,10 @@
                                 <i class="fas fa-trash"></i>
                             </a>
                             <form id="delete-step-${step.id}"
-                                      action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
-                                      method="POST"
-                                      style="display: none;">
-                                    {% csrf_token %}
+                                  action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
+                                  method="POST"
+                                  style="display: none;">
+                                {% csrf_token %}
                             </form>
                         ` : '<div style="width: 24px;"></div>'} <!-- Заполнитель для выравнивания -->
                     </div>
@@ -398,6 +419,7 @@
 
                     <div style="margin-top: 10px;">
                         ${step.text_input ? '' : `
+                            <!-- Кнопка "Добавить кнопку" (всегда показываем, если не текстовый ввод) -->
                             <a href="#"
                                onclick="event.preventDefault(); document.getElementById('create-button-${step.id}').submit();"
                                class="add-button">
@@ -410,6 +432,24 @@
                                 {% csrf_token %}
                                 <input type="hidden" name="step_id" value="${step.id}">
                             </form>
+
+                            <!-- Кнопка "Добавить текстовый ввод" (только если нет кнопок) -->
+                            ${!hasButtons ? `
+                                <div style="margin-top: 5px;">
+                                    <a href="#"
+                                       onclick="event.preventDefault(); document.getElementById('add-textinput-${step.id}').submit();"
+                                       class="add-textinput-button">
+                                        <i class="fas fa-plus"></i> Добавить текстовый ввод
+                                    </a>
+                                    <form id="add-textinput-${step.id}"
+                                          action="/bots/edit-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
+                                          method="POST"
+                                          style="display: none;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="text_input" value="on">
+                                    </form>
+                                </div>
+                            ` : ''}
                         `}
                     </div>
                 </div>
@@ -418,7 +458,7 @@
                 rx: 10,
                 ry: 10,
                 width: 300,
-                height: 150,
+                height: hasButtons ? 150 : 180, // Увеличиваем высоту, если есть кнопка добавления текстового ввода
             });
 
             // Если есть родительский шаг, добавляем связь
@@ -561,10 +601,11 @@
                                         <i class="fas fa-trash"></i>
                                     </a>
                                     <form id="delete-text-input-${step.id}"
-                                          action="/bots/delete-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
+                                          action="/bots/edit-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
                                           method="POST"
                                           style="display: none;">
                                         {% csrf_token %}
+                                        <input type="hidden" name="text_input" value="off">
                                     </form>
                                 ` : '<div style="width: 24px;"></div>'}
                             </div>
