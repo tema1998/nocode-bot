@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import EmptyPage, Paginator
 from django.http import (
     Http404,
     HttpResponse,
@@ -39,8 +40,8 @@ from .utils import (
     get_bot_main_menu,
     get_bot_main_menu_button,
     get_chain_button,
-    get_chain_results,
     get_chain_step,
+    get_paginated_chain_results,
     update_bot,
     update_chain,
     update_chain_button,
@@ -1485,41 +1486,63 @@ class DeleteChainButtonView(LoginRequiredMixin, View):
 
 
 class ChainResultsView(LoginRequiredMixin, View):
-    """View for displaying user completion results for a specific chain."""
+    """
+    View for displaying paginated chain execution results.
+
+    Attributes:
+        template_name (str): Path to the template used for rendering.
+        RESULTS_PER_PAGE (int): Number of items to display per page.
+    """
 
     template_name = "bots/chain_results.html"
+    RESULTS_PER_PAGE = 4
 
     def get(self, request, bot_id: int, chain_id: int) -> HttpResponse:
         """
-        Render chain completion results page.
+        Handle GET request to display chain results.
 
         Args:
-            request: The incoming HTTP request
-            bot_id: ID of the bot that owns the chain
+            request: HttpRequest object
+            bot_id: ID of the bot
             chain_id: ID of the chain to show results for
 
         Returns:
-            HttpResponse: Rendered template with chain results data
+            HttpResponse: Rendered template with paginated results
 
         Raises:
-            Http404: If either:
-                - The bot doesn't exist
-                - User doesn't own the bot
-                - Chain doesn't exist
+            Http404: If bot doesn't exist or user doesn't have permission
         """
-        # Validate bot ownership
+        # Verify bot exists and user has permission
         bot = get_object_or_404(Bot, id=bot_id)
         if bot.user != request.user:
-            raise Http404("Permission denied - you don't own this bot")
+            raise Http404("Permission denied")
 
-        # Fetch and render results
-        results = get_chain_results(chain_id)
+        # Get and validate page number from query params
+        try:
+            page_number = int(request.GET.get("page", 1))
+        except ValueError:
+            page_number = 1  # Fallback to first page if invalid number
+
+        # Fetch results from API
+        results = get_paginated_chain_results(chain_id)
+        logger.debug(f"Fetched {len(results)} results for chain {chain_id}")
+
+        # Handle pagination
+        if not results:
+            page_obj = None  # No results case
+        else:
+            paginator = Paginator(results, self.RESULTS_PER_PAGE)
+            try:
+                page_obj = paginator.page(page_number)
+            except EmptyPage:
+                page_obj = paginator.page(1)  # Fallback to first page
+
         return render(
             request,
             self.template_name,
             {
                 "bot": bot,
-                "chain": chain_id,
-                "results": results,
+                "chain_id": chain_id,
+                "page_obj": page_obj,
             },
         )
