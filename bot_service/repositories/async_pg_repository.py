@@ -5,7 +5,7 @@ from uuid import UUID
 from bot_service.core.configs import config
 from bot_service.db.db_utils import Base
 from bot_service.repositories.async_data_repository import AsyncDataRepository
-from sqlalchemy import and_, delete, select, update
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import joinedload, sessionmaker
@@ -435,6 +435,32 @@ class PostgresAsyncRepository(AsyncDataRepository):
             result = await session.execute(stmt)
             items = result.scalars().all()
             return items if items else None
+
+    async def count_by_query(
+        self, model_class: Type[Base], column: str, value: Any
+    ) -> int:
+        """
+        Count records matching the specified filter condition.
+
+        Args:
+            model_class: The SQLAlchemy model class to query
+            column: Name of the column to filter by
+            value: Value to match in the specified column
+
+        Returns:
+            int: Count of matching records (0 if none found)
+        """
+        async with self.async_session() as session:
+            # Build count query
+            stmt = (
+                select(func.count())
+                .select_from(model_class)
+                .where(getattr(model_class, column) == value)
+            )
+
+            # Execute and return scalar result
+            result = await session.execute(stmt)
+            return result.scalar_one() or 0
 
 
 async def get_repository() -> PostgresAsyncRepository:

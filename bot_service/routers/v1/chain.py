@@ -1,15 +1,16 @@
 import logging
-from typing import List
+from typing import Any
 
 from bot_service.models import Chain
 from bot_service.schemas.chain import (
     ChainCreate,
     ChainResponse,
+    ChainResultsResponse,
     ChainsResponse,
     ChainUpdate,
 )
 from bot_service.services.chain_service import ChainService, get_chain_service
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from starlette import status
 
 
@@ -177,36 +178,45 @@ async def get_chain_with_details(
 
 @router.get(
     "/results/{chain_id}",
-    summary="Get chain completion results",
-    description="Retrieves all user responses for a specific chain including "
-    "profile information, answers, and interaction timestamps.",
-    response_description="List of user completion results",
-    status_code=200,
+    summary="Get paginated chain completion results",
+    response_model=ChainResultsResponse,
+    responses={
+        404: {"description": "Chain not found or no results available"},
+        500: {"description": "Internal server error"},
+    },
 )
 async def get_chain_results(
-    chain_id: int,
+    chain_id: int = Path(..., description="ID of the chain", example=1),
+    page: int = Query(1, ge=1, description="Page number starting from 1"),
+    per_page: int = Query(
+        10, ge=1, le=100, description="Items per page (max 100)"
+    ),
     chain_service: ChainService = Depends(get_chain_service),
-) -> List:
+) -> dict[str, Any]:
     """
-    Retrieve completion results for a specific chain.
+    Retrieve paginated completion results for a chain with user details.
 
-    Returns a list of user responses including:
-    - User profile information (name, username, photo)
+    Returns enriched user data including:
+    - Profile information (name, username, photo)
     - Answers to chain questions
     - Interaction timestamps
-    - Current progress in the chain
-
-    Args:
-        chain_id: The ID of the chain to get results for
-        chain_service: Dependency injection of chain service
-
-    Returns:
-        List[Dict]: List of user result dictionaries
-
-    Raises:
-        HTTPException: 404 if no results found for this chain
+    - Current progress status
     """
-    results = await chain_service.get_chain_results(chain_id)
-    if not results:
-        return []
-    return results
+    try:
+        result = await chain_service.get_paginated_chain_results(
+            chain_id=chain_id, page=page, per_page=per_page
+        )
+
+        if not result["items"]:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No results found for chain {chain_id}",
+            )
+
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")

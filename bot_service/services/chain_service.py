@@ -1,5 +1,6 @@
+import asyncio
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from bot_service.core.configs import config
 from bot_service.models import Bot
@@ -332,89 +333,146 @@ class ChainService:
                 detail="Failed to set first chain's step.",
             )
 
-    async def get_chain_results(self, chain_id: int) -> Optional[List[Dict]]:
+    async def get_paginated_chain_results(
+        self, chain_id: int, page: int = 1, per_page: int = 10
+    ) -> Dict[str, Any]:
         """
-        Retrieves chain completion results with user information for frontend display.
+        Retrieves paginated chain completion results with user information.
 
-        Fetches all user states for a specific chain, enriches them with Telegram user data,
-        and formats the results for frontend consumption.
+        Enhanced version with:
+        - Better error handling
+        - Parallel user data fetching
+        - Strict parameter validation
+        - Optimized database queries
 
         Args:
-            chain_id: The ID of the chain to get results for
+            chain_id: ID of the chain to query (positive integer)
+            page: Page number (1-based)
+            per_page: Number of items per page (1-100)
 
         Returns:
-            A list of dictionaries containing user results, or None if no data found.
-            Each dictionary contains:
-            - user_id: Telegram user ID
-            - username: Telegram username (may be None)
-            - first_name: User's first name
-            - last_name: User's last name (may be None)
-            - photo: URL to user's profile photo (may be None)
-            - answers: Dictionary of user's answers
-            - last_interaction: ISO formatted timestamp of last activity
-            - current_step: ID of the current chain step
+            Dictionary containing paginated results with metadata
 
         Raises:
-            Does not explicitly raise exceptions but logs errors during processing
+            ValueError: If input parameters are invalid
         """
-        # Fetch chain and associated bot from database
+        # Validate input parameters
+        if not isinstance(chain_id, int) or chain_id <= 0:
+            raise ValueError("chain_id must be positive integer")
+        if not isinstance(page, int) or page <= 0:
+            raise ValueError("page must be positive integer")
+        if not isinstance(per_page, int) or not 1 <= per_page <= 100:
+            raise ValueError("per_page must be between 1 and 100")
+
+        # Fetch required entities
+        chain, bot = await self._get_chain_and_bot(chain_id)
+        if not chain or not bot:
+            return self._empty_response(page, per_page)
+
+        # Get paginated results
+        try:
+            total = await self.db_repository.count_by_query(
+                model_class=UserState, column="chain_id", value=chain_id
+            )
+            if total == 0:
+                return self._empty_response(page, per_page)
+
+            user_states = await self._get_paginated_user_states(
+                chain_id=chain_id, page=page, per_page=per_page
+            )
+
+            # Process users in parallel
+            items = await self._process_users_parallel(
+                user_states=user_states, bot_token=str(bot.token)
+            )
+
+            return {
+                "items": items,
+                "total": total,
+                "page": page,
+                "per_page": per_page,
+                "total_pages": (total + per_page - 1) // per_page,
+            }
+
+        except Exception as e:
+            logger.error(
+                f"Failed to get chain results: {str(e)}", exc_info=True
+            )
+            return self._empty_response(page, per_page)
+
+    async def _get_chain_and_bot(
+        self, chain_id: int
+    ) -> Tuple[Optional[Chain], Optional[Bot]]:
+        """Fetch chain and bot in single transaction"""
         chain = await self.db_repository.fetch_by_id(Chain, chain_id)
         if not chain:
-            return None
+            return None, None
 
         bot = await self.db_repository.fetch_by_id(Bot, chain.bot_id)
+        return chain, bot
 
-        # Get all user states for this chain
-        user_states = await self.db_repository.fetch_by_query(
-            UserState, {"chain_id": chain_id}
+    async def _get_paginated_user_states(
+        self, chain_id: int, page: int, per_page: int
+    ) -> List[UserState]:
+        """Retrieve paginated user states with optimized query"""
+        offset = (page - 1) * per_page
+        return await self.db_repository.fetch_by_query_with_pagination(  # type: ignore
+            model_class=UserState,
+            column="chain_id",
+            value=chain_id,
+            skip=offset,
+            limit=per_page,
         )
 
-        if not user_states or not bot:
-            return None
+    async def _process_users_parallel(
+        self, user_states: List[UserState], bot_token: str
+    ) -> List[Dict]:
+        """Process user states in parallel with error handling"""
+        tasks = [
+            self._get_user_data(user_state, bot_token)
+            for user_state in user_states
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        return [r for r in results if isinstance(r, dict)]
 
-        results = []
+    async def _get_user_data(
+        self, user_state: UserState, bot_token: str
+    ) -> Optional[Dict]:
+        """Get enriched user data with telegram info"""
+        try:
+            user_info = await self.telegram_api_repository.get_user_info(
+                bot_token=bot_token, user_id=int(user_state.user_id)
+            )
+            if user_info:
+                return self._format_user_result(user_state, user_info)
+        except Exception as e:
+            logger.warning(f"Skipped user {user_state.user_id}: {str(e)}")
+        return None
 
-        for user_state in user_states:
-            try:
-                # Get Telegram user profile information
-                user_info = await self.telegram_api_repository.get_user_info(
-                    bot_token=bot.token, user_id=user_state.user_id
-                )
+    def _format_user_result(
+        self, user_state: UserState, user_info: Dict
+    ) -> Dict:
+        """Uniform user result formatting"""
+        return {
+            "user_id": user_state.user_id,
+            "username": user_info.get("username"),
+            "first_name": user_info.get("first_name", "Unknown"),
+            "last_name": user_info.get("last_name"),
+            "photo": user_info.get("photo_url"),
+            "answers": user_state.result or {},
+            "last_interaction": user_state.updated_at.isoformat(),
+            "current_step": user_state.step_id,
+        }
 
-                # Skip if we couldn't retrieve user info
-                if not user_info:
-                    logger.warning(
-                        f"Skipping user {user_state.user_id} - info unavailable"
-                    )
-                    continue
-
-                # Format data for frontend response
-                user_data = {
-                    "user_id": user_state.user_id,
-                    "username": user_info.get("username"),
-                    "first_name": user_info.get(
-                        "first_name", ""
-                    ),  # Ensure non-None
-                    "last_name": user_info.get("last_name"),
-                    "photo": user_info.get("photo_url"),  # May be None
-                    "answers": user_state.result
-                    or {},  # Ensure dict even if None
-                    "last_interaction": user_state.updated_at.isoformat(),
-                    "current_step": user_state.step_id,
-                }
-                results.append(user_data)
-
-            except Exception as e:
-                # Log error but continue processing other users
-                logger.error(
-                    f"Error processing user {user_state.user_id}: {str(e)}",
-                    exc_info=True,
-                )
-                continue
-
-        return (
-            results if results else None
-        )  # Explicit None if empty after processing
+    def _empty_response(self, page: int, per_page: int) -> Dict:
+        """Consistent empty response format"""
+        return {
+            "items": [],
+            "total": 0,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": 0,
+        }
 
 
 async def get_chain_service() -> ChainService:
