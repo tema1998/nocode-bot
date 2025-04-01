@@ -2,6 +2,7 @@ from bot_service.schemas.main_menu import (
     ButtonCreateRequest,
     ButtonResponse,
     ButtonUpdateRequest,
+    ButtonUpdateResponse,
     MainMenuResponse,
     PatchWelcomeMessageRequest,
     PatchWelcomeMessageResponse,
@@ -142,7 +143,10 @@ async def create_main_menu_button(
     """
 
     button = await main_menu_service.create_main_menu_button(
-        request.bot_id, request.button_text, request.reply_text
+        request.bot_id,
+        request.button_text,
+        request.reply_text,
+        chain_id=request.chain_id,
     )
 
     return button
@@ -161,7 +165,7 @@ async def update_main_menu_button(
     button_id: int,
     request: ButtonUpdateRequest,
     main_menu_service: MainMenuService = Depends(get_main_menu_service),
-) -> ButtonResponse:
+) -> ButtonUpdateResponse:
     """
     Update a button in the main menu of a bot.
 
@@ -177,7 +181,7 @@ async def update_main_menu_button(
         HTTPException: If the button with the specified ID is not found.
     """
     button = await main_menu_service.update_main_menu_button(
-        button_id, request.button_text, request.reply_text
+        button_id, request.button_text, request.reply_text, request.chain_id
     )
 
     return button

@@ -1,6 +1,7 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
+from bot_service.models import Chain
 from bot_service.models.main_menu import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
@@ -12,9 +13,10 @@ from bot_service.repositories.telegram_api_repository import (
 )
 from bot_service.schemas.main_menu import (
     ButtonResponse,
+    ButtonUpdateResponse,
     PatchWelcomeMessageResponse,
 )
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 
 
 logger = logging.getLogger(__name__)
@@ -134,16 +136,31 @@ class MainMenuService:
             logger.error(f"Button with ID {button_id} not found.")
             raise HTTPException(status_code=404, detail="Button not found")
 
-        # Return the button details
-        return ButtonResponse(
+        if button.chain_id:
+            # Fetch the chain by its ID
+            chain = await self.db_repository.fetch_by_query_one_joinedload(
+                Chain, {"id": button.chain_id}
+            )
+        else:
+            chain = None
+
+        response = ButtonResponse(
             id=int(button.id),
             bot_id=button.bot_id,
             button_text=button.button_text,
             reply_text=button.reply_text,
         )
+        if chain:
+            response.chain_id = chain.id
+            response.chain = chain.name
+        return response
 
     async def create_main_menu_button(
-        self, bot_id: int, button_text: str, reply_text: str
+        self,
+        bot_id: int,
+        button_text: str,
+        reply_text: str,
+        chain_id: Optional[int] = None,
     ) -> ButtonResponse:
         """
         Create a new button for the main menu of a specific bot.
@@ -152,6 +169,7 @@ class MainMenuService:
             bot_id (int): The unique identifier of the bot to which the button belongs.
             button_text (str): The text displayed on the button.
             reply_text (str): The text sent as a reply when the button is clicked.
+            chain_id (Optional[int]): Button starts chain with ID = chain_id.
 
         Returns:
             ButtonResponse: A response model containing the details of the created button.
@@ -178,6 +196,7 @@ class MainMenuService:
             reply_text=reply_text,
             main_menu_id=main_menu.id,
             bot_id=bot_id,
+            chain_id=chain_id,
         )
 
         await self.db_repository.insert(button)
@@ -190,8 +209,12 @@ class MainMenuService:
         )
 
     async def update_main_menu_button(
-        self, button_id: int, button_text: str, reply_text: str
-    ) -> ButtonResponse:
+        self,
+        button_id: int,
+        button_text: str,
+        reply_text: str,
+        chain_id: Optional[int] = None,
+    ) -> ButtonUpdateResponse:
         """
         Update the text and reply text of a button in the main menu.
 
@@ -199,9 +222,10 @@ class MainMenuService:
             button_id (int): The unique identifier of the button to update.
             button_text (str): The new text to display on the button.
             reply_text (str): The new text to send as a reply when the button is clicked.
+            chain_id (Optional[int]): The button starts chain with ID = chain_id.
 
         Returns:
-            ButtonResponse: A response model containing the details of the updated button.
+            ButtonUpdateResponse: A response model containing the details of the updated button.
 
         Raises:
             HTTPException:
@@ -228,11 +252,33 @@ class MainMenuService:
         button.button_text = button_text
         button.reply_text = reply_text
 
+        if chain_id is not None:
+            try:
+                chain = await self.db_repository.fetch_by_id(Chain, chain_id)
+                if chain and chain.bot_id == button.bot_id:
+                    button.chain_id = chain_id
+                else:
+                    logger.error(
+                        f"Failed to set chain with ID={chain_id} to button with ID={button_id}"
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Failed to set chain to button",
+                    )
+            except Exception as e:
+                logger.error(f"Failed to update button: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to update button",
+                )
+        else:
+            button.chain_id = None
+
         # Save the updated button to the database
         await self.db_repository.update(button)
 
         # Return the updated button details
-        return ButtonResponse(
+        return ButtonUpdateResponse(
             id=int(button.id),
             bot_id=button.bot_id,
             button_text=button.button_text,

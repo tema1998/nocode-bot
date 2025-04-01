@@ -15,15 +15,29 @@ class ButtonCreateRequest(BaseModel):
     bot_id: int
     button_text: str
     reply_text: str
+    chain_id: int
 
 
 class ButtonUpdateRequest(BaseModel):
     button_text: str
     reply_text: str
+    chain_id: Optional[int] = None
 
 
-class ButtonResponse(ButtonCreateRequest):
+class ButtonResponse(BaseModel):
     id: int
+    bot_id: int
+    button_text: str
+    reply_text: str
+    chain_id: Optional[int] = None
+    chain: Optional[str] = None
+
+
+class ButtonUpdateResponse(BaseModel):
+    id: int
+    bot_id: int
+    button_text: str
+    reply_text: str
 
 
 class MainMenuResponse(BaseModel):
