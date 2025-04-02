@@ -460,7 +460,7 @@ class BotMainMenuButtonView(LoginRequiredMixin, View):
     Users must be logged in and be the owner of the bot to access this view.
     """
 
-    template_name = "bots/main_menu_button.html"  # Template for rendering the bot's main menu button
+    template_name = "bots/update_main_menu_button.html"  # Template for rendering the bot's main menu button
 
     def get(self, request, bot_id: int, button_id: int) -> HttpResponse:
         """
@@ -484,6 +484,8 @@ class BotMainMenuButtonView(LoginRequiredMixin, View):
         try:
             # Fetch the bot's main menu button from the Bot-Service API
             button: Dict[str, Any] = get_bot_main_menu_button(button_id)
+
+            chains_response: Dict[str, Any] = get_bot_chains(bot.bot_id)
         except Exception as e:
             # Log the error if the API request fails
             logger.error(
@@ -497,7 +499,11 @@ class BotMainMenuButtonView(LoginRequiredMixin, View):
         return render(
             request,
             self.template_name,
-            {"bot": bot, "button": button},
+            {
+                "bot": bot,
+                "button": button,
+                "chains": chains_response["chains"],
+            },
         )
 
 
@@ -538,13 +544,17 @@ class UpdateBotMainMenuButtonView(LoginRequiredMixin, View):
                 "bot-main-menu-button", bot_id=bot.id, button_id=button_id
             )
 
-        # Extract button text and reply text from the form
+        # Extract button text,reply text and chain_id from the form
         button_text: str = form.cleaned_data["button_text"]
         reply_text: str = form.cleaned_data["reply_text"]
+        chain_id = form.cleaned_data["chain_id"]
+        chain_id = chain_id if chain_id != 0 else None
 
         try:
             # Update the bot's main menu button in the Bot-Service API
-            update_main_menu_button(button_id, button_text, reply_text)
+            update_main_menu_button(
+                button_id, button_text, reply_text, chain_id
+            )
         except Exception as e:
             # Log the error if the API request fails
             logger.error(
@@ -599,11 +609,13 @@ class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
         if bot.user != request.user:
             raise Http404("Вы не являетесь владельцем данного бота.")
 
+        chains_response: Dict[str, Any] = get_bot_chains(bot.bot_id)
+
         # Render the template with the bot context
         return render(
             request,
             self.template_name,
-            {"bot": bot},
+            {"bot": bot, "chains": chains_response["chains"]},
         )
 
     def post(self, request, bot_id: int) -> HttpResponse:
@@ -630,13 +642,17 @@ class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
             messages.error(request, "Проверьте правильность данных.")
             return redirect("create-bot-main-menu-button", bot_id=bot.id)
 
-        # Extract button text and reply text from the form
+        # Extract button text,reply text and chain_id from the form
         button_text: str = form.cleaned_data["button_text"]
         reply_text: str = form.cleaned_data["reply_text"]
+        chain_id = form.cleaned_data["chain_id"]
+        chain_id = chain_id if chain_id != 0 else None
 
         try:
             # Create the bot's main menu button via the Bot-Service API
-            create_main_menu_button(bot.bot_id, button_text, reply_text)
+            create_main_menu_button(
+                bot.bot_id, button_text, reply_text, chain_id
+            )
         except Exception as e:
             # Log the error if the API request fails
             logger.error(

@@ -104,3 +104,7 @@
     </div>
 </div>
 {% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}

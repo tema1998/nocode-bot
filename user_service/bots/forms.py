@@ -69,6 +69,7 @@ class BotMainMenuButtonForm(forms.Form):
             }
         ),
     )
+    chain_id = forms.IntegerField()
 
 
 class BotChainForm(forms.Form):

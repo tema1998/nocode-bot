@@ -230,7 +230,7 @@ def get_bot_main_menu_button(button_id: int) -> Dict[str, Any]:
 
 
 def update_main_menu_button(
-    button_id: int, button_text: str, reply_text: str
+    button_id: int, button_text: str, reply_text: str, chain_id: Optional[int]
 ) -> Optional[Dict[str, Any]]:
     """
     Update the main menu button for a specific button ID in the Bot-Service API.
@@ -239,9 +239,10 @@ def update_main_menu_button(
         button_id (int): The ID of the main menu button to update.
         button_text (str): The new text for the button.
         reply_text (str): The new reply text associated with the button.
+        chain_id (Optional[int]): The new reply text associated with the button.
 
     Returns:
-        Optional[Dict[str, Any]]: A dictionary containing the updated button details,
+        Optional[A[str, Any]]: A dictionary containing the updated button details,
                                    or None if the update was unsuccessful.
 
     Raises:
@@ -251,7 +252,11 @@ def update_main_menu_button(
         # Send a PATCH request to update the button data
         response = requests.patch(
             f"{BOT_SERVICE_API_URL}main-menu/button/{button_id}",
-            json={"button_text": button_text, "reply_text": reply_text},
+            json={
+                "button_text": button_text,
+                "reply_text": reply_text,
+                "chain_id": chain_id,
+            },
         )
         response.raise_for_status()  # Raise an exception for HTTP errors
 
@@ -274,7 +279,7 @@ def update_main_menu_button(
 
 
 def create_main_menu_button(
-    bot_id: int, button_text: str, reply_text: str
+    bot_id: int, button_text: str, reply_text: str, chain_id: Optional[int]
 ) -> Optional[Dict[str, Any]]:
     """
     Creates a new main menu button for a bot.
@@ -299,6 +304,7 @@ def create_main_menu_button(
                 "bot_id": bot_id,
                 "button_text": button_text,
                 "reply_text": reply_text,
+                "chain_id": chain_id,
             },
         )
         response.raise_for_status()  # Raise an exception for HTTP errors
