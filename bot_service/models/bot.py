@@ -1,7 +1,10 @@
 from bot_service.models.mixin import TimeStampedMixin
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
+    ForeignKey,
+    Index,
     Integer,
     String,
 )
@@ -25,3 +28,28 @@ class Bot(Base, TimeStampedMixin):
     chains = relationship(
         "Chain", back_populates="bot", cascade="all, delete-orphan"
     )
+    users = relationship(
+        "BotUser", back_populates="bot", cascade="all, delete-orphan"
+    )
+
+
+class BotUser(Base, TimeStampedMixin):
+    """Model representing a bot user."""
+
+    __tablename__ = "bot_users"
+    __table_args__ = (
+        Index("idx_bot_user_unique", "bot_id", "id", unique=True),
+        {"schema": "public"},
+    )
+
+    id = Column(
+        BigInteger, primary_key=True
+    )  # Telegram user_id как primary key
+    bot_id = Column(
+        Integer, ForeignKey("bots.id", ondelete="CASCADE"), nullable=False
+    )
+    username = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
+
+    bot = relationship("Bot", back_populates="users")

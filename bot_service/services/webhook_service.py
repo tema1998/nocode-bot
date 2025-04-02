@@ -1,6 +1,6 @@
 from bot_service.core.configs import config
 from bot_service.models import UserState
-from bot_service.models.bot import Bot
+from bot_service.models.bot import Bot, BotUser
 from bot_service.models.main_menu import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
@@ -68,11 +68,15 @@ class WebhookService:
                 status_code=400, detail="Failed to parse update data."
             )
 
+        await self._save_bot_user(bot_id, update)
+
         # Process the update based on its type
         if update.callback_query is not None:
             await self.chain_handler_service.process_chain_step(update)
         elif update.message is not None and update.message.text == "/start":
             await self._handle_start_command(bot, update)
+        elif update.message is not None and update.message.text == "/update":
+            await self._handle_update_command(bot, update)
         elif update.message is not None:
             await self._handle_message(bot, update)
         else:
@@ -116,6 +120,51 @@ class WebhookService:
         # Update the welcome message if the main menu has a custom message
         if main_menu and main_menu.welcome_message:
             welcome_message = main_menu.welcome_message
+
+        # Add main menu buttons to the keyboard
+        if main_menu and main_menu.buttons:
+            main_menu_buttons = [
+                [KeyboardButton(button.button_text)]
+                for button in main_menu.buttons
+            ]
+            keyboard = main_menu_buttons + keyboard
+
+        # Send the welcome message with the keyboard
+        await update.message.reply_text(
+            welcome_message,
+            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
+        )
+
+    async def _handle_update_command(self, bot: Bot, update: Update) -> None:
+        """
+        Handle the /update command.
+
+        Args:
+            bot (Bot): The bot instance.
+            update (Update): The incoming update from Telegram.
+
+        Raises:
+            HTTPException: If the update has no message.
+        """
+        if update.message is None:
+            raise HTTPException(
+                status_code=400, detail="Update has no message."
+            )
+
+        # Create a default keyboard
+        keyboard = [
+            [
+                KeyboardButton(
+                    "Bot created using a constructor developed by tema1998"
+                )
+            ]
+        ]
+        welcome_message = "Главное меню успешно обновлено."
+
+        # Fetch the main menu from the database
+        main_menu = await self.db_repository.fetch_by_id_joinedload(
+            MainMenu, bot.main_menu.id, "buttons"
+        )
 
         # Add main menu buttons to the keyboard
         if main_menu and main_menu.buttons:
@@ -192,6 +241,46 @@ class WebhookService:
             )
         else:
             await self._handle_button_press(bot, update)
+
+    async def _save_bot_user(self, bot_id: int, update: Update) -> None:
+        """
+        Saves or updates bot user information in the database.
+
+        Args:
+            bot_id: The ID of the bot associated with the user
+            update: Telegram Update object containing user information
+
+        Returns:
+            None: This method doesn't return anything but performs database operations
+        """
+        # Return early if there's no effective user in the update
+        if not update.effective_user:
+            return
+
+        user = update.effective_user
+        # Prepare user data dictionary for saving
+        bot_user_data = {
+            "id": user.id,
+            "bot_id": bot_id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        }
+
+        # Check if user already exists in database
+        existing_user = await self.db_repository.fetch_by_query_one(
+            BotUser, {"id": user.id, "bot_id": bot_id}
+        )
+
+        if existing_user:
+            # Update existing user record
+            for key, value in bot_user_data.items():
+                setattr(existing_user, key, value)
+            await self.db_repository.update(existing_user)
+        else:
+            # Create new user record
+            new_user = BotUser(**bot_user_data)
+            await self.db_repository.insert(new_user)
 
 
 async def get_webhook_service() -> WebhookService:
