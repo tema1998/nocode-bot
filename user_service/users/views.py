@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import redirect, render
 from django.views import View
@@ -69,6 +70,7 @@ class LoginView(View):
             if user is not None:
                 login(request, user)  # Log the user in
                 return redirect("index")
+        messages.error(request, "Неверный логин/пароль.")
         return render(request, "users/login.html", {"form": form})
 
 

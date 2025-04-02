@@ -1,7 +1,7 @@
 {% extends 'login.html' %}
 
 {% block title %}
-Login
+Авторизация
 {% endblock %}
 
 {% block content %}
@@ -10,46 +10,153 @@ Login
         <h1 class="h4 text-gray-900 mb-4">Добро пожаловать!</h1>
     </div>
 
+    {# Стилизованные сообщения #}
+    {% if messages %}
+    <div class="mb-4 messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show message-item" role="alert">
+            <div class="message-content">
+                <i class="fas
+                    {% if message.tags == 'success' %}fa-check-circle
+                    {% elif message.tags == 'error' %}fa-times-circle
+                    {% elif message.tags == 'warning' %}fa-exclamation-triangle
+                    {% else %}fa-info-circle{% endif %}
+                "></i>
+                <span>{{ message }}</span>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">×</span>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <form class="user" method="post">
         {% csrf_token %}
 
-        <div class="form-group" >
-            Логин:
+        <div class="form-group">
+            <label class="form-label">Логин:</label>
             {{ form.username }}
             {% if form.username.errors %}
-                <div class="invalid-feedback">
+                <div class="invalid-feedback d-block">
                     {% for error in form.username.errors %}
-                        {{ error }}
+                        <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
         <div class="form-group">
-            Пароль:
+            <label class="form-label">Пароль:</label>
             {{ form.password }}
             {% if form.password.errors %}
-                <div class="invalid-feedback">
-                    {% for error in form.username.errors %}
-                        {{ error }}
+                <div class="invalid-feedback d-block">
+                    {% for error in form.password.errors %}
+                        <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
-        <button type="submit" class="btn btn-primary btn-user btn-block">Войти</button>
-        <hr>
-        <a href="index.html" class="btn btn-google btn-user btn-block">
-            <i class="fab fa-google fa-fw"></i> Войти с Google
-        </a>
-        <a href="index.html" class="btn btn-facebook btn-user btn-block">
-            <i class="fab fa-facebook-f fa-fw"></i> Войти с Facebook
-        </a>
+        <button type="submit" class="btn btn-primary btn-user btn-block btn-login">
+            <i class="fas fa-sign-in-alt mr-2"></i>Войти
+        </button>
     </form>
-    <hr>
-    <div class="text-center">
-        <a class="small" href="forgot-password.html">Забыли пароль?</a>
-    </div>
-    <div class="text-center">
-        <a class="small" href="{% url 'register' %}">Регистрация</a>
+    <hr class="divider">
+    <div class="text-center footer-links">
+        <a class="small" href="{% url 'index' %}"><i class="fas fa-home mr-1"></i>На главную</a>
+        <span class="mx-2">|</span>
+        <a class="small" href="{% url 'register' %}"><i class="fas fa-user-plus mr-1"></i>Регистрация</a>
     </div>
 </div>
+
+<style>
+    /* Стили для сообщений */
+    .messages-container {
+        max-width: 100%;
+        margin: 0 auto 1.5rem;
+    }
+
+    .message-item {
+        border-radius: 8px;
+        padding: 12px 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        border-left: 4px solid;
+    }
+
+    .message-content {
+        display: flex;
+        align-items: center;
+    }
+
+    .message-content i {
+        margin-right: 10px;
+        font-size: 1.1em;
+    }
+
+    .alert-success {
+        background-color: #e6f7ee;
+        border-color: #28a745;
+        color: #28a745;
+    }
+
+    .alert-error, .alert-danger {
+        background-color: #fce8e8;
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+    .alert-warning {
+        background-color: #fff8e6;
+        border-color: #ffc107;
+        color: #d39e00;
+    }
+
+    .alert-info {
+        background-color: #e7f5fe;
+        border-color: #17a2b8;
+        color: #17a2b8;
+    }
+
+    /* Стили для формы */
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .btn-login {
+        border-radius: 50px;
+        padding: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .divider {
+        border-top: 1px solid rgba(0,0,0,0.1);
+        margin: 1.5rem 0;
+    }
+
+    .footer-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .footer-links a {
+        color: #6c757d;
+        transition: color 0.3s;
+    }
+
+    .footer-links a:hover {
+        color: #4e73df;
+        text-decoration: none;
+    }
+
+    .invalid-feedback {
+        font-size: 0.85em;
+        margin-top: 5px;
+    }
+</style>
 {% endblock %}
