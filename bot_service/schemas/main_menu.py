@@ -15,7 +15,7 @@ class ButtonCreateRequest(BaseModel):
     bot_id: int
     button_text: str
     reply_text: str
-    chain_id: int
+    chain_id: Optional[int]
 
 
 class ButtonUpdateRequest(BaseModel):
