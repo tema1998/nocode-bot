@@ -16,6 +16,10 @@ from bot_service.schemas.main_menu import (
     ButtonUpdateResponse,
     PatchWelcomeMessageResponse,
 )
+from bot_service.services.mailing_service import (
+    MailingService,
+    get_mailing_service,
+)
 from fastapi import Depends, HTTPException, status
 
 
@@ -31,6 +35,7 @@ class MainMenuService:
         self,
         db_repository: PostgresAsyncRepository,
         tg_api_repository: TelegramApiRepository,
+        mailing_service: MailingService,
     ) -> None:
         """
         Initialize the MainMenuService.
@@ -41,6 +46,7 @@ class MainMenuService:
         """
         self.db_repository = db_repository
         self.tg_api_repository = tg_api_repository
+        self.mailing_service = mailing_service
 
     async def _get_main_menu(self, bot_id: int) -> MainMenu:
         """Internal method to get main menu or raise 404 if not found."""
@@ -207,6 +213,11 @@ class MainMenuService:
         await self._process_chain_association(button, chain_id)
         await self.db_repository.insert(button)
 
+        # Send notification to users that buttons were updated
+        await self.mailing_service.create_mailing(
+            bot_id,
+            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
+        )
         return ButtonResponse(
             id=button.id,  # type: ignore
             bot_id=bot_id,
@@ -250,6 +261,11 @@ class MainMenuService:
 
         await self._process_chain_association(button, chain_id)
         await self.db_repository.update(button)
+        # Send notification to users that buttons were updated
+        await self.mailing_service.create_mailing(
+            int(button.bot_id),
+            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
+        )
 
         return ButtonUpdateResponse(
             id=button.id,  # type: ignore
@@ -271,6 +287,11 @@ class MainMenuService:
         """
         button = await self._get_button(button_id)
         await self.db_repository.delete(Button, button.id)  # type: ignore
+        # Send notification to users that buttons were updated
+        await self.mailing_service.create_mailing(
+            int(button.bot_id),
+            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
+        )
 
     async def _check_button_text_constraint(self, bot_id, button_text):
         buttons_with_same_text = await self.db_repository.fetch_by_query(
@@ -291,8 +312,9 @@ class MainMenuService:
 def get_main_menu_service(
     db_repository: PostgresAsyncRepository = Depends(get_repository),
     tg_api_repository: TelegramApiRepository = Depends(
-        get_telegram_api_repository
+        get_telegram_api_repository,
     ),
+    mailing_service: MailingService = Depends(get_mailing_service),
 ) -> MainMenuService:
     """
     Dependency function to get an instance of MainMenuService.
@@ -300,8 +322,9 @@ def get_main_menu_service(
     Args:
         db_repository (PostgresAsyncRepository): The repository for database operations.
         tg_api_repository (TelegramApiRepository): The repository for Telegram API interactions.
+        mailing_service (MailingService): The mailing service.
 
     Returns:
         MainMenuService: An instance of MainMenuService.
     """
-    return MainMenuService(db_repository, tg_api_repository)
+    return MainMenuService(db_repository, tg_api_repository, mailing_service)
