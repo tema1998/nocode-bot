@@ -5,16 +5,18 @@ from bot_service.models import Chain
 from bot_service.models.main_menu import Button, MainMenu
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
+    get_repository,
 )
 from bot_service.repositories.telegram_api_repository import (
     TelegramApiRepository,
+    get_telegram_api_repository,
 )
 from bot_service.schemas.main_menu import (
     ButtonResponse,
     ButtonUpdateResponse,
     PatchWelcomeMessageResponse,
 )
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 
 
 logger = logging.getLogger(__name__)
@@ -284,3 +286,22 @@ class MainMenuService:
                 status_code=400,
                 detail="A button with this name is forbidden.",
             )
+
+
+def get_main_menu_service(
+    db_repository: PostgresAsyncRepository = Depends(get_repository),
+    tg_api_repository: TelegramApiRepository = Depends(
+        get_telegram_api_repository
+    ),
+) -> MainMenuService:
+    """
+    Dependency function to get an instance of MainMenuService.
+
+    Args:
+        db_repository (PostgresAsyncRepository): The repository for database operations.
+        tg_api_repository (TelegramApiRepository): The repository for Telegram API interactions.
+
+    Returns:
+        MainMenuService: An instance of MainMenuService.
+    """
+    return MainMenuService(db_repository, tg_api_repository)
