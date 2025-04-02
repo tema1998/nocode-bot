@@ -664,7 +664,7 @@ class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
                 request,
                 "Ошибка при создании кнопки. Проверьте имя цепочка.",
             )
-            return redirect("create-bot-main-menu", bot_id=bot.id)
+            return redirect("create-bot-main-menu-button", bot_id=bot.id)
 
         # If everything is successful, show a success message and redirect
         messages.success(request, "Кнопка успешно создана.")
