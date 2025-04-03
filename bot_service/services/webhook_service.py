@@ -33,6 +33,9 @@ class WebhookService:
         """
         self.db_repository = db_repository
         self.chain_handler_service = chain_handler_service
+        self.default_keyboard = [
+            [KeyboardButton("Бот создан с помощью платформы nocode-bot.ru")]
+        ]
 
     async def handle_webhook(self, bot_id: int, update_data: dict) -> dict:
         """
@@ -102,14 +105,6 @@ class WebhookService:
                 status_code=400, detail="Update has no message."
             )
 
-        # Create a default keyboard
-        keyboard = [
-            [
-                KeyboardButton(
-                    "Bot created using a constructor developed by tema1998"
-                )
-            ]
-        ]
         welcome_message = config.bot_default_welcome_message
 
         # Fetch the main menu from the database
@@ -127,7 +122,7 @@ class WebhookService:
                 [KeyboardButton(button.button_text)]
                 for button in main_menu.buttons
             ]
-            keyboard = main_menu_buttons + keyboard
+            keyboard = main_menu_buttons + self.default_keyboard
 
         # Send the welcome message with the keyboard
         await update.message.reply_text(
@@ -151,14 +146,6 @@ class WebhookService:
                 status_code=400, detail="Update has no message."
             )
 
-        # Create a default keyboard
-        keyboard = [
-            [
-                KeyboardButton(
-                    "Bot created using a constructor developed by tema1998"
-                )
-            ]
-        ]
         welcome_message = "Главное меню успешно обновлено."
 
         # Fetch the main menu from the database
@@ -172,7 +159,7 @@ class WebhookService:
                 [KeyboardButton(button.button_text)]
                 for button in main_menu.buttons
             ]
-            keyboard = main_menu_buttons + keyboard
+            keyboard = main_menu_buttons + self.default_keyboard
 
         # Send the welcome message with the keyboard
         await update.message.reply_text(
