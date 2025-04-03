@@ -1,5 +1,6 @@
 from typing import Dict, Literal
 
+from bot_service.schemas.bot import MailingRequest
 from bot_service.services.mailing_service import (
     MailingService,
     get_mailing_service,
@@ -19,7 +20,7 @@ router = APIRouter(prefix="/mailings", tags=["mailings"])
 )
 async def start_mailing(
     bot_id: int,
-    message: str,
+    message_request: MailingRequest,
     mailing_service: MailingService = Depends(get_mailing_service),
 ) -> Dict[str, str | int]:
     """
@@ -27,7 +28,7 @@ async def start_mailing(
 
     Args:
         bot_id (int): ID of the bot whose users will receive the message
-        message (str): Content to be broadcasted to users
+        message_request (MailingRequest): Message text
         mailing_service (MailingService): Injected mailing service dependency
 
     Returns:
@@ -41,7 +42,9 @@ async def start_mailing(
         HTTPException 404: If specified bot doesn't exist
         HTTPException 500: If internal processing fails
     """
-    return await mailing_service.create_mailing(bot_id, message)
+    return await mailing_service.create_mailing(
+        bot_id, message_request.message
+    )
 
 
 @router.get(

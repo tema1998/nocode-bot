@@ -84,3 +84,7 @@ class PaginatedBotUsersResponse(BaseModel):
     offset: int
     limit: int
     has_more: bool
+
+
+class MailingRequest(BaseModel):
+    message: str

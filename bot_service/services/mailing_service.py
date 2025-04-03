@@ -9,7 +9,7 @@ from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
 )
 from bot_service.services.bot_service import BotService, get_bot_service
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from telegram import Bot as TelegramBot
 
 
@@ -241,5 +241,5 @@ async def get_mailing_service() -> MailingService:
     """
     return MailingService(
         db_repository=PostgresAsyncRepository(dsn=config.dsn),
-        bot_service=Depends(get_bot_service),
+        bot_service=await get_bot_service(),
     )
