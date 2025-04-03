@@ -7,10 +7,16 @@
 {% block content %}
 <div class="p-5">
     <div class="text-center">
-        <h1 class="h4 text-gray-900 mb-4">Добро пожаловать!</h1>
+        <div class="brand-logo mb-4">
+            <i class="fas fa-robot fa-3x text-primary mb-2"></i>
+            <h2 class="h3 text-gray-800 mb-0">nocode-bot.ru</h2>
+            <div class="small text-muted">Платформа для создания ботов без знания программирования</div>
+        </div>
+    </div>
+    <div class="text-center">
+        <h1 class="h4 text-gray-900 mb-4">Войти в аккаунт</h1>
     </div>
 
-    {# Стилизованные сообщения #}
     {% if messages %}
     <div class="mb-4 messages-container">
         {% for message in messages %}
