@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import datetime
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -58,3 +59,28 @@ class ButtonCreate(BaseModel):
     step_id: int
     text: str
     next_step_id: int
+
+
+class BotUserSchema(BaseModel):
+    """Schema for BotUser representation"""
+
+    id: int
+    bot_id: int
+    username: Optional[str]
+    first_name: Optional[str]
+    last_name: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PaginatedBotUsersResponse(BaseModel):
+    """Response model for paginated bot users"""
+
+    users: List[BotUserSchema]  # Use the Pydantic schema here
+    total_count: int
+    offset: int
+    limit: int
+    has_more: bool

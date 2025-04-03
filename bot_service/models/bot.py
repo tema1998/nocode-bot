@@ -1,4 +1,5 @@
 from bot_service.models.mixin import TimeStampedMixin
+from pydantic.v1 import ConfigDict
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -53,3 +54,5 @@ class BotUser(Base, TimeStampedMixin):
     last_name = Column(String)
 
     bot = relationship("Bot", back_populates="users")
+
+    model_config = ConfigDict(from_attributes=True)  # type: ignore

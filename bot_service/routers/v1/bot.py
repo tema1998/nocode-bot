@@ -4,12 +4,15 @@ from bot_service.schemas.bot import (
     BotGetResponse,
     BotPatchRequest,
     BotPatchResponse,
+    BotUserSchema,
+    PaginatedBotUsersResponse,
 )
+from bot_service.services.bot_service import BotService, get_bot_service
 from bot_service.services.telegram_bot_service import (
     TelegramBotService,
     get_telegram_bot_service,
 )
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 
 router = APIRouter()
@@ -131,3 +134,47 @@ async def add_bot(
     """
     created_bot = await bot_service.create_bot(bot.model_dump())
     return BotCreateResponse(**created_bot)
+
+
+@router.get("/{bot_id}/list", response_model=PaginatedBotUsersResponse)
+async def get_bot_users(
+    bot_id: int,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, le=500),
+    bot_service: BotService = Depends(get_bot_service),
+):
+    """
+    Retrieve paginated list of users for a specific bot.
+
+    Args:
+        bot_id (int): ID of the bot to fetch users for
+        offset (int): Pagination offset (default: 0)
+        limit (int): Number of users per page (default: 100, max: 500)
+        bot_service (BotService): Injected bot service instance
+
+    Returns:
+        PaginatedBotUsersResponse: Contains:
+            - users: List of user objects for current page
+            - total_count: Total number of users for this bot
+            - offset: Current pagination offset
+            - limit: Current page size
+            - has_more: Flag indicating more users available
+    """
+    # Get total count first
+    total_count = await bot_service.get_bot_users_count(bot_id)
+
+    # Get users chunk with proper None handling
+    users = await bot_service.get_bot_users_chunk(bot_id, offset, limit)
+
+    # Convert users to schemas - handle None case
+    user_schemas = []
+    if users is not None:  # Explicit None check
+        user_schemas = [BotUserSchema.model_validate(user) for user in users]
+
+    return PaginatedBotUsersResponse(
+        users=user_schemas,
+        total_count=total_count,
+        offset=offset,
+        limit=limit,
+        has_more=(offset + limit) < total_count,
+    )

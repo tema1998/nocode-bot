@@ -1,14 +1,15 @@
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 from bot_service.core.configs import config
-from bot_service.models.bot import Bot, BotUser
+from bot_service.models.bot import Bot
 from bot_service.repositories.async_pg_repository import (
     PostgresAsyncRepository,
 )
-from fastapi import HTTPException
+from bot_service.services.bot_service import BotService, get_bot_service
+from fastapi import Depends, HTTPException
 from telegram import Bot as TelegramBot
 
 
@@ -26,7 +27,9 @@ class MailingService:
     - Maintain delivery rate within Telegram API limits
     """
 
-    def __init__(self, db_repository: PostgresAsyncRepository):
+    def __init__(
+        self, db_repository: PostgresAsyncRepository, bot_service: BotService
+    ):
         """
         Initialize the mailing service with database repository.
 
@@ -36,38 +39,7 @@ class MailingService:
         self.db_repository = db_repository
         # Dictionary to track active mailing tasks {mailing_id: asyncio.Task}
         self.active_tasks: Dict[int, asyncio.Task] = {}
-
-    async def get_bot_users_count(self, bot_id: int) -> int:
-        """
-        Get total count of users for a specific bot.
-
-        Args:
-            bot_id (int): ID of the target bot
-
-        Returns:
-            int: Total number of users subscribed to the bot
-        """
-        return await self.db_repository.count_by_query(
-            BotUser, "bot_id", bot_id
-        )
-
-    async def get_bot_users_chunk(
-        self, bot_id: int, offset: int = 0, limit: int = 100
-    ) -> Optional[List[Any]]:
-        """
-        Retrieve a paginated chunk of bot users.
-
-        Args:
-            bot_id (int): ID of the target bot
-            offset (int): Pagination offset
-            limit (int): Maximum number of users to retrieve
-
-        Returns:
-            List[BotUser]: List of user records
-        """
-        return await self.db_repository.fetch_by_query_with_pagination(
-            BotUser, "bot_id", bot_id, skip=offset, limit=limit
-        )
+        self.bot_service: BotService = bot_service
 
     async def send_to_user(
         self,
@@ -178,11 +150,13 @@ class MailingService:
         Returns:
             Dict: Final mailing statistics
         """
-        total_users = await self.get_bot_users_count(bot_id)
+        total_users = await self.bot_service.get_bot_users_count(bot_id)
         success = failed = offset = 0
 
         while True:
-            users = await self.get_bot_users_chunk(bot_id, offset, chunk_size)
+            users = await self.bot_service.get_bot_users_chunk(
+                bot_id, offset, chunk_size
+            )
             if not users:
                 break  # No more users to process
 
@@ -266,5 +240,6 @@ async def get_mailing_service() -> MailingService:
         MailingService: Configured mailing service instance
     """
     return MailingService(
-        db_repository=PostgresAsyncRepository(dsn=config.dsn)
+        db_repository=PostgresAsyncRepository(dsn=config.dsn),
+        bot_service=Depends(get_bot_service),
     )
