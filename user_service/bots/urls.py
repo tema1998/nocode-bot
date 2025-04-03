@@ -22,6 +22,7 @@ from .views import (
     DeleteChainStepView,
     DeleteChainView,
     EditTextinputView,
+    MailingView,
     UpdateBotMainMenuButtonView,
     UpdateChainButtonView,
     UpdateChainStepView,
@@ -135,4 +136,5 @@ urlpatterns = [
         name="chain-results",
     ),
     path("bots/<int:bot_id>/users/", BotUsersView.as_view(), name="bot-users"),
+    path("bots/<int:bot_id>/mailing/", MailingView.as_view(), name="mailing"),
 ]
