@@ -1052,3 +1052,41 @@ def get_paginated_chain_results(chain_id: int) -> List[Dict[str, Any]]:
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse API response: {str(e)}")
         return []
+
+
+def get_paginated_bot_users(bot_id: int) -> List[Dict[str, Any]]:
+    """
+    Fetch paginated bot users from the API.
+
+    Args:
+        bot_id: ID of the bot to get users for
+
+    Returns:
+        List of user dictionaries. Returns empty list on any error.
+
+    Note:
+        The API is expected to return a dictionary with 'users' key containing
+        the actual users list. Any other format will return empty list.
+    """
+    try:
+        # Make API request
+        response = requests.get(
+            f"{BOT_SERVICE_API_URL}bot/{bot_id}/list", timeout=10
+        )
+        response.raise_for_status()
+
+        data = response.json()
+
+        # Validate response structure
+        if not isinstance(data, dict) or "users" not in data:
+            logger.error(f"Unexpected API response format: {data}")
+            return []
+
+        return data["users"]  # type: ignore
+
+    except requests.RequestException as e:
+        logger.error(f"API request failed: {str(e)}")
+        return []
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse API response: {str(e)}")
+        return []

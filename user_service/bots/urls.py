@@ -10,6 +10,7 @@ from .views import (
     BotMainMenuButtonView,
     BotMainMenuView,
     BotsView,
+    BotUsersView,
     ChainResultsView,
     CreateBotMainMenuButtonView,
     CreateChainButtonView,
@@ -133,4 +134,5 @@ urlpatterns = [
         ChainResultsView.as_view(),
         name="chain-results",
     ),
+    path("bots/<int:bot_id>/users/", BotUsersView.as_view(), name="bot-users"),
 ]

@@ -41,6 +41,7 @@ from .utils import (
     get_bot_main_menu_button,
     get_chain_button,
     get_chain_step,
+    get_paginated_bot_users,
     get_paginated_chain_results,
     update_bot,
     update_chain,
@@ -1559,6 +1560,65 @@ class ChainResultsView(LoginRequiredMixin, View):
             {
                 "bot": bot,
                 "chain_id": chain_id,
+                "page_obj": page_obj,
+            },
+        )
+
+
+class BotUsersView(LoginRequiredMixin, View):
+    """
+    View for displaying paginated bot users.
+
+    Attributes:
+        template_name (str): Path to the template used for rendering.
+        USERS_PER_PAGE (int): Number of users to display per page.
+    """
+
+    template_name = "bots/bot_users.html"
+    USERS_PER_PAGE = 10
+
+    def get(self, request, bot_id: int) -> HttpResponse:
+        """
+        Handle GET request to display bot users.
+
+        Args:
+            request: HttpRequest object
+            bot_id: ID of the bot to show users for
+
+        Returns:
+            HttpResponse: Rendered template with paginated users
+
+        Raises:
+            Http404: If bot doesn't exist or user doesn't have permission
+        """
+        # Verify bot exists and user has permission
+        bot = get_object_or_404(Bot, id=bot_id)
+        if bot.user != request.user:
+            raise Http404("Permission denied")
+
+        # Get and validate page number from query params
+        try:
+            page_number = int(request.GET.get("page", 1))
+        except ValueError:
+            page_number = 1  # Fallback to first page if invalid number
+
+        # Fetch users from API
+        users = get_paginated_bot_users(bot.bot_id)
+
+        # Handle pagination
+        if not users:
+            page_obj = None  # No users case
+        else:
+            paginator = Paginator(users, self.USERS_PER_PAGE)
+            try:
+                page_obj = paginator.page(page_number)
+            except EmptyPage:
+                page_obj = paginator.page(1)  # Fallback to first page
+        return render(
+            request,
+            self.template_name,
+            {
+                "bot": bot,
                 "page_obj": page_obj,
             },
         )
