@@ -302,7 +302,7 @@ class MainMenuService:
                 status_code=400,
                 detail="A button with the same text already exists.",
             )
-        if button_text == "/start":
+        if button_text == "/start" or button_text == "/update":
             raise HTTPException(
                 status_code=400,
                 detail="A button with this name is forbidden.",
