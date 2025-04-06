@@ -140,7 +140,10 @@ class BotDetailView(LoginRequiredMixin, View):
 
         try:
             # Update bot data in the Bot-Service service
-            update_bot(bot.bot_id, token, is_active)
+            updated_bot = update_bot(bot.bot_id, token, is_active)
+            bot.bot_username = updated_bot["username"]
+            bot.save()
+
         except Exception as e:
             # Log the error
             logger.error(
