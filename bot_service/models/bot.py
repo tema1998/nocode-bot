@@ -24,7 +24,12 @@ class Bot(Base, TimeStampedMixin):
     secret_token = Column(String)
     default_reply = Column(String(3000), nullable=True, default="")
     username = Column(String)
-    main_menu = relationship("MainMenu", back_populates="bot", uselist=False)
+    main_menu = relationship(
+        "MainMenu",
+        back_populates="bot",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
     buttons = relationship("Button", back_populates="bot")
     chains = relationship(
         "Chain", back_populates="bot", cascade="all, delete-orphan"
