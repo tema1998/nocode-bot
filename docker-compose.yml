@@ -1,85 +1,34 @@
 services:
-#  bot_service:
-#    container_name: bot_service
-#    build:
-#      context: .
-#      dockerfile: bot_service/Dockerfile
-#    depends_on:
-#      bot_service_db:
-#        condition: service_healthy
-##      rabbitmq_broker:
-##        condition: service_healthy
-##      redis:
-##        condition: service_started
-#    volumes:
-#      - ./bot_service:/srv/app/bot_service
-#    ports:
-#      - "8080:8080" #TODO to delete on prod
+  bot_service:
+    container_name: bot_service
+    build:
+      context: .
+      dockerfile: bot_service/Dockerfile
+    depends_on:
+      bot_service_db:
+        condition: service_healthy
+    volumes:
+      - ./bot_service:/srv/app/bot_service
+    ports:
+      - "8080:8080" #TODO to delete on prod
 
 
-#  user_service:
-#    container_name: user_service
-#    build:
-#      context: .
-#      dockerfile: user_service/Dockerfile
-#    depends_on:
-#      user_service_db:
-#        condition: service_healthy
-#    env_file:
-#      - .env
-#    restart: always
-#    ports:
-#      - "8000:8000" #TODO to delete on prod
-
-#  celery_worker:
-#    build:
-#      context: .
-#      dockerfile: ./broker/Dockerfile.celery
-#    restart: always
-#    depends_on:
-#      redis:
-#        condition: service_started
-#      rabbitmq_broker:
-#        condition: service_healthy
-#    env_file:
-#      - .env
-#    command: celery -A bot_service.tasks worker -l info  --concurrency=2
-#    environment:
-#      CELERY_BROKER_URL: amqp://${BROKER_USER}:${BROKER_PASS}@rabbitmq_broker:5672//
-#      CELERY_RESULT_BACKEND: redis://:${REDIS_PASS}@redis:6379/0
-
-#  flower:
-#    build:
-#      context: .
-#      dockerfile: ./broker/Dockerfile.flower
-#    restart: always
-#    depends_on:
-##      - celery_worker
-#      - rabbitmq_broker
-#    ports:
-#      - "5555:5555" #TODO: DELETE ON PROD
-#    volumes:
-#      - flower_data:/app/flower_data
-#    env_file:
-#      - .env
-#    environment:
-#      CELERY_BROKER_URL: ${BROKER_PROTOCOL}://${BROKER_USER}:${BROKER_PASS}@${BROKER_HOST}:${BROKER_PORT}//
-#      CELERY_RESULT_BACKEND: redis://:${REDIS_PASS}@${REDIS_HOST}:${REDIS_PORT}/0
-#    command: celery -A bot_service.celery.tasks flower --port=5555
-#
-#  beat:
-#    restart: always
-#    build:
-#      context: .
-#    depends_on:
-#      - celery_worker
-#
-#      - redis
-#    volumes:
-#      - ./bot_service/:/usr/bot_service/app/
-#    env_file:
-#      - ./.env
-#    command: ["celery", "--workdir=./mail_sender", "-A", "mail_sender", "beat", "-l", "info", "-S", "django"]
+  user_service:
+    container_name: user_service
+    build:
+      context: .
+      dockerfile: user_service/Dockerfile
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      user_service_db:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: always
+    ports:
+      - "8000:8000" #TODO to delete on prod
 
   bot_service_db:
     image: postgres:15
@@ -117,39 +66,35 @@ services:
     ports:
       - "5433:5432" #TODO to delete on prod
 
-#  rabbitmq_broker:
-#    image: rabbitmq:4.0-management  # Includes the management plugin for monitoring
-#    container_name: rabbitmq_broker
-#    ports:
-#      - "5672:5672" # Port for AMQP #TODO: DELETE ON PROD
-#      - "15672:15672" # Port for web-interface #TODO: DELETE ON PROD
-#    environment:
-#      RABBITMQ_DEFAULT_USER: ${BROKER_USER}
-#      RABBITMQ_DEFAULT_PASS: ${BROKER_PASS}
-#    healthcheck:
-#      test: [ "CMD", "rabbitmqctl", "ping" ]
-#      interval: 10s
-#      retries: 5
+  nginx:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./nginx/
+    container_name: nginx
+    volumes:
+      - static_volume:/user_service/staticfiles
+      - media_volume:/user_service/media
+#      - ./data/certbot/conf:/etc/letsencrypt
+#      - ./data/certbot/www:/var/www/certbot
+    depends_on:
+      - bot_service
+      - user_service
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+
+#  certbot:
+#    image: certbot/certbot
+#    depends_on:
+#      - nginx
+#    container_name: certbot
 #    volumes:
-#      - rabbitmq_data:/var/lib/rabbitmq
-#    env_file:
-#      - .env
-#
-#  redis:
-#    image: redis:latest
-#    ports:
-#      - "6379:6379" #TODO: DELETE ON PROD
-#    volumes:
-#      - redis_data:/data
-#    env_file:
-#      - .env
-#    environment:
-#      REDIS_PASSWORD: ${REDIS_PASS}
-#    command: redis-server --requirepass ${REDIS_PASS}
+#      - ./data/certbot/conf:/etc/letsencrypt
+#      - ./data/certbot/www:/var/www/certbot
 
 volumes:
   bot_service_db_data:
   user_service_db_data:
-  rabbitmq_data:
-  redis_data:
-  flower_data:
+  static_volume:
+  media_volume:
