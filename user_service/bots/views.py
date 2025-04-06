@@ -109,8 +109,7 @@ class BotDetailView(LoginRequiredMixin, View):
                 f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
                 exc_info=True,
             )
-            # Return an error response if the request fails
-            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+            bot_data = {"username": bot.bot_username, "token_error": True}
 
         return render(
             request, self.template_name, {"bot": bot, "bot_data": bot_data}
