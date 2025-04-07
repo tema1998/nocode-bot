@@ -34,7 +34,7 @@
                         <tbody>
                             {% for user in page_obj.object_list %}
                             <tr>
-                                <td>{{ user.id }}</td>
+                                <td>{{ user.user_id }}</td>
                                 <td>
                                     {% if user.username %}
                                         <a href="https://t.me/{{user.username}}" target="_blank" class="font-weight-bold">@{{ user.username }}</a>
