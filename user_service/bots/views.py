@@ -302,11 +302,10 @@ class BotDefaultReplyView(LoginRequiredMixin, View):
         except Exception as e:
             # Log the error
             logger.error(
-                f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                f"Failed to fetch bot's default reply. Bot ID: {bot.bot_id}. Error: {str(e)}",
                 exc_info=True,
             )
-            # Return an error response if the request fails
-            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+            bot_data = {}
 
         return render(
             request, self.template_name, {"bot": bot, "bot_data": bot_data}
@@ -401,8 +400,7 @@ class BotMainMenuView(LoginRequiredMixin, View):
                 f"Failed to fetch bot's main menu. Bot ID: {bot.bot_id}. Error: {str(e)}",
                 exc_info=True,
             )
-            # Return an error response if the request fails
-            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+            main_menu = {}
 
         # Render the template with bot and main menu data
         return render(
@@ -499,8 +497,7 @@ class BotMainMenuButtonView(LoginRequiredMixin, View):
                 f"Failed to fetch bot's main menu button. Bot ID: {bot.bot_id}. Error: {str(e)}",
                 exc_info=True,
             )
-            # Return an error response if the request fails
-            return HttpResponse(f"Произошла ошибка: {str(e)}", status=500)
+            chains_response = {"chains": {}}
 
         # Render the template with bot and main menu button data
         return render(
@@ -615,8 +612,14 @@ class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
         # Check if the user is the owner of the bot
         if bot.user != request.user:
             raise Http404("Вы не являетесь владельцем данного бота.")
-
-        chains_response: Dict[str, Any] = get_bot_chains(bot.bot_id)
+        try:
+            chains_response: Dict[str, Any] = get_bot_chains(bot.bot_id)
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch chains of the bot. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                exc_info=True,
+            )
+            chains_response = {"chains": {}}
 
         # Render the template with the bot context
         return render(
@@ -669,7 +672,7 @@ class CreateBotMainMenuButtonView(LoginRequiredMixin, View):
             # If an API error occurs, show an error message and redirect
             messages.error(
                 request,
-                "Ошибка при создании кнопки. Проверьте имя цепочка.",
+                "Ошибка при создании кнопки. Возможно такая кнопка уже существует.",
             )
             return redirect("create-bot-main-menu-button", bot_id=bot.id)
 
@@ -761,11 +764,11 @@ class BotChainDetailView(LoginRequiredMixin, View):
         except Exception as e:
             # Log the error if the API request fails
             logger.error(
-                f"Failed to fetch bot's main menu button. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                f"Failed to fetch chain. Chain ID: {chain_id}. Error: {str(e)}",
                 exc_info=True,
             )
             # Return an error response if the request fails
-            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+            chain = {}
 
         # Convert the chain data to JSON format for rendering
         chain_json = json.dumps(chain, default=str)
@@ -796,20 +799,20 @@ class BotChainView(LoginRequiredMixin, View):
 
         try:
             # Fetch bot details from the Bot-Service service
-            chains = get_bot_chains(bot.bot_id)
+            chains_response = get_bot_chains(bot.bot_id)
         except Exception as e:
             # Log the error
             logger.error(
-                f"Failed to fetch bot details. Bot ID: {bot.bot_id}. Error: {str(e)}",
+                f"Failed to fetch chains of the bot. Bot ID: {bot.bot_id}. Error: {str(e)}",
                 exc_info=True,
             )
             # Return an error response if the request fails
-            return HttpResponse(f"An error occurred: {str(e)}", status=500)
+            chains_response = {"chains": {}}
 
         return render(
             request,
             self.template_name,
-            {"bot": bot, "chains": chains["chains"]},
+            {"bot": bot, "chains": chains_response["chains"]},
         )
 
 
