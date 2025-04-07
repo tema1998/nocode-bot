@@ -76,6 +76,8 @@ services:
     container_name: nginx
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
       - static_volume:/user_service/staticfiles
       - media_volume:/user_service/media
     ports:
@@ -88,14 +90,14 @@ services:
       - bot_service
       - user_service
 
-#  certbot:
-#    image: certbot/certbot
-#    depends_on:
-#      - nginx
-#    container_name: certbot
-#    volumes:
-#      - ./data/certbot/conf:/etc/letsencrypt
-#      - ./data/certbot/www:/var/www/certbot
+  certbot:
+    image: certbot/certbot
+    depends_on:
+      - nginx
+    container_name: certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
 
 volumes:
   bot_service_db_data:
