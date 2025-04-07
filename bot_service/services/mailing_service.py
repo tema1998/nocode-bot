@@ -164,7 +164,7 @@ class MailingService:
             batch_results = await asyncio.gather(
                 *(
                     self.send_to_user(
-                        bot_token, int(user.id), message, parse_mode
+                        bot_token, int(user.user_id), message, parse_mode
                     )
                     for user in users
                 ),

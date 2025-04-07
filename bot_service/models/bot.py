@@ -44,13 +44,12 @@ class BotUser(Base, TimeStampedMixin):
 
     __tablename__ = "bot_users"
     __table_args__ = (
-        Index("idx_bot_user_unique", "bot_id", "id", unique=True),
+        Index("idx_bot_user_unique", "bot_id", "user_id", unique=True),
         {"schema": "public"},
     )
 
-    id = Column(
-        BigInteger, primary_key=True
-    )  # Telegram user_id как primary key
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, nullable=False)  # Telegram user_id
     bot_id = Column(
         Integer, ForeignKey("bots.id", ondelete="CASCADE"), nullable=False
     )

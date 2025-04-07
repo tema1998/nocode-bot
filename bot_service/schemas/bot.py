@@ -65,6 +65,7 @@ class BotUserSchema(BaseModel):
     """Schema for BotUser representation"""
 
     id: int
+    user_id: int
     bot_id: int
     username: Optional[str]
     first_name: Optional[str]

@@ -247,7 +247,7 @@ class WebhookService:
         user = update.effective_user
         # Prepare user data dictionary for saving
         bot_user_data = {
-            "id": user.id,
+            "user_id": user.id,
             "bot_id": bot_id,
             "username": user.username,
             "first_name": user.first_name,
@@ -256,7 +256,7 @@ class WebhookService:
 
         # Check if user already exists in database
         existing_user = await self.db_repository.fetch_by_query_one(
-            BotUser, {"id": user.id, "bot_id": bot_id}
+            BotUser, {"user_id": user.id, "bot_id": bot_id}
         )
 
         if existing_user:
