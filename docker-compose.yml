@@ -9,9 +9,11 @@ services:
         condition: service_healthy
     volumes:
       - ./bot_service:/srv/app/bot_service
-    ports:
-      - "8080:8080" #TODO to delete on prod
-
+    networks:
+      - backend
+      - database
+    env_file:
+      - .env
 
   user_service:
     container_name: user_service
@@ -24,11 +26,12 @@ services:
     depends_on:
       user_service_db:
         condition: service_healthy
+    networks:
+      - backend
+      - database
     env_file:
       - .env
     restart: always
-    ports:
-      - "8000:8000" #TODO to delete on prod
 
   bot_service_db:
     image: postgres:15
@@ -39,14 +42,14 @@ services:
       POSTGRES_PASSWORD: ${BOT_SERVICE_DB_PASSWORD}
     volumes:
       - bot_service_db_data:/var/lib/postgresql/data/
+    networks:
+      - database
     healthcheck:
       test: [ "CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'" ]
       interval: 10s
       timeout: 3s
       retries: 3
     restart: always
-    ports:
-      - "5432:5432" #TODO to delete on prod
 
   user_service_db:
     image: postgres:15
@@ -57,14 +60,14 @@ services:
       POSTGRES_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
     volumes:
       - user_service_db_data:/var/lib/postgresql/data/
+    networks:
+      - database
     healthcheck:
       test: [ "CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'" ]
       interval: 10s
       timeout: 3s
       retries: 3
     restart: always
-    ports:
-      - "5433:5432" #TODO to delete on prod
 
   nginx:
     build:
@@ -72,17 +75,18 @@ services:
       context: ./nginx/
     container_name: nginx
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - static_volume:/user_service/staticfiles
       - media_volume:/user_service/media
-#      - ./data/certbot/conf:/etc/letsencrypt
-#      - ./data/certbot/www:/var/www/certbot
-    depends_on:
-      - bot_service
-      - user_service
-    restart: always
     ports:
       - "80:80"
       - "443:443"
+    networks:
+      - backend
+    restart: always
+    depends_on:
+      - bot_service
+      - user_service
 
 #  certbot:
 #    image: certbot/certbot
@@ -98,3 +102,8 @@ volumes:
   user_service_db_data:
   static_volume:
   media_volume:
+
+networks:
+  backend:
+  database:
+    internal: true
