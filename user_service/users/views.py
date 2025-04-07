@@ -31,7 +31,6 @@ class RegisterView(View):
         if form.is_valid():
             user = form.save()  # Save the new user
             login(request, user)  # Log the user in
-            messages.success(request, "Регистрация прошла успешно!")
             return redirect("index")
         return render(request, "users/register.html", {"form": form})
 
@@ -70,8 +69,8 @@ class LoginView(View):
             )  # Authenticate the user
             if user is not None:
                 login(request, user)  # Log the user in
-                messages.success(request, f"Добро пожаловать, {username}!")
                 return redirect("index")
+        messages.error(request, "Неверный логин/пароль.")
         return render(request, "users/login.html", {"form": form})
 
 
@@ -87,5 +86,4 @@ class LogoutView(View):
         Logs the user out and redirects to the registration page.
         """
         logout(request)  # Log the user out
-        messages.success(request, "Вы вышли из системы.")
         return redirect("index")

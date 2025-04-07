@@ -1,0 +1,97 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}
+Массовая рассылка сообщений - @{{bot.bot_username}}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">Массовая рассылка сообщений</h1>
+    <p class="mb-4">Отправляет сообщение всем пользователям зарегистрированным в вашем telegram-боте.</p>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary"></h6>
+        </div>
+        <div class="card-body">
+
+            <div class="container mt-5">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="mailingForm" method="post" action="{% url 'mailing' bot.id %}">
+                            {% csrf_token %}
+
+                            <p class="card-text h3">
+                                <strong>Текст сообщения:</strong>
+                            </p>
+                            <textarea name="message_text" id="messageText" class="form-control" rows="9" maxlength="3000"
+                                      oninput="updateCharCount(this, 'remainingCharsReplyText', 3000)"
+                                      required ></textarea><br>
+                            <div id="charCountReplyText">
+                                Осталось символов: <span id="remainingCharsReplyText">3000</span>/3000
+                            </div>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="d-flex justify-content-center gap-2">
+                                <button type="submit" id="submitBtn" class="btn btn-success">Отправить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'bootstrap/js/button-fields-counter.js' %}"></script>
+    <script>
+        // Проверка формы перед отправкой
+        document.getElementById('mailingForm').addEventListener('submit', function(e) {
+            const messageText = document.getElementById('messageText').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (messageText === '') {
+                e.preventDefault();
+                alert('Пожалуйста, введите текст сообщения перед отправкой.');
+                document.getElementById('messageText').focus();
+                return false;
+            }
+
+            // Блокируем кнопку, чтобы предотвратить множественные отправки
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+            return true;
+        });
+
+        // Дополнительная проверка при изменении текста
+        document.getElementById('messageText').addEventListener('input', function() {
+            const messageText = this.value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (messageText === '') {
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+{% endblock %}

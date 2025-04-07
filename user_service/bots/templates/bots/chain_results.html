@@ -1,0 +1,110 @@
+{% extends 'index.html' %}
+
+{% block title %}Результаты цепочки{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold">Результаты прохождения цепочки</h6>
+            {% if page_obj %}
+            <span class="badge badge-light">
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            {% if not page_obj %}
+                <div class="alert alert-danger">Ошибка загрузки данных</div>
+            {% elif not page_obj.object_list %}
+                <div class="alert alert-info">Нет данных для отображения</div>
+            {% else %}
+                <div class="row">
+                    {% for result in page_obj.object_list %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex align-items-center">
+                                <img src="{{ result.photo }}"
+                                     class="rounded-circle mr-3"
+                                     width="50"
+                                     height="50"
+                                     alt="Фото {{ result.first_name }}"
+                                     onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ result.first_name|urlencode }}&background=random'">
+                                <div>
+                                    <h5 class="mb-0">{{ result.first_name }}</h5>
+                                    <small class="text-muted">
+                                        @{{ result.username }} (ID: {{ result.user_id }})
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="font-weight-bold mb-3">Ответы:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Шаг</th>
+                                                <th>Ответ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for step, answer in result.answers.items %}
+                                            <tr>
+                                                <td>{{ step }}</td>
+                                                <td class="{% if answer == '<Не задано>' %}text-muted{% endif %}">
+                                                    {{ answer|default:"Не задано" }}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card-footer text-muted small">
+                                Последняя активность: {{ result.last_interaction|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Пагинация -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center mt-4">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">&laquo;&laquo;</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;&raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}

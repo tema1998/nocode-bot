@@ -1,0 +1,51 @@
+{% extends 'index.html' %}
+
+{% block title %}
+Редактирование шага
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 font-weight-bold">
+                Редактирование шага
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Название шага</label>
+                    <input type="text" name="name" class="form-control" 
+                           value="{{ step.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Сообщение</label>
+                    <textarea name="message" class="form-control" rows="5" required>{{ step.message }}</textarea>
+                </div>
+
+<!--                <div class="form-group">-->
+<!--                    <div class="form-check">-->
+<!--                        <input class="form-check-input" type="checkbox" name="text_input" -->
+<!--                               id="text_input" {% if step and step.text_input %}checked{% endif %}>-->
+<!--                        <label class="form-check-label" for="text_input">-->
+<!--                            Запрос текстового ввода-->
+<!--                        </label>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                -->
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save mr-2"></i> Сохранить
+                </button>
+                <a href="{% url 'bot-chain' bot.id chain_id %}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-2"></i> Отмена
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

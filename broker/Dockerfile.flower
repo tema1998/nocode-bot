@@ -1,9 +1,0 @@
-FROM python:3.9-slim-buster
-
-WORKDIR /app
-
-COPY /broker/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY /src/celery ./src/celery
-COPY /src/core/configs.py ./src/core/

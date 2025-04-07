@@ -10,6 +10,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+
 
     <title>
     {% block title %}
@@ -35,7 +37,19 @@
             <div class="card-body p-0">
                 <!-- Nested Row within Card Body -->
                 <div class="row">
-                    <div class="col-lg-5 d-none d-lg-block bg-register-image"></div>
+
+                <div class="col-lg-5 d-none d-lg-block position-relative overflow-hidden">
+                    <div style="
+                        position: absolute;
+                        top: 0;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        background: url('{% static 'img/bot.png' %}') center/contain no-repeat;
+                        background-color: #f8f9fc;
+                    "></div>
+                </div>
+
                     <div class="col-lg-7">
                         {% block content %}
                         {% endblock %}

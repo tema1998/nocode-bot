@@ -1,0 +1,116 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block title %}
+Редактирование цепочки - {{chain.name}} - @{{bot.bot_username}}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Редактирование цепочки</h1>
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteChainModal">
+            <i class="fas fa-trash-alt"></i> Удалить цепочку
+        </button>
+    </div>
+    <p class="mb-4">Редактирование цепочки "{{chain.name}}" для бота @{{bot.bot_username}}.</p>
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Основные параметры</h6>
+        </div>
+        <div class="card-body">
+
+            <div class="container mt-3">
+                <div class="card border-left-primary">
+                    <div class="card-body">
+                        <form id="chainForm" method="post" action="{% url 'update-chain' bot.id chain.id %}">
+                            {% csrf_token %}
+
+                            <div class="form-group">
+                                <label for="chainName" class="h5 font-weight-bold text-primary">Название цепочки:</label>
+                                <textarea id="chainName" name="name" class="form-control" rows="1" maxlength="64"
+                                          oninput="updateCharCount(this, 'remainingCharsChainName', 64)">{{chain.name}}</textarea>
+                                <small id="charCountChainName" class="form-text text-muted">
+                                    Осталось символов: <span id="remainingCharsChainName">64</span>/64
+                                </small>
+                            </div>
+
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} mt-3">
+                                        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{% url 'bot-chains' bot.id %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Назад к списку
+                                </a>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Сохранить изменения
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Delete Chain Modal -->
+    <div class="modal fade" id="deleteChainModal" tabindex="-1" role="dialog" aria-labelledby="deleteChainModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteChainModalLabel">Подтверждение удаления</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы действительно хотите удалить цепочку <strong>"{{chain.name}}"</strong>?</p>
+                    <p class="text-danger"><i class="fas fa-exclamation-triangle"></i> Это действие нельзя отменить!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <form method="post" action="{% url 'update-chain' bot.id chain.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block sidebar-nav %}
+    {% include 'bots/include/nav_bot_manage.html' with bot=bot %}
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script src="{% static 'bootstrap/js/button-fields-counter.js' %}"></script>
+    <script>
+        // Initialize character counter with current value
+        document.addEventListener('DOMContentLoaded', function() {
+            const textarea = document.getElementById('chainName');
+            const remainingSpan = document.getElementById('remainingCharsChainName');
+            const maxLength = 64;
+            const currentLength = textarea.value.length;
+            remainingSpan.textContent = maxLength - currentLength;
+        });
+    </script>
+{% endblock %}

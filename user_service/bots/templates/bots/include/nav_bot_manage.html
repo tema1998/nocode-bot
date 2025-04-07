@@ -1,0 +1,20 @@
+<!-- Nav Item - Utilities Collapse Menu -->
+<li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
+        aria-expanded="true" aria-controls="collapseUtilities">
+        <i class="fas fa-fw fa-wrench"></i>
+        <span>{{bot.bot_username}}</span>
+    </a>
+    <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
+        data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Функции:</h6>
+            <a class="collapse-item" href="{% url 'bot-details' bot.id %}">Основное</a>
+            <a class="collapse-item" href="{% url 'bot-users' bot.id %}">Пользователи бота</a>
+            <a class="collapse-item" href="{% url 'mailing' bot.id %}">Массовая рассылка</a>
+            <a class="collapse-item" href="{% url 'bot-main-menu' bot.id %}">Главное меню</a>
+            <a class="collapse-item" href="{% url 'bot-default-reply' bot.id %}">Ответ по умолчанию</a>
+            <a class="collapse-item" href="{% url 'bot-chains' bot.id %}">Цепочки</a>
+        </div>
+    </div>
+</li>
