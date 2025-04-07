@@ -116,10 +116,7 @@ class TelegramBotService:
         if bot_update.get("default_reply") is not None:
             bot.default_reply = bot_update["default_reply"]
 
-        if (
-            bot_update.get("token") is not None
-            and bot.token != bot_update["token"]
-        ):
+        if bot_update.get("token") is not None:
             try:
                 await self.tg_api_repository.set_webhook(
                     bot_id=bot_id,
