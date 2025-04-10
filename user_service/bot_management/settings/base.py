@@ -12,7 +12,10 @@ SECRET_KEY = os.getenv(
     "USER_SERVICE_SECRET_KEY", "DSAmdU3H783hs8M9S30k9xSi9d3KD"
 )
 DEBUG = bool(int(os.getenv("USER_SERVICE_DEBUG", 1)))
-ALLOWED_HOSTS = [os.getenv("USER_SERVICE_ALLOWED_HOST", "*")]
+ALLOWED_HOSTS = os.getenv("USER_SERVICE_ALLOWED_HOST", "*").split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "USER_SERVICE_CSRF_TRUSTED_ORIGINS", "*"
+).split(",")
 
 ROOT_URLCONF = "bot_management.urls"
 WSGI_APPLICATION = "bot_management.wsgi.application"

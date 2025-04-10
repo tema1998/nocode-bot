@@ -116,7 +116,7 @@ async def get_main_menu_button(
 
 
 @router.post(
-    "/button",
+    "/button/",
     response_model=ButtonResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new button for the main menu",

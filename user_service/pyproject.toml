@@ -19,6 +19,7 @@ uvicorn = "^0.34.0"
 psycopg2-binary = "^2.9.10"
 gunicorn = "^23.0.0"
 types-requests = "^2.32.0.20250301"
+django-cors-headers = "^4.7.0"
 
 
 [build-system]

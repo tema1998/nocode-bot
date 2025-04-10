@@ -136,7 +136,7 @@ async def add_bot(
     return BotCreateResponse(**created_bot)
 
 
-@router.get("/{bot_id}/list", response_model=PaginatedBotUsersResponse)
+@router.get("/{bot_id}/list/", response_model=PaginatedBotUsersResponse)
 async def get_bot_users(
     bot_id: int,
     offset: int = Query(default=0, ge=0),
