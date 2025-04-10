@@ -87,7 +87,7 @@ def create_bot(token):
     """
     try:
         response = requests.post(
-            f"{BOT_SERVICE_API_URL}bot",
+            f"{BOT_SERVICE_API_URL}bot/",
             json={"token": token},
         )
         response.raise_for_status()
@@ -299,7 +299,7 @@ def create_main_menu_button(
     try:
         # Send a POST request to create a main menu button
         response = requests.post(
-            f"{BOT_SERVICE_API_URL}main-menu/button",
+            f"{BOT_SERVICE_API_URL}main-menu/button/",
             json={
                 "bot_id": bot_id,
                 "button_text": button_text,
@@ -715,7 +715,7 @@ def create_chain_step(
         )
 
     response = requests.post(
-        f"{BOT_SERVICE_API_URL}chain-step", json=payload, timeout=10
+        f"{BOT_SERVICE_API_URL}chain-step/", json=payload, timeout=10
     )
     response.raise_for_status()
     response_data = response.json()
@@ -855,7 +855,7 @@ def create_chain_button(
 
     try:
         response = requests.post(
-            f"{BOT_SERVICE_API_URL}chain-button", json=payload, timeout=10
+            f"{BOT_SERVICE_API_URL}chain-button/", json=payload, timeout=10
         )
         response.raise_for_status()
 
@@ -1071,7 +1071,7 @@ def get_paginated_bot_users(bot_id: int) -> List[Dict[str, Any]]:
     try:
         # Make API request
         response = requests.get(
-            f"{BOT_SERVICE_API_URL}bot/{bot_id}/list", timeout=10
+            f"{BOT_SERVICE_API_URL}bot/{bot_id}/list/", timeout=10
         )
         response.raise_for_status()
 
@@ -1117,7 +1117,7 @@ def send_mail_to_bot_users(bot_id: int, message_text: str) -> Dict[str, Any]:
 
     try:
         response = requests.post(
-            f"{BOT_SERVICE_API_URL}mailing/mailings/{bot_id}/start",
+            f"{BOT_SERVICE_API_URL}mailing/mailings/{bot_id}/start/",
             json=payload,
             timeout=15,
         )
