@@ -1,0 +1,93 @@
+services:
+  bot_service:
+    container_name: bot_service
+    build:
+      context: .
+      dockerfile: bot_service/Dockerfile
+    depends_on:
+      bot_service_db:
+        condition: service_healthy
+    volumes:
+      - ./bot_service:/srv/app/bot_service
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+  user_service:
+    container_name: user_service
+    build:
+      context: .
+      dockerfile: user_service/Dockerfile
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      user_service_db:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: always
+    ports:
+      - "8000:8000"
+
+  bot_service_db:
+    image: postgres:15
+    container_name: bot_service_db
+    environment:
+      POSTGRES_DB: ${BOT_SERVICE_DB_NAME}
+      POSTGRES_USER: ${BOT_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${BOT_SERVICE_DB_PASSWORD}
+    volumes:
+      - bot_service_db_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    ports:
+      - "5432:5432"
+
+  user_service_db:
+    image: postgres:15
+    container_name: user_service_db
+    environment:
+      POSTGRES_DB: ${USER_SERVICE_DB_NAME}
+      POSTGRES_USER: ${USER_SERVICE_DB_USER}
+      POSTGRES_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
+    volumes:
+      - user_service_db_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: always
+    ports:
+      - "5433:5432"
+
+  nginx:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./nginx/
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+      - static_volume:/user_service/staticfiles
+      - media_volume:/user_service/media
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    depends_on:
+      - bot_service
+      - user_service
+
+volumes:
+  bot_service_db_data:
+  user_service_db_data:
+  static_volume:
+  media_volume:
