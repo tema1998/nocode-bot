@@ -116,13 +116,14 @@ class WebhookService:
         if main_menu and main_menu.welcome_message:
             welcome_message = main_menu.welcome_message
 
+        keyboard = self.default_keyboard
         # Add main menu buttons to the keyboard
         if main_menu and main_menu.buttons:
             main_menu_buttons = [
                 [KeyboardButton(button.button_text)]
                 for button in main_menu.buttons
             ]
-            keyboard = main_menu_buttons + self.default_keyboard
+            keyboard = main_menu_buttons + keyboard
 
         # Send the welcome message with the keyboard
         await update.message.reply_text(
@@ -153,13 +154,14 @@ class WebhookService:
             MainMenu, bot.main_menu.id, "buttons"
         )
 
+        keyboard = self.default_keyboard
         # Add main menu buttons to the keyboard
         if main_menu and main_menu.buttons:
             main_menu_buttons = [
                 [KeyboardButton(button.button_text)]
                 for button in main_menu.buttons
             ]
-            keyboard = main_menu_buttons + self.default_keyboard
+            keyboard = main_menu_buttons + keyboard
 
         # Send the welcome message with the keyboard
         await update.message.reply_text(

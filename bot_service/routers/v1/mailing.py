@@ -12,7 +12,7 @@ router = APIRouter(prefix="/mailings", tags=["mailings"])
 
 
 @router.post(
-    "/{bot_id}/start",
+    "/{bot_id}/start/",
     response_model=Dict[str, str | int],
     summary="Start new mailing campaign",
     response_description="Initial mailing status with tracking ID",
@@ -48,7 +48,7 @@ async def start_mailing(
 
 
 @router.get(
-    "/{mailing_id}/status",
+    "/{mailing_id}/status/",
     response_model=Dict[str, str | Dict],
     summary="Check mailing status",
     response_description="Current status of mailing campaign",
@@ -79,7 +79,7 @@ async def get_status(
 
 
 @router.post(
-    "/{mailing_id}/cancel",
+    "/{mailing_id}/cancel/",
     response_model=Dict[str, Literal["cancelled", "not_cancelled"]],
     summary="Cancel active mailing",
     response_description="Cancellation attempt result",
