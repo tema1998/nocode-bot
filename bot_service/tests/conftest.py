@@ -32,3 +32,13 @@ def mock_bot_service():
         mock_instance = AsyncMock()
         mock_service.return_value = mock_instance
         yield mock_instance
+
+
+@pytest.fixture
+def mock_chain_service():
+    with patch(
+        "bot_service.services.chain_service.ChainService"
+    ) as mock_service:
+        mock_instance = AsyncMock()
+        mock_service.return_value = mock_instance
+        yield mock_instance
