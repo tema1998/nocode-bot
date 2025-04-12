@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, HttpUrl
-from pydantic.v1 import Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class ChainCreate(BaseModel):
@@ -20,8 +19,7 @@ class ChainResponse(BaseModel):
     bot_id: int
     name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChainsResponse(BaseModel):

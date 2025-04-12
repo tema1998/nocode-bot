@@ -186,7 +186,7 @@ async def get_chain_with_details(
     },
 )
 async def get_chain_results(
-    chain_id: int = Path(..., description="ID of the chain", example=1),
+    chain_id: int = Path(..., description="ID of the chain"),
     page: int = Query(1, ge=1, description="Page number starting from 1"),
     per_page: int = Query(
         10, ge=1, le=100, description="Items per page (max 100)"

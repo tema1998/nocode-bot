@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class BotCreate(BaseModel):
@@ -12,8 +12,7 @@ class BotCreateResponse(BaseModel):
     id: int
     username: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BotGetResponse(BaseModel):
@@ -23,8 +22,7 @@ class BotGetResponse(BaseModel):
     name: str | None
     default_reply: str | None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BotPatchRequest(BaseModel):
@@ -73,8 +71,7 @@ class BotUserSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedBotUsersResponse(BaseModel):
