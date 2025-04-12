@@ -72,3 +72,13 @@ def mock_mailing_service():
         mock_instance = AsyncMock()
         mock_service.return_value = mock_instance
         yield mock_instance
+
+
+@pytest.fixture
+def mock_main_menu_service():
+    with patch(
+        "bot_service.services.main_menu_service.MainMenuService"
+    ) as mock_service:
+        mock_instance = AsyncMock()
+        mock_service.return_value = mock_instance
+        yield mock_instance
