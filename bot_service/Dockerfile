@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir poetry && \
     cd bot_service && \
     poetry config virtualenvs.create false && \
-    poetry install --no-root
+    poetry install --no-root --without dev
 
 COPY ./bot_service /srv/app/bot_service/
 
