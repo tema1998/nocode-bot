@@ -82,3 +82,23 @@ def mock_main_menu_service():
         mock_instance = AsyncMock()
         mock_service.return_value = mock_instance
         yield mock_instance
+
+
+@pytest.fixture
+def mock_webhook_service():
+    with patch(
+        "bot_service.services.webhook_service.WebhookService"
+    ) as mock_service:
+        mock_instance = AsyncMock()
+        mock_service.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_chain_handle_service():
+    with patch(
+        "bot_service.services.chain_handler_service.ChainHandlerService"
+    ) as mock_service:
+        mock_instance = AsyncMock()
+        mock_service.return_value = mock_instance
+        yield mock_instance
