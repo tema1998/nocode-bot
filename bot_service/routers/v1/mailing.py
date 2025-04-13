@@ -8,7 +8,7 @@ from bot_service.services.mailing_service import (
 from fastapi import APIRouter, Depends
 
 
-router = APIRouter(prefix="/mailings", tags=["mailings"])
+router = APIRouter()
 
 
 @router.post(

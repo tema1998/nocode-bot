@@ -90,14 +90,16 @@ class ChainStep(Base):
     chain_buttons = relationship(
         "ChainButton",
         back_populates="step",
+        cascade="all, delete-orphan",
         foreign_keys=[ChainButton.step_id],
+        overlaps="buttons",
     )
 
     buttons = relationship(
         "ChainButton",
         back_populates="step",
-        cascade="all, delete-orphan",
         foreign_keys=[ChainButton.step_id],
+        overlaps="chain_buttons",
     )
 
     chain = relationship(

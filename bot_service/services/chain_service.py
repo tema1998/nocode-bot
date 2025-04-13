@@ -340,7 +340,8 @@ class ChainService:
         Retrieves paginated chain completion results with user information.
 
         Enhanced version with:
-        - Better error handling
+        - Consistent response structure (always returns pagination metadata)
+        - Better error handling (never raises 404)
         - Parallel user data fetching
         - Strict parameter validation
         - Optimized database queries
@@ -351,7 +352,12 @@ class ChainService:
             per_page: Number of items per page (1-100)
 
         Returns:
-            Dictionary containing paginated results with metadata
+            Dictionary containing:
+            - items: list of results (may be empty)
+            - total: total count of items
+            - page: current page number
+            - per_page: items per page
+            - total_pages: calculated total pages
 
         Raises:
             ValueError: If input parameters are invalid
@@ -364,19 +370,31 @@ class ChainService:
         if not isinstance(per_page, int) or not 1 <= per_page <= 100:
             raise ValueError("per_page must be between 1 and 100")
 
-        # Fetch required entities
-        chain, bot = await self._get_chain_and_bot(chain_id)
-        if not chain or not bot:
-            return self._empty_response(page, per_page)
+        # Initialize default empty response structure
+        empty_response = {
+            "items": [],
+            "total": 0,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": 0,
+        }
 
-        # Get paginated results
         try:
+            # Fetch required entities
+            chain, bot = await self._get_chain_and_bot(chain_id)
+            if not chain or not bot:
+                return empty_response
+
+            # Get total count
             total = await self.db_repository.count_by_query(
                 model_class=UserState, column="chain_id", value=chain_id
             )
-            if total == 0:
-                return self._empty_response(page, per_page)
 
+            # Early return if no results
+            if total == 0:
+                return empty_response
+
+            # Get paginated results
             user_states = await self._get_paginated_user_states(
                 chain_id=chain_id, page=page, per_page=per_page
             )
@@ -391,14 +409,15 @@ class ChainService:
                 "total": total,
                 "page": page,
                 "per_page": per_page,
-                "total_pages": (total + per_page - 1) // per_page,
+                "total_pages": max(1, (total + per_page - 1) // per_page),
             }
 
         except Exception as e:
             logger.error(
-                f"Failed to get chain results: {str(e)}", exc_info=True
+                f"Failed to get chain results for chain {chain_id}: {str(e)}",
+                exc_info=True,
             )
-            return self._empty_response(page, per_page)
+            return empty_response
 
     async def _get_chain_and_bot(
         self, chain_id: int

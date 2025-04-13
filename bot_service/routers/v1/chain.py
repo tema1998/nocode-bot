@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Dict
 
 from bot_service.models import Chain
 from bot_service.schemas.chain import (
@@ -181,42 +181,58 @@ async def get_chain_with_details(
     summary="Get paginated chain completion results",
     response_model=ChainResultsResponse,
     responses={
-        404: {"description": "Chain not found or no results available"},
+        200: {"description": "Successfully retrieved results (may be empty)"},
+        400: {"description": "Invalid request parameters"},
         500: {"description": "Internal server error"},
     },
 )
 async def get_chain_results(
-    chain_id: int = Path(..., description="ID of the chain", example=1),
-    page: int = Query(1, ge=1, description="Page number starting from 1"),
+    chain_id: int = Path(
+        ..., description="ID of the chain", examples=[1, 2, 3], gt=0
+    ),
+    page: int = Query(
+        1, ge=1, description="Page number starting from 1", examples=[1, 2]
+    ),
     per_page: int = Query(
-        10, ge=1, le=100, description="Items per page (max 100)"
+        10,
+        ge=1,
+        le=100,
+        description="Items per page (max 100)",
+        examples=[10, 25, 50],
     ),
     chain_service: ChainService = Depends(get_chain_service),
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     Retrieve paginated completion results for a chain with user details.
 
-    Returns enriched user data including:
+    Key features:
+    - Always returns 200 status with consistent pagination structure
+    - Returns empty items list when no results found
+    - Includes complete pagination metadata
+
+    Response includes:
+    - items: List of results (maybe empty)
+    - total: Total number of results
+    - page: Current page number
+    - per_page: Items per page
+    - total_pages: Total number of pages
+
+    Each item contains:
     - Profile information (name, username, photo)
     - Answers to chain questions
     - Interaction timestamps
     - Current progress status
     """
     try:
-        result = await chain_service.get_paginated_chain_results(
+        return await chain_service.get_paginated_chain_results(
             chain_id=chain_id, page=page, per_page=per_page
         )
-
-        if not result["items"]:
-            raise HTTPException(
-                status_code=404,
-                detail=f"No results found for chain {chain_id}",
-            )
-
-        return result
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
+        logger.error(
+            f"Unexpected error fetching results for chain {chain_id}: {str(e)}",
+            exc_info=True,
+        )
         raise HTTPException(status_code=500, detail="Internal server error")

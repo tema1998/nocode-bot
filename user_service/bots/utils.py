@@ -1117,7 +1117,7 @@ def send_mail_to_bot_users(bot_id: int, message_text: str) -> Dict[str, Any]:
 
     try:
         response = requests.post(
-            f"{BOT_SERVICE_API_URL}mailing/mailings/{bot_id}/start/",
+            f"{BOT_SERVICE_API_URL}mailing/{bot_id}/start/",
             json=payload,
             timeout=15,
         )
