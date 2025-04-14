@@ -35,3 +35,38 @@ class BotDefaultReplyForm(forms.Form):
             }
         ),
     )
+
+
+class BotMainMenuForm(forms.Form):
+    welcome_message = forms.CharField(
+        label="Приветственное сообщение:",
+        max_length=3000,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-user",
+            }
+        ),
+    )
+
+
+class BotMainMenuButtonForm(forms.Form):
+    button_text = forms.CharField(
+        label="Текст кнопки:",
+        max_length=64,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-user",
+            }
+        ),
+    )
+
+    reply_text = forms.CharField(
+        label="Текст ответного сообщения:",
+        max_length=3000,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-user",
+            }
+        ),
+    )
+    chain_id = forms.IntegerField()

@@ -14,6 +14,9 @@ INSTALLED_APPS = [
     "users",
     "core",
     "bots",
+    "bots_chain",
+    "bots_mailing",
+    "bots_menu",
 ]
 
 MIDDLEWARE = [
