@@ -23,5 +23,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include("users.urls")),
     path("bots/", include("bots.urls")),
+    path("bots-chain/", include("bots_chain.urls")),
+    path("bots-mailing/", include("bots_mailing.urls")),
+    path("bots-menu/", include("bots_menu.urls")),
     path("", include("core.urls")),
 ]

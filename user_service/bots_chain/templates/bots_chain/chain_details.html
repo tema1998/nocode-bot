@@ -396,7 +396,7 @@
                 <div style="text-align: center;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <!-- Левая иконка (всегда есть) -->
-                        <a href="/bots/update-chain-step/{{bot.id}}/{{chain.id}}/${step.id}" class="icon edit-icon">
+                        <a href="/bots-chain/update-chain-step/{{bot.id}}/{{chain.id}}/${step.id}" class="icon edit-icon">
                             <i class="fas fa-edit"></i>
                         </a>
 
@@ -425,7 +425,7 @@
                                 <i class="fas fa-trash"></i>
                             </a>
                             <form id="delete-step-${step.id}"
-                                  action="/bots/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
+                                  action="/bots-chain/delete-chain-step/{{bot.id}}/{{chain.id}}/${step.id}"
                                   method="POST"
                                   style="display: none;">
                                 {% csrf_token %}
@@ -446,7 +446,7 @@
                                 <i class="fas fa-plus"></i> Добавить кнопку
                             </a>
                             <form id="create-button-${step.id}"
-                                  action="/bots/create-chain-button/{{bot.id}}/{{chain.id}}"
+                                  action="/bots-chain/create-chain-button/{{bot.id}}/{{chain.id}}"
                                   method="POST"
                                   style="display: none;">
                                 {% csrf_token %}
@@ -462,7 +462,7 @@
                                         <i class="fas fa-plus"></i> Добавить текстовый ввод
                                     </a>
                                     <form id="add-textinput-${step.id}"
-                                          action="/bots/edit-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
+                                          action="/bots-chain/edit-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
                                           method="POST"
                                           style="display: none;">
                                         {% csrf_token %}
@@ -502,7 +502,7 @@
                                     <!-- Верхняя строка с иконками и надписью -->
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                         <!-- Левая иконка редактирования -->
-                                        <a href="/bots/update-chain-button/{{bot.id}}/{{chain.id}}/${button.id}" class="icon edit-icon">
+                                        <a href="/bots-chain/update-chain-button/{{bot.id}}/{{chain.id}}/${button.id}" class="icon edit-icon">
                                             <i class="fas fa-edit"></i>
                                         </a>
 
@@ -531,7 +531,7 @@
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                             <form id="delete-button-${button.id}"
-                                                  action="/bots/delete-chain-button/{{bot.id}}/{{chain.id}}/${button.id}"
+                                                  action="/bots-chain/delete-chain-button/{{bot.id}}/{{chain.id}}/${button.id}"
                                                   method="POST"
                                                   style="display: none;">
                                                 {% csrf_token %}
@@ -555,7 +555,7 @@
                                                 <i class="fas fa-plus"></i> Добавить шаг
                                             </a>
                                             <form id="create-step-${button.id}"
-                                                  action="/bots/create-chain-step/{{bot.id}}/{{chain.id}}"
+                                                  action="/bots-chain/create-chain-step/{{bot.id}}/{{chain.id}}"
                                                   method="POST"
                                                   style="display: none;">
                                                 {% csrf_token %}
@@ -621,7 +621,7 @@
                                         <i class="fas fa-trash"></i>
                                     </a>
                                     <form id="delete-text-input-${step.id}"
-                                          action="/bots/edit-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
+                                          action="/bots-chain/edit-text-input/{{bot.id}}/{{chain.id}}/${step.id}"
                                           method="POST"
                                           style="display: none;">
                                         {% csrf_token %}
@@ -639,7 +639,7 @@
                                         <i class="fas fa-plus"></i> Добавить шаг
                                     </a>
                                     <form id="create-step-textinput-${step.id}"
-                                          action="/bots/create-chain-step-textinput/{{bot.id}}/{{chain.id}}"
+                                          action="/bots-chain/create-chain-step-textinput/{{bot.id}}/{{chain.id}}"
                                           method="POST"
                                           style="display: none;">
                                         {% csrf_token %}
