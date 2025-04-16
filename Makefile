@@ -16,4 +16,5 @@ run-bot-service:
 run-user-service:
 	cd user_service && python manage.py runserver
 
-
+run-user-service-tests:
+	cd user_service && python manage.py test  --settings=bot_management.settings_test
