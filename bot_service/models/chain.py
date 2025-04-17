@@ -33,7 +33,9 @@ class Chain(Base):
     __tablename__ = "chains"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
+    bot_id = Column(
+        Integer, ForeignKey("bots.id", ondelete="CASCADE"), nullable=False
+    )
     name = Column(String, nullable=False, unique=True)
     first_chain_step_id = Column(
         Integer,
@@ -44,11 +46,14 @@ class Chain(Base):
     first_chain_step = relationship(
         "ChainStep", foreign_keys=[first_chain_step_id], post_update=True
     )
-    buttons = relationship("Button", back_populates="chain")
+    buttons = relationship(
+        "Button", back_populates="chain", cascade="all, delete-orphan"
+    )
     steps = relationship(
         "ChainStep",
         back_populates="chain",
         cascade="all, delete-orphan",
+        passive_deletes=True,
         foreign_keys="[ChainStep.chain_id]",
     )
     bot = relationship("Bot", back_populates="chains")
@@ -58,7 +63,11 @@ class ChainButton(Base):
     __tablename__ = "chain_buttons"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=False)
+    step_id = Column(
+        Integer,
+        ForeignKey("chain_steps.id", ondelete="CASCADE"),
+        nullable=False,
+    )
     text = Column(String, nullable=False)
     next_step_id = Column(
         Integer,
@@ -70,14 +79,14 @@ class ChainButton(Base):
         "ChainStep", back_populates="chain_buttons", foreign_keys=[step_id]
     )
 
-    next_step = relationship("ChainStep", foreign_keys=[next_step_id])
-
 
 class ChainStep(Base):
     __tablename__ = "chain_steps"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    chain_id = Column(Integer, ForeignKey("chains.id"), nullable=False)
+    chain_id = Column(
+        Integer, ForeignKey("chains.id", ondelete="CASCADE"), nullable=False
+    )
     name = Column(String, nullable=False)
     message = Column(String, nullable=False)
     next_step_id = Column(
@@ -91,19 +100,15 @@ class ChainStep(Base):
         "ChainButton",
         back_populates="step",
         cascade="all, delete-orphan",
+        passive_deletes=True,
         foreign_keys=[ChainButton.step_id],
         overlaps="buttons",
-    )
-
-    buttons = relationship(
-        "ChainButton",
-        back_populates="step",
-        foreign_keys=[ChainButton.step_id],
-        overlaps="chain_buttons",
     )
 
     chain = relationship(
         "Chain", back_populates="steps", foreign_keys=[chain_id]
     )
 
-    next_step = relationship("ChainStep", foreign_keys=[next_step_id])
+    next_step = relationship(
+        "ChainStep", foreign_keys=[next_step_id], remote_side=[id]
+    )

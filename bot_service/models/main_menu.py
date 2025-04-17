@@ -18,7 +18,9 @@ class Button(Base, TimeStampedMixin):
     main_menu_id = Column(
         Integer, ForeignKey("main_menu.id", ondelete="CASCADE"), nullable=True
     )
-    bot_id = Column(Integer, ForeignKey("bots.id"), index=True)
+    bot_id = Column(
+        Integer, ForeignKey("bots.id", ondelete="CASCADE"), nullable=False
+    )
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=True)
 
     main_menu = relationship("MainMenu", back_populates="buttons")
