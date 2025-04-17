@@ -8,6 +8,23 @@ from bot_management.settings.static import *
 from bot_management.settings.urls import *
 
 
+# Отключение всего логирования
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": True,
+    "handlers": {
+        "null": {
+            "class": "logging.NullHandler",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["null"],
+            "level": "CRITICAL",
+        },
+    },
+}
+
 DATABASES["default"] = {  # type:ignore
     "ENGINE": "django.db.backends.sqlite3",
     "NAME": ":memory:",
