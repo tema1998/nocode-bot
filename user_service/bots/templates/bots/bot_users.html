@@ -20,19 +20,19 @@
             {% else %}
                 <div class="table-responsive">
                     <table class="table table-bordered table-hover mb-0">
-                        <thead class="thead-light d-none d-sm-table-header-group">
+                        <thead class="thead-light">
                             <tr>
-                                <th>ID</th>
+                                <th class="">ID</th>
                                 <th>Пользователь</th>
-                                <th>Имя</th>
-                                <th>Дата регистрации</th>
+                                <th class="">Имя</th>
+                                <th class="">Дата регистрации</th>
                                 <th>Последняя активность</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for user in page_obj.object_list %}
                             <tr>
-                                <td data-label="ID" class="font-weight-bold">{{ user.user_id }}</td>
+                                <td data-label="ID" class="font-weight-bold >{{ user.user_id }}</td>
                                 <td data-label="Пользователь">
                                     {% if user.username %}
                                         <a href="https://t.me/{{user.username}}" target="_blank" class="font-weight-bold">@{{ user.username }}</a>
@@ -40,7 +40,7 @@
                                         <span class="text-muted">Не указан</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="Имя">
+                                <td data-label="Имя" class="">
                                     {% if user.first_name or user.last_name %}
                                         {{ user.first_name|default:"" }}
                                         {{ user.last_name|default:"" }}
@@ -48,7 +48,7 @@
                                         <span class="text-muted">Не указано</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="Дата регистрации" class="text-nowrap">{{ user.created_at}}</td>
+                                <td data-label="Дата регистрации" class="text-nowrap ">{{ user.created_at}}</td>
                                 <td data-label="Последняя активность" class="text-nowrap">
                                     {% if user.updated_at %}
                                         {{ user.updated_at}}
@@ -152,6 +152,11 @@
 
         table td:last-child {
             border-bottom: 0;
+        }
+
+        /* Скрываем заголовки на мобильных */
+        table thead {
+            display: none;
         }
     }
 </style>
