@@ -29,6 +29,7 @@ class BotDefaultReplyForm(forms.Form):
     default_reply = forms.CharField(
         label="Ответ бота на неизвестную команду/сообщение:",
         max_length=3000,
+        required=False,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control form-control-user",
