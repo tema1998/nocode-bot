@@ -128,7 +128,10 @@ class CreateChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Ошибка создания цепочки.")
+        self.assertEqual(
+            str(messages_list[0]),
+            "Ошибка создания цепочки. Возможно цепочка с таким именем уже существует.",
+        )
         self.assertEqual(response.status_code, 302)
 
 

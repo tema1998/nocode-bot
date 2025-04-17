@@ -72,6 +72,28 @@ class BotChainView(BaseChainView):
             )
 
 
+class BotChainsResultView(BaseChainView):
+    template_name = "bots_chain/list_chains_results.html"
+
+    def get(self, request, bot_id: int) -> HttpResponse:
+        bot = self.get_bot_or_404(bot_id)
+
+        try:
+            chains_response = ChainService.get_bot_chains(bot.bot_id)
+            return render(
+                request,
+                self.template_name,
+                {"bot": bot, "chains": chains_response.get("chains", [])},
+            )
+        except RequestException as e:
+            logger.error(f"Failed to fetch chains: {str(e)}", exc_info=True)
+            return render(
+                request,
+                self.template_name,
+                {"bot": bot, "chains": []},
+            )
+
+
 class CreateChainView(BaseChainView):
     template_name = "bots_chain/create_chain.html"
 
@@ -95,7 +117,10 @@ class CreateChainView(BaseChainView):
             return redirect("bot-chains", bot_id=bot.id)
         except RequestException as e:
             logger.error(f"Failed to create chain: {str(e)}", exc_info=True)
-            messages.error(request, "Ошибка создания цепочки.")
+            messages.error(
+                request,
+                "Ошибка создания цепочки. Возможно цепочка с таким именем уже существует.",
+            )
             return redirect("bot-chains", bot_id=bot.id)
 
 

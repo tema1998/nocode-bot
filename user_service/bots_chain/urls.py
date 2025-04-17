@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     BotChainDetailView,
+    BotChainsResultView,
     BotChainView,
     ChainResultsView,
     CreateChainButtonView,
@@ -88,5 +89,10 @@ urlpatterns = [
         "chain-results/<int:bot_id>/<int:chain_id>/",
         ChainResultsView.as_view(),
         name="chain-results",
+    ),
+    path(
+        "bot-chains-results/<int:bot_id>/",
+        BotChainsResultView.as_view(),
+        name="bot-chains-results",
     ),
 ]
