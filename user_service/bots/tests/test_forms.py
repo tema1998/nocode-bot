@@ -55,7 +55,7 @@ class BotFormTest(TestCase):
                 self.assertIn("token", form.errors)
                 self.assertEqual(
                     form.errors["token"][0],
-                    "Invalid Telegram token format. Expected format: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'.",
+                    "Неверный формат токена Telegram, пример токена: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'.",
                 )
 
 

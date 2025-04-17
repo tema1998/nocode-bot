@@ -5,20 +5,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="p-5">
+<div class="p-3 p-md-5">
     <div class="text-center">
-        <div class="brand-logo mb-4">
+        <div class="brand-logo mb-3">
             <i class="fas fa-robot fa-3x text-primary mb-2"></i>
-            <h2 class="h3 text-gray-800 mb-0">nocode-bot.ru</h2>
-            <div class="small text-muted">Платформа для создания ботов без знания программирования</div>
+            <h2 class="h4 text-gray-800 mb-0">nocode-bot.ru</h2>
+            <div class="small text-muted">Платформа для создания ботов</div>
         </div>
     </div>
     <div class="text-center">
-        <h1 class="h4 text-gray-900 mb-4">Войти в аккаунт</h1>
+        <h1 class="h5 text-gray-900 mb-3">Войти в аккаунт</h1>
     </div>
 
     {% if messages %}
-    <div class="mb-4 messages-container">
+    <div class="mb-3 messages-container">
         {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show message-item" role="alert">
             <div class="message-content">
@@ -43,107 +43,151 @@
 
         <div class="form-group">
             <label class="form-label">Логин:</label>
-            {{ form.username }}
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                </div>
+                {{ form.username }}
+            </div>
             {% if form.username.errors %}
                 <div class="invalid-feedback d-block">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
                     {% for error in form.username.errors %}
-                        <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+                        {{ error }}
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
+
         <div class="form-group">
             <label class="form-label">Пароль:</label>
-            {{ form.password }}
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                </div>
+                {{ form.password }}
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary toggle-password" type="button" data-target="id_password">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
             {% if form.password.errors %}
                 <div class="invalid-feedback d-block">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
                     {% for error in form.password.errors %}
-                        <i class="fas fa-exclamation-circle mr-1"></i>{{ error }}
+                        {{ error }}
                     {% endfor %}
                 </div>
             {% endif %}
         </div>
-        <button type="submit" class="btn btn-primary btn-user btn-block btn-login">
+
+        <button type="submit" class="btn btn-primary btn-user btn-block mt-3">
             <i class="fas fa-sign-in-alt mr-2"></i>Войти
         </button>
     </form>
-    <hr class="divider">
+
+    <hr class="divider my-3">
+
     <div class="text-center footer-links">
         <a class="small" href="{% url 'index' %}"><i class="fas fa-home mr-1"></i>На главную</a>
-        <span class="mx-2">|</span>
+        <span class="mx-1 mx-sm-2">|</span>
         <a class="small" href="{% url 'register' %}"><i class="fas fa-user-plus mr-1"></i>Регистрация</a>
     </div>
 </div>
 
 <style>
-    /* Стили для сообщений */
-    .messages-container {
-        max-width: 100%;
-        margin: 0 auto 1.5rem;
+    /* Общие стили */
+    body {
+        background-color: #f8f9fc;
     }
 
+    .p-3.p-md-5 {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    /* Адаптивные отступы */
+    @media (max-width: 576px) {
+        .p-3.p-md-5 {
+            padding: 1.5rem !important;
+            margin: 1rem;
+        }
+
+        .brand-logo i {
+            font-size: 2.5rem;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+        }
+    }
+
+    /* Стили для полей ввода */
+    .input-group {
+        margin-bottom: 5px;
+    }
+
+    .input-group-text {
+        min-width: 45px;
+        justify-content: center;
+    }
+
+    .form-control {
+        height: calc(1.5em + 1rem + 2px);
+        padding: 0.5rem 1rem;
+    }
+
+    /* Кнопка просмотра пароля */
+    .toggle-password {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+        border-left: 0;
+        cursor: pointer;
+    }
+
+    .toggle-password:hover {
+        background-color: #f8f9fa;
+    }
+
+    .toggle-password i {
+        width: 1em;
+    }
+
+    /* Кнопка входа */
+    .btn-user {
+        padding: 0.75rem;
+        font-size: 1rem;
+        border-radius: 50px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
+
+    .btn-user:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Сообщения */
     .message-item {
+        padding: 0.75rem 1rem;
         border-radius: 8px;
-        padding: 12px 20px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         border-left: 4px solid;
     }
 
-    .message-content {
-        display: flex;
-        align-items: center;
-    }
-
     .message-content i {
+        font-size: 1rem;
         margin-right: 10px;
-        font-size: 1.1em;
     }
 
-    .alert-success {
-        background-color: #e6f7ee;
-        border-color: #28a745;
-        color: #28a745;
-    }
-
-    .alert-error, .alert-danger {
-        background-color: #fce8e8;
-        border-color: #dc3545;
-        color: #dc3545;
-    }
-
-    .alert-warning {
-        background-color: #fff8e6;
-        border-color: #ffc107;
-        color: #d39e00;
-    }
-
-    .alert-info {
-        background-color: #e7f5fe;
-        border-color: #17a2b8;
-        color: #17a2b8;
-    }
-
-    /* Стили для формы */
-    .form-label {
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 5px;
-        display: block;
-    }
-
-    .btn-login {
-        border-radius: 50px;
-        padding: 10px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-
-    .divider {
-        border-top: 1px solid rgba(0,0,0,0.1);
-        margin: 1.5rem 0;
-    }
-
+    /* Футер */
     .footer-links {
+        font-size: 0.9rem;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -151,6 +195,8 @@
     }
 
     .footer-links a {
+        display: inline-flex;
+        align-items: center;
         color: #6c757d;
         transition: color 0.3s;
     }
@@ -160,9 +206,41 @@
         text-decoration: none;
     }
 
+    /* Ошибки валидации */
     .invalid-feedback {
         font-size: 0.85em;
         margin-top: 5px;
+        color: #dc3545;
+    }
+
+    /* Разделитель */
+    .divider {
+        border-top: 1px solid rgba(0,0,0,0.1);
     }
 </style>
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Функция для переключения видимости пароля
+    $('.toggle-password').click(function() {
+        const target = $(this).data('target');
+        const input = $('#' + target);
+        const icon = $(this).find('i');
+
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+            $(this).attr('title', 'Скрыть пароль');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+            $(this).attr('title', 'Показать пароль');
+        }
+    });
+
+    // Добавляем подсказки при наведении
+    $('.toggle-password').attr('title', 'Показать пароль');
+});
+</script>
+{% endblock %}
 {% endblock %}
