@@ -171,14 +171,6 @@ class TelegramBotService:
                 detail=f"Failed to reset webhook: {str(e)}",
             )
 
-        # Delete bot's main menu
-        bot_main_menu = await self.db_repository.fetch_by_query_one(
-            MainMenu, {"bot_id": bot_id}
-        )
-        await self.db_repository.delete(
-            MainMenu, bot_main_menu.id  # type:ignore
-        )
-
         await self.db_repository.delete(Bot, bot_id)
 
         return None

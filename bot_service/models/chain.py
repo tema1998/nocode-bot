@@ -18,7 +18,9 @@ class UserState(Base, TimeStampedMixin):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, nullable=False)
-    bot_id = Column(Integer, ForeignKey("bots.id"), nullable=False)
+    bot_id = Column(
+        Integer, ForeignKey("bots.id", ondelete="CASCADE"), nullable=False
+    )
     chain_id = Column(Integer, ForeignKey("chains.id"), nullable=True)
     step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=True)
     expects_text_input = Column(Boolean, default=False)
@@ -47,7 +49,10 @@ class Chain(Base):
         "ChainStep", foreign_keys=[first_chain_step_id], post_update=True
     )
     buttons = relationship(
-        "Button", back_populates="chain", cascade="all, delete-orphan"
+        "Button",
+        back_populates="chain",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     steps = relationship(
         "ChainStep",

@@ -53,6 +53,12 @@ class Bot(Base, TimeStampedMixin):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    user_states = relationship(
+        "UserState",
+        backref="bot",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
 
 class BotUser(Base, TimeStampedMixin):
