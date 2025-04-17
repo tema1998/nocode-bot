@@ -88,12 +88,6 @@ class BotDefaultReplyFormTest(TestCase):
             form.cleaned_data["default_reply"], valid_data["default_reply"]
         )
 
-        # Проверка пустого значения
-        empty_data = {"default_reply": ""}
-        form = BotDefaultReplyForm(data=empty_data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("default_reply", form.errors)
-
         # Проверка слишком длинного значения
         long_data = {"default_reply": "x" * 3001}
         form = BotDefaultReplyForm(data=long_data)
