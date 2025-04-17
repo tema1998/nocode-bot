@@ -112,7 +112,6 @@ class BotMainMenuFormTest(TestCase):
 
         # Invalid cases
         invalid_data = [
-            {"welcome_message": ""},
             {"welcome_message": "x" * 3001},
         ]
 

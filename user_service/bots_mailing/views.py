@@ -54,7 +54,7 @@ class MailingView(LoginRequiredMixin, View):
         message_text = request.POST.get("message_text", "").strip()
 
         if not message_text:
-            messages.error(request, "Message text cannot be empty")
+            messages.error(request, "Текст сообщения не может быть пустым.")
             return redirect("mailing", bot_id=bot_id)
 
         try:
@@ -65,14 +65,16 @@ class MailingView(LoginRequiredMixin, View):
                 f"Mailing failed for bot {bot_id}: {str(e)}", exc_info=True
             )
             messages.error(
-                request, "Failed to start mailing. Please try again later"
+                request, "Ошибка запуска рассылки. Попробуйте повторить позже."
             )
         except Exception as e:
             logger.critical(
                 f"Unexpected error in mailing for bot {bot_id}: {str(e)}",
                 exc_info=True,
             )
-            messages.error(request, "An unexpected error occurred")
+            messages.error(
+                request, "Ошибка запуска рассылки. Попробуйте повторить позже."
+            )
 
         return redirect("mailing", bot_id=bot_id)
 

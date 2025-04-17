@@ -69,12 +69,18 @@ class BotMainMenuButtonView(BaseBotView):
 
     def get(self, request, bot_id: int, button_id: int) -> HttpResponse:
         bot = self.validate_bot_ownership(request, bot_id)
-
         try:
             button = BotServiceClient.get_main_menu_button(button_id)
             chains_response = BotServiceClient.get_bot_chains(bot.bot_id)
+
         except RequestException:
-            chains_response = {"chains": {}}
+            messages.error(
+                request,
+                "Ошибка при загрузке данных. Попробуйте обновить страницу.",
+            )
+            return redirect(
+                "bot-main-menu-button", bot_id=bot_id, button_id=button_id
+            )
 
         return render(
             request,
@@ -155,7 +161,7 @@ class CreateBotMainMenuButtonView(BaseBotView):
         except RequestException:
             messages.error(
                 request,
-                "Ошибка при создании кнопки. Возможно такая кнопка уже существует.",
+                "Ошибка при создании кнопки. Возможно такая кнопка уже существует. Запрещено использовать названия служебных команд '/start', '/update'.",
             )
 
         return redirect("bot-main-menu", bot_id=bot.id)

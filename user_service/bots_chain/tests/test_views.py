@@ -112,7 +112,7 @@ class CreateChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Chain created successfully.")
+        self.assertEqual(str(messages_list[0]), "Цепочка создана успешно.")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/bots-chain/chains/{self.bot.id}/")
 
@@ -128,7 +128,10 @@ class CreateChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Failed to create chain.")
+        self.assertEqual(
+            str(messages_list[0]),
+            "Ошибка создания цепочки. Возможно цепочка с таким именем уже существует.",
+        )
         self.assertEqual(response.status_code, 302)
 
 
@@ -147,7 +150,7 @@ class UpdateChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Chain updated successfully.")
+        self.assertEqual(str(messages_list[0]), "Цепочка успешно обновлена.")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/bots-chain/chain/{self.bot.id}/1")
 
@@ -165,7 +168,7 @@ class UpdateChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Failed to update chain.")
+        self.assertEqual(str(messages_list[0]), "Ошибка обновления цепочки.")
         self.assertEqual(response.status_code, 302)
 
 
@@ -184,7 +187,7 @@ class DeleteChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Chain deleted successfully.")
+        self.assertEqual(str(messages_list[0]), "Цепочка успешно удалена.")
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, f"/bots-chain/chains/{self.bot.id}/")
 
@@ -202,7 +205,7 @@ class DeleteChainViewTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Failed to delete chain.")
+        self.assertEqual(str(messages_list[0]), "Ошибка удаления цепочки.")
         self.assertEqual(response.status_code, 302)
 
 
@@ -223,7 +226,7 @@ class ChainStepViewsTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Step created successfully.")
+        self.assertEqual(str(messages_list[0]), "Шаг успешно создан.")
         self.assertEqual(response.status_code, 302)
 
     @patch("bots_chain.services.ChainStepService.update_step")
@@ -242,7 +245,7 @@ class ChainStepViewsTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Step updated successfully.")
+        self.assertEqual(str(messages_list[0]), "Шаг успешно обновлен.")
         self.assertEqual(response.status_code, 302)
 
     @patch("bots_chain.services.ChainStepService.delete_step")
@@ -259,7 +262,7 @@ class ChainStepViewsTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Step deleted successfully.")
+        self.assertEqual(str(messages_list[0]), "Шаг успешно удален.")
         self.assertEqual(response.status_code, 302)
 
 
@@ -278,7 +281,7 @@ class ChainButtonViewsTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Button created successfully.")
+        self.assertEqual(str(messages_list[0]), "Кнопка успешно создана.")
         self.assertEqual(response.status_code, 302)
 
     @patch("bots_chain.services.ChainButtonService.update_button")
@@ -295,7 +298,7 @@ class ChainButtonViewsTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Button updated successfully.")
+        self.assertEqual(str(messages_list[0]), "Кнопка успешно обновлена.")
         self.assertEqual(response.status_code, 302)
 
     @patch("bots_chain.services.ChainButtonService.delete_button")
@@ -312,7 +315,7 @@ class ChainButtonViewsTestCase(BaseChainViewTestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Button deleted successfully.")
+        self.assertEqual(str(messages_list[0]), "Кнопка успешно удалена.")
         self.assertEqual(response.status_code, 302)
 
 

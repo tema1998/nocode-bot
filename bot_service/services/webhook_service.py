@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from bot_service.core.configs import config
 from bot_service.models import UserState
 from bot_service.models.bot import Bot, BotUser
@@ -10,7 +12,7 @@ from bot_service.services.chain_handler_service import (
     get_chain_handler_service,
 )
 from fastapi import HTTPException
-from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
+from telegram import KeyboardButton, ReplyKeyboardMarkup, Update, WebAppInfo
 from telegram.ext import Application
 
 
@@ -34,12 +36,17 @@ class WebhookService:
         self.db_repository = db_repository
         self.chain_handler_service = chain_handler_service
         self.default_keyboard = [
-            [KeyboardButton("Бот создан с помощью платформы nocode-bot.ru")]
+            [
+                KeyboardButton(
+                    "Бот создан с помощью платформы nocode-bot.ru",
+                    web_app=WebAppInfo(url="https://nocode-bot.ru"),
+                )
+            ]
         ]
 
     async def handle_webhook(self, bot_id: int, update_data: dict) -> dict:
         """
-        Handle incoming webhook update from Telegram.
+        Handle incoming webhook update from Telegram with time-based filtering.
 
         Args:
             bot_id (int): The ID of the bot.
@@ -59,7 +66,7 @@ class WebhookService:
             raise HTTPException(status_code=404, detail="Bot not found")
 
         if not bot.is_active:
-            raise HTTPException(status_code=403, detail="Bot is deactivated.")
+            return {"status": "ok", "detail": "bot_deactivated"}
 
         # Create an instance of Application using the bot's token
         application = Application.builder().token(bot.token).build()
@@ -73,15 +80,53 @@ class WebhookService:
 
         await self._save_bot_user(bot_id, update)
 
-        # Process the update based on its type
+        # Get current time for time comparison
+        current_time = datetime.now()
+
+        # Process the update based on its type with time checks
         if update.callback_query is not None:
-            await self.chain_handler_service.process_chain_step(update)
-        elif update.message is not None and update.message.text == "/start":
-            await self._handle_start_command(bot, update)
-        elif update.message is not None and update.message.text == "/update":
-            await self._handle_update_command(bot, update)
+            try:
+                # Check callback message age
+                callback_time = datetime.fromtimestamp(
+                    update.callback_query.message.date.timestamp()  # type:ignore
+                )
+                if current_time - callback_time > timedelta(minutes=1):
+                    return {"status": "ok", "detail": "ignored_old_callback"}
+
+                await self.chain_handler_service.process_chain_step(update)
+            except AttributeError:
+                # Handle case where callback message or date is missing
+                return {"status": "error", "detail": "invalid_callback_format"}
+
         elif update.message is not None:
-            await self._handle_message(bot, update)
+            try:
+                # Check message age
+                message_time = datetime.fromtimestamp(
+                    update.message.date.timestamp()
+                )
+                if current_time - message_time > timedelta(minutes=1):
+                    return {"status": "ok", "detail": "ignored_old_message"}
+
+                # Process specific commands
+                if update.message.text == "/start":
+                    await self._handle_start_command(bot, update)
+                elif update.message.text == "/update":
+                    await self._handle_update_command(bot, update)
+                else:
+                    await self._handle_message(bot, update)
+            except AttributeError:
+                # Handle non-text messages or missing date
+                if (
+                    update.message.date
+                ):  # If it's a non-text message with valid date
+                    return {
+                        "status": "ok",
+                        "detail": "unsupported_message_type",
+                    }
+                raise HTTPException(
+                    status_code=400, detail="Invalid message format"
+                )
+
         else:
             raise HTTPException(
                 status_code=400, detail="Unsupported update type."
@@ -194,13 +239,18 @@ class WebhookService:
         )
 
         if button and button.chain_id:
+            # Send the button's reply text
+            if button.reply_text:
+                reply_text = str(button.reply_text)
+                await update.message.reply_text(reply_text)
+
             # Start a chain if the button is linked to one
             await self.chain_handler_service.start_chain(
                 int(bot.id), update, button.chain_id
             )
         elif button and button.reply_text:
             # Send the button's reply text
-            reply_text = str(button.reply_text)  # Convert Column[str] to str
+            reply_text = str(button.reply_text)
             await update.message.reply_text(reply_text)
         else:
             # Send a default reply if no button is found

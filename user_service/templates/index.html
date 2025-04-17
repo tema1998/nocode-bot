@@ -102,32 +102,33 @@
         <!-- Divider -->
         <hr class="sidebar-divider">
 
-        <!-- Help Card -->
-        <div id="help-1" class="sidebar-card d-none d-lg-flex mx-3 mb-3">
+    <div class="sidebar-card-container">
+        <div id="help-1" class="sidebar-card mx-3 mb-3">
             <div class="card-body p-3 text-center">
                 <i class="fas fa-magic mb-2 text-primary"></i>
                 <p class="text-sm mb-0">Чтобы перейти в конструктор бота, откройте раздел <strong>"Боты"</strong> и выберите <strong>"Конструктор"</strong>.</p>
             </div>
         </div>
-        <div id="help-2" class="sidebar-card d-none d-lg-flex mx-3 mb-3">
+        <div id="help-2" class="sidebar-card mx-3 mb-3">
             <div class="card-body p-3 text-center">
                 <i class="fas fa-people-arrows mb-2 text-primary"></i>
                 <p class="text-sm mb-0">Взаимодействуйте с аудиторией с помощью <strong>"Цепочек"</strong> и анализируйте результаты.</p>
             </div>
         </div>
-        <div id="help-3" class="sidebar-card d-none d-lg-flex mx-3 mb-3">
+        <div id="help-3" class="sidebar-card mx-3 mb-3">
             <div class="card-body p-3 text-center">
                 <i class="fas fa-cogs mb-2 text-primary"></i>
                 <p class="text-sm mb-0">Не забудьте настроить <strong>главное меню</strong> и <strong>ответ по умолчанию</strong> (когда команда неизвестна боту).</p>
             </div>
         </div>
-        <div id="help-4" class="sidebar-card d-none d-lg-flex mx-3 mb-3">
+        <div id="help-4" class="sidebar-card mx-3 mb-3">
             <div class="card-body p-3 text-center">
                 <i class="fas fa-mail-bulk mb-2 text-primary"></i>
-                <p class="text-sm mb-0">Делайте <strong>массовые рассылки</strong> писем пользователем ваших ботов.</p>
+                <p class="text-sm mb-0">Делайте <strong>массовые рассылки</strong> писем пользователям ваших ботов.</p>
             </div>
         </div>
-        
+    </div>
+
 
     </ul>
     <!-- End of Sidebar -->
@@ -376,6 +377,103 @@
             </div>
         </div>
     </div>
+
+    <style>
+        /* Общие стили для карточек помощи */
+        .sidebar-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-card:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .sidebar-card .card-body {
+            padding: 1rem;
+        }
+
+        .sidebar-card i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-card p {
+            font-size: 0.8rem;
+            line-height: 1.3;
+            margin-bottom: 0;
+        }
+
+        /* Стили для мобильной версии */
+        @media (max-width: 991.98px) {
+            .sidebar-card-container {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding: 0.5rem;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                -ms-overflow-style: none; /* IE 10+ */
+            }
+
+            .sidebar-card-container::-webkit-scrollbar {
+                display: none; /* Chrome/Safari/Webkit */
+            }
+
+            .sidebar-card {
+                flex: 0 0 auto;
+                width: 85%;
+                margin-right: 1rem;
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+
+            .sidebar-card:last-child {
+                margin-right: 0;
+            }
+
+            .sidebar-card .card-body {
+                padding: 0.75rem;
+            }
+
+            .sidebar-card i {
+                font-size: 1.2rem;
+            }
+
+            .sidebar-card p {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Стили для десктопной версии */
+        @media (min-width: 992px) {
+            .sidebar-card-container {
+                display: block;
+            }
+
+            .sidebar-card {
+                display: block !important;
+            }
+        }
+    </style>
+
+    <script>
+        // Анимация при скролле для мобильных карточек
+        $(document).ready(function() {
+            if ($(window).width() < 992) {
+                $('.sidebar-card').hover(
+                    function() {
+                        $(this).css('transform', 'translateY(-3px) scale(1.02)');
+                    },
+                    function() {
+                        $(this).css('transform', 'translateY(0) scale(1)');
+                    }
+                );
+            }
+        });
+    </script>
 
     <!-- Bootstrap core JavaScript-->
     <script src="{% static 'bootstrap/vendor/jquery/jquery.min.js' %}"></script>

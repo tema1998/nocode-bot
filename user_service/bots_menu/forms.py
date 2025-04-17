@@ -20,7 +20,7 @@ class BotForm(forms.Form):
         # Регулярное выражение для проверки формата Telegram-токена
         if not re.match(r"^\d+:[a-zA-Z0-9_-]+$", token):
             raise forms.ValidationError(
-                "Invalid Telegram token format. Expected format: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'."
+                "Неверный формат токена Telegram, пример токена: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'."
             )
         return token
 
@@ -41,6 +41,7 @@ class BotMainMenuForm(forms.Form):
     welcome_message = forms.CharField(
         label="Приветственное сообщение:",
         max_length=3000,
+        required=False,
         widget=forms.TextInput(
             attrs={
                 "class": "form-control form-control-user",

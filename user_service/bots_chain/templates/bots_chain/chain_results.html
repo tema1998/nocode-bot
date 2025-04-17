@@ -16,9 +16,9 @@
 
         <div class="card-body">
             {% if not page_obj %}
-                <div class="alert alert-danger">Ошибка загрузки данных</div>
+                <div class="alert alert-info">Результаты цепочки отсутствуют.</div>
             {% elif not page_obj.object_list %}
-                <div class="alert alert-info">Нет данных для отображения</div>
+                <div class="alert alert-info">Результаты цепочки отсутствуют.</div>
             {% else %}
                 <div class="row">
                     {% for result in page_obj.object_list %}

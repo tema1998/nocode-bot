@@ -268,7 +268,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
         self.assertEqual(len(messages_list), 1)
         self.assertEqual(
             str(messages_list[0]),
-            "Ошибка при создании кнопки. Возможно такая кнопка уже существует.",
+            "Ошибка при создании кнопки. Возможно такая кнопка уже существует. Запрещено использовать названия служебных команд '/start', '/update'.",
         )
         self.assertEqual(response.status_code, 302)
 

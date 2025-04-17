@@ -72,6 +72,28 @@ class BotChainView(BaseChainView):
             )
 
 
+class BotChainsResultView(BaseChainView):
+    template_name = "bots_chain/list_chains_results.html"
+
+    def get(self, request, bot_id: int) -> HttpResponse:
+        bot = self.get_bot_or_404(bot_id)
+
+        try:
+            chains_response = ChainService.get_bot_chains(bot.bot_id)
+            return render(
+                request,
+                self.template_name,
+                {"bot": bot, "chains": chains_response.get("chains", [])},
+            )
+        except RequestException as e:
+            logger.error(f"Failed to fetch chains: {str(e)}", exc_info=True)
+            return render(
+                request,
+                self.template_name,
+                {"bot": bot, "chains": []},
+            )
+
+
 class CreateChainView(BaseChainView):
     template_name = "bots_chain/create_chain.html"
 
@@ -85,17 +107,20 @@ class CreateChainView(BaseChainView):
 
         if not form.is_valid():
             messages.error(
-                request, "Invalid chain name or name already exists."
+                request, "Неверное имя цепочки или имя уже существует."
             )
             return redirect("create-chain", bot_id=bot.id)
 
         try:
             ChainService.create_chain(bot.bot_id, form.cleaned_data["name"])
-            messages.success(request, "Chain created successfully.")
+            messages.success(request, "Цепочка создана успешно.")
             return redirect("bot-chains", bot_id=bot.id)
         except RequestException as e:
             logger.error(f"Failed to create chain: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to create chain.")
+            messages.error(
+                request,
+                "Ошибка создания цепочки. Возможно цепочка с таким именем уже существует.",
+            )
             return redirect("bot-chains", bot_id=bot.id)
 
 
@@ -107,16 +132,16 @@ class UpdateChainView(BaseChainView):
         form = BotChainForm(request.POST)
 
         if not form.is_valid():
-            messages.error(request, "Invalid chain name.")
+            messages.error(request, "Недопустимое имя цепочки.")
             return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
 
         try:
             ChainService.update_chain(chain_id, form.cleaned_data["name"])
-            messages.success(request, "Chain updated successfully.")
+            messages.success(request, "Цепочка успешно обновлена.")
             return redirect("bot-chain", bot_id=bot.id, chain_id=chain_id)
         except RequestException as e:
             logger.error(f"Failed to update chain: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to update chain.")
+            messages.error(request, "Ошибка обновления цепочки.")
             return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
 
 
@@ -128,10 +153,10 @@ class DeleteChainView(BaseChainView):
 
         try:
             ChainService.delete_chain(chain_id)
-            messages.success(request, "Chain deleted successfully.")
+            messages.success(request, "Цепочка успешно удалена.")
         except RequestException as e:
             logger.error(f"Failed to delete chain: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to delete chain.")
+            messages.error(request, "Ошибка удаления цепочки.")
 
         return redirect("bot-chains", bot_id=bot_id)
 
@@ -158,10 +183,10 @@ class CreateChainStepView(ChainStepMixin):
                 message="<Не задано>",
                 button_id=request.POST.get("set_as_next_step_for_button_id"),
             )
-            messages.success(request, "Step created successfully.")
+            messages.success(request, "Шаг успешно создан.")
         except RequestException as e:
             logger.error(f"Failed to create step: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to create step.")
+            messages.error(request, "Ошибка создания шага.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -183,13 +208,15 @@ class CreateChainStepTextinputView(ChainStepMixin):
             )
 
             messages.success(
-                request, "Step for text input created successfully."
+                request, "Шаг для текстового ввода успешно создан."
             )
         except RequestException as e:
             logger.error(
                 f"Failed to create textinput step: {str(e)}", exc_info=True
             )
-            messages.error(request, "Failed to create step for text input.")
+            messages.error(
+                request, "Ошибка создания шага для текстового ввода."
+            )
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -220,10 +247,10 @@ class UpdateChainStepView(ChainStepMixin):
                 name=request.POST.get("name"),
                 message=request.POST.get("message"),
             )
-            messages.success(request, "Step updated successfully.")
+            messages.success(request, "Шаг успешно обновлен.")
         except RequestException as e:
             logger.error(f"Failed to update step: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to update step.")
+            messages.error(request, "Ошибка обновления шага.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -236,10 +263,10 @@ class DeleteChainStepView(ChainStepMixin):
 
         try:
             ChainStepService.delete_step(step_id)
-            messages.success(request, "Step deleted successfully.")
+            messages.success(request, "Шаг успешно удален.")
         except RequestException as e:
             logger.error(f"Failed to delete step: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to delete step.")
+            messages.error(request, "Ошибка удаления шага.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -257,14 +284,16 @@ class EditTextinputView(ChainStepMixin):
             )
 
             if text_input:
-                messages.success(request, "Text input enabled.")
+                messages.success(request, "Текстовый ввод включен.")
             else:
-                messages.success(request, "Text input disabled.")
+                messages.success(request, "Текстовый ввод отключен.")
         except RequestException as e:
             logger.error(
                 f"Failed to update text input: {str(e)}", exc_info=True
             )
-            messages.error(request, "Failed to update text input setting.")
+            messages.error(
+                request, "Ошибка обновления настроек текстового ввода."
+            )
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -288,10 +317,10 @@ class CreateChainButtonView(ChainButtonMixin):
             ChainButtonService.create_button(
                 step_id=int(request.POST.get("step_id")), text="<Не задано>"
             )
-            messages.success(request, "Button created successfully.")
+            messages.success(request, "Кнопка успешно создана.")
         except RequestException as e:
             logger.error(f"Failed to create button: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to create button.")
+            messages.error(request, "Ошибка создания кнопки.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -320,10 +349,10 @@ class UpdateChainButtonView(ChainButtonMixin):
             ChainButtonService.update_button(
                 button_id=button_id, text=request.POST.get("text")
             )
-            messages.success(request, "Button updated successfully.")
+            messages.success(request, "Кнопка успешно обновлена.")
         except RequestException as e:
             logger.error(f"Failed to update button: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to update button.")
+            messages.error(request, "Ошибка обновления кнопки.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 
@@ -336,10 +365,10 @@ class DeleteChainButtonView(ChainButtonMixin):
 
         try:
             ChainButtonService.delete_button(button_id)
-            messages.success(request, "Button deleted successfully.")
+            messages.success(request, "Кнопка успешно удалена.")
         except RequestException as e:
             logger.error(f"Failed to delete button: {str(e)}", exc_info=True)
-            messages.error(request, "Failed to delete button.")
+            messages.error(request, "Ошибка удаления кнопки.")
 
         return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
 

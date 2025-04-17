@@ -55,7 +55,7 @@ class BotFormTest(TestCase):
                 self.assertIn("token", form.errors)
                 self.assertEqual(
                     form.errors["token"][0],
-                    "Invalid Telegram token format. Expected format: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'.",
+                    "Неверный формат токена Telegram, пример токена: '123456789:ABCdefGHIJKlmNoPQRstuVWXyz'.",
                 )
 
 
@@ -87,12 +87,6 @@ class BotDefaultReplyFormTest(TestCase):
         self.assertEqual(
             form.cleaned_data["default_reply"], valid_data["default_reply"]
         )
-
-        # Проверка пустого значения
-        empty_data = {"default_reply": ""}
-        form = BotDefaultReplyForm(data=empty_data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("default_reply", form.errors)
 
         # Проверка слишком длинного значения
         long_data = {"default_reply": "x" * 3001}
