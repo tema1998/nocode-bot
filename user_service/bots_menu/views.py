@@ -161,7 +161,7 @@ class CreateBotMainMenuButtonView(BaseBotView):
         except RequestException:
             messages.error(
                 request,
-                "Ошибка при создании кнопки. Возможно такая кнопка уже существует.",
+                "Ошибка при создании кнопки. Возможно такая кнопка уже существует. Запрещено использовать названия служебных команд '/start', '/update'.",
             )
 
         return redirect("bot-main-menu", bot_id=bot.id)
