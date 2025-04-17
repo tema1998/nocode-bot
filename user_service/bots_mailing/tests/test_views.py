@@ -79,7 +79,7 @@ class MailingViewTestCase(TestCase):
         self.assertEqual(len(messages_list), 1)
         self.assertEqual(
             str(messages_list[0]),
-            "Failed to start mailing. Please try again later",
+            "Ошибка запуска рассылки. Попробуйте повторить позже.",
         )
         self.assertEqual(response.status_code, 302)
 
@@ -92,7 +92,9 @@ class MailingViewTestCase(TestCase):
 
         messages_list = list(messages.get_messages(request))
         self.assertEqual(len(messages_list), 1)
-        self.assertEqual(str(messages_list[0]), "Message text cannot be empty")
+        self.assertEqual(
+            str(messages_list[0]), "Текст сообщения не может быть пустым."
+        )
         self.assertEqual(response.status_code, 302)
 
 
