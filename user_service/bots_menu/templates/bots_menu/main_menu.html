@@ -28,9 +28,9 @@
                 {% csrf_token %}
                 <div class="form-group">
                     <label>Сообщение при команде /start</label>
-                    <textarea name="welcome_message" class="form-control" rows="6"
-                              maxlength="3000" oninput="updateCharCount(this)"
-                              placeholder="Введите текст приветствия...">{{ bot_main_menu.welcome_message }}</textarea>
+    <textarea name="welcome_message" class="form-control" rows="6"
+              maxlength="3000" oninput="updateCharCount(this)"
+              placeholder="На данный момент отображается стандартное приветствие. Введите собственное приветствие.">{% if bot_main_menu.welcome_message is not None %}{{ bot_main_menu.welcome_message }}{% endif %}</textarea>
                     <small class="text-muted float-right">
                         <span id="charCount">3000</span> символов осталось
                     </small>
