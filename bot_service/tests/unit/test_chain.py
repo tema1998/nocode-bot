@@ -8,11 +8,18 @@ from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 
+# Initialize a test client for the FastAPI application
 client = TestClient(app)
 
 
 @pytest.mark.asyncio
 async def test_create_chain_success(mock_chain_service):
+    """
+    Test the successful creation of a chain.
+    Mocks the `create_chain` and `create_and_set_first_step` methods
+    to return a predefined chain structure. Asserts the API returns the
+    expected chain details and a 201 Created status.
+    """
     test_chain_data = {"bot_id": 1, "name": "Test Chain"}
 
     mock_chain = MagicMock()
@@ -30,6 +37,12 @@ async def test_create_chain_success(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_create_chain_name_exists(mock_chain_service):
+    """
+    Test the scenario where trying to create a chain with an existing name.
+    Mocks the `create_chain` method to raise an HTTPException indicating
+    the chain already exists. Asserts the API returns a 400 Bad Request
+    status and the expected error message.
+    """
     test_chain_data = {"bot_id": 1, "name": "Existing Chain"}
 
     mock_chain_service.create_chain.side_effect = HTTPException(
@@ -46,6 +59,11 @@ async def test_create_chain_name_exists(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chains_success(mock_chain_service):
+    """
+    Test the successful retrieval of all chains associated with a bot.
+    Mocks the `get_chains` method to return a list of chains.
+    Asserts the API returns the chains with a 200 OK status.
+    """
     mock_chains = [
         ChainResponse(id=1, bot_id=1, name="Chain 1"),
         ChainResponse(id=2, bot_id=1, name="Chain 2"),
@@ -66,6 +84,11 @@ async def test_get_chains_success(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chains_empty(mock_chain_service):
+    """
+    Test the scenario where there are no chains associated with a bot.
+    Mocks the `get_chains` method to return an empty list.
+    Asserts the API returns an empty list of chains with a 200 OK status.
+    """
     mock_chain_service.get_chains.return_value = ChainsResponse(chains=[])
 
     response = client.get("/api/v1/chain/1")
@@ -75,6 +98,11 @@ async def test_get_chains_empty(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_update_chain_success(mock_chain_service):
+    """
+    Test the successful update of a chain's details.
+    Mocks the `update_chain` method to return a predefined updated chain structure.
+    Asserts the API returns the updated chain's details and a 200 OK status.
+    """
     test_update_data = {"name": "Updated Chain"}
 
     mock_chain = MagicMock()
@@ -91,6 +119,12 @@ async def test_update_chain_success(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_update_chain_not_found(mock_chain_service):
+    """
+    Test the scenario where trying to update a chain that does not exist.
+    Mocks the `update_chain` method to raise an HTTPException indicating
+    the chain was not found. Asserts the API returns a 404 Not Found status
+    and the expected error message.
+    """
     test_update_data = {"name": "Updated Chain"}
 
     mock_chain_service.update_chain.side_effect = HTTPException(
@@ -104,6 +138,11 @@ async def test_update_chain_not_found(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_delete_chain_success(mock_chain_service):
+    """
+    Test the successful deletion of a chain.
+    Asserts the API returns a 204 No Content status after a successful delete operation.
+    Also verifies that the delete method on the mock service was called with the correct ID.
+    """
     response = client.delete("/api/v1/chain/1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     mock_chain_service.delete_chain.assert_awaited_once_with(1)
@@ -111,6 +150,12 @@ async def test_delete_chain_success(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_delete_chain_not_found(mock_chain_service):
+    """
+    Test the scenario where attempting to delete a chain that does not exist.
+    Mocks the `delete_chain` method to raise an HTTPException indicating
+    the chain was not found. Asserts the API returns a 404 Not Found
+    status and the expected error message.
+    """
     mock_chain_service.delete_chain.side_effect = HTTPException(
         status_code=404, detail="Chain with ID 999 not found"
     )
@@ -122,6 +167,12 @@ async def test_delete_chain_not_found(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chain_with_details_success(mock_chain_service):
+    """
+    Test the successful retrieval of chain details along with its steps and buttons.
+    Mocks the `get_chain_with_steps_and_buttons` method to return
+    predefined chain data. Asserts the API returns the chain details with
+    a 200 OK status.
+    """
     mock_chain_data = {
         "id": 1,
         "name": "Test Chain",
@@ -143,6 +194,12 @@ async def test_get_chain_with_details_success(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chain_with_details_not_found(mock_chain_service):
+    """
+    Test the scenario where attempting to retrieve details for a chain
+    that does not exist. Mocks the `get_chain_with_steps_and_buttons` method
+    to return None. Asserts the API returns a 404 Not Found status
+    and the expected error message.
+    """
     mock_chain_service.get_chain_with_steps_and_buttons.return_value = None
 
     response = client.get("/api/v1/chain/detail/999")
@@ -152,6 +209,12 @@ async def test_get_chain_with_details_not_found(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chain_results_success(mock_chain_service):
+    """
+    Test the successful retrieval of results from a chain.
+    Mocks the `get_paginated_chain_results` method to return
+    predefined results data. Asserts the API returns the results with
+    a 200 OK status.
+    """
     mock_results = {
         "items": [
             {
@@ -179,7 +242,12 @@ async def test_get_chain_results_success(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chain_results_not_found(mock_chain_service):
-    # Adjust the test to match the actual error handling in the endpoint
+    """
+    Test the scenario where attempting to retrieve results for a chain
+    that does not exist. Mocks the `get_paginated_chain_results` method
+    to return an empty result set. Asserts the API returns a 200 OK status
+    but indicates that no results were found.
+    """
     mock_chain_service.get_paginated_chain_results.return_value = {
         "items": [],
         "total": 0,
@@ -195,6 +263,9 @@ async def test_get_chain_results_not_found(mock_chain_service):
 
 @pytest.mark.asyncio
 async def test_get_chain_results_invalid_params(mock_chain_service):
-    # Test FastAPI's built-in parameter validation
+    """
+    Test FastAPI's built-in parameter validation by sending invalid pagination parameters.
+    Asserts that the API returns a 422 Unprocessable Entity status for invalid parameters.
+    """
     response = client.get("/api/v1/chain/results/1?page=0")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
