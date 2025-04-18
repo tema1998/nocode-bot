@@ -250,6 +250,8 @@ class PostgresAsyncRepository(AsyncDataRepository):
         value: Any,
         skip: int = 0,
         limit: int = 10,
+        order_by_column: Optional[str] = None,
+        descending: bool = False,
     ) -> Union[None, List[Base]]:
         """
         Fetch records based on filters with pagination support.
@@ -260,17 +262,24 @@ class PostgresAsyncRepository(AsyncDataRepository):
             value (Any): The value to filter against.
             skip (int): Number of records to skip (for pagination).
             limit (int): Maximum number of records to return.
-
+            order_by_column (Optional[str]): Column to order by. If None, no ordering is applied.
+            descending (bool): If True, sort in descending order.
         Returns:
             Union[None, List[Base]]: A list of fetched records or None if none found.
         """
         async with self.async_session() as session:
-            stmt = (
-                select(model_class)
-                .where(getattr(model_class, column) == value)
-                .offset(skip)
-                .limit(limit)
+            stmt = select(model_class).where(
+                getattr(model_class, column) == value
             )
+
+            if order_by_column:
+                column_to_order = getattr(model_class, order_by_column)
+                if descending:
+                    stmt = stmt.order_by(column_to_order.desc())
+                else:
+                    stmt = stmt.order_by(column_to_order.asc())
+
+            stmt = stmt.offset(skip).limit(limit)
             result = await session.execute(stmt)
             items = result.scalars().all()
             return items if items else None

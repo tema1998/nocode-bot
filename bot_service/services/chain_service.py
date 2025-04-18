@@ -441,6 +441,8 @@ class ChainService:
             value=chain_id,
             skip=offset,
             limit=per_page,
+            order_by_column="updated_at",
+            descending=True,
         )
 
     async def _process_users_parallel(

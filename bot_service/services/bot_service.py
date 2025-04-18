@@ -45,7 +45,13 @@ class BotService:
             List[BotUser]: List of user records
         """
         return await self.db_repository.fetch_by_query_with_pagination(
-            BotUser, "bot_id", bot_id, skip=offset, limit=limit
+            BotUser,
+            "bot_id",
+            bot_id,
+            skip=offset,
+            limit=limit,
+            order_by_column="created_at",
+            descending=True,
         )
 
 
