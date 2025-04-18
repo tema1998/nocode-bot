@@ -28,9 +28,17 @@
                             <p class="card-text h3">
                                 <strong>Текст сообщения:</strong>
                             </p>
+
+                            <!-- Emoji Picker -->
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#emojiModal">
+                                    Добавить смайлик
+                                </button>
+                            </div>
+
                             <textarea name="message_text" id="messageText" class="form-control" rows="9" maxlength="3000"
                                       oninput="updateCharCount(this, 'remainingCharsReplyText', 3000)"
-                                      required ></textarea><br>
+                                      required></textarea><br>
                             <div id="charCountReplyText">
                                 Осталось символов: <span id="remainingCharsReplyText">3000</span>/3000
                             </div>
@@ -54,6 +62,7 @@
         </div>
     </div>
 
+    {% include 'emoji/emoji.html' %}
 </div>
 {% endblock %}
 
@@ -64,7 +73,20 @@
 {% block scripts %}
     <script src="{% static 'bootstrap/js/button-fields-counter.js' %}"></script>
     <script>
-        // Проверка формы перед отправкой
+        function insertEmoji(emoji) {
+            const textarea = document.getElementById('messageText');
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const currentText = textarea.value;
+
+            textarea.value = currentText.substring(0, startPos) + emoji + currentText.substring(endPos);
+            textarea.focus();
+            textarea.selectionStart = startPos + emoji.length;
+            textarea.selectionEnd = startPos + emoji.length;
+
+            updateCharCount(textarea, 'remainingCharsReplyText', 3000);
+        }
+
         document.getElementById('mailingForm').addEventListener('submit', function(e) {
             const messageText = document.getElementById('messageText').value.trim();
             const submitBtn = document.getElementById('submitBtn');
@@ -76,13 +98,11 @@
                 return false;
             }
 
-            // Блокируем кнопку, чтобы предотвратить множественные отправки
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
             return true;
         });
 
-        // Дополнительная проверка при изменении текста
         document.getElementById('messageText').addEventListener('input', function() {
             const messageText = this.value.trim();
             const submitBtn = document.getElementById('submitBtn');
@@ -94,4 +114,37 @@
             }
         });
     </script>
+
+    <style>
+        .emoji-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .emoji-category {
+            margin-bottom: 15px;
+        }
+
+        .emoji-category h6 {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .emoji-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .emoji {
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .emoji:hover {
+            transform: scale(1.2);
+        }
+    </style>
 {% endblock %}

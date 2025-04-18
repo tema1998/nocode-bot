@@ -1,5 +1,7 @@
 {% extends 'index.html' %}
 
+{% load custom_filters %}
+
 {% block title %}Пользователи бота{% endblock %}
 
 {% block content %}
@@ -32,7 +34,7 @@
                         <tbody>
                             {% for user in page_obj.object_list %}
                             <tr>
-                                <td data-label="ID" class="font-weight-bold >{{ user.user_id }}</td>
+                                <td data-label="ID" class="font-weight-bold" > {{ user.user_id }} </td>
                                 <td data-label="Пользователь">
                                     {% if user.username %}
                                         <a href="https://t.me/{{user.username}}" target="_blank" class="font-weight-bold">@{{ user.username }}</a>
@@ -48,13 +50,9 @@
                                         <span class="text-muted">Не указано</span>
                                     {% endif %}
                                 </td>
-                                <td data-label="Дата регистрации" class="text-nowrap ">{{ user.created_at}}</td>
+                                <td data-label="Дата регистрации" class="text-nowrap ">{{ user.created_at|iso_to_pretty }}</td>
                                 <td data-label="Последняя активность" class="text-nowrap">
-                                    {% if user.updated_at %}
-                                        {{ user.updated_at}}
-                                    {% else %}
-                                        <span class="text-muted">Никогда</span>
-                                    {% endif %}
+                                    {{ user.updated_at|iso_to_pretty}}
                                 </td>
                             </tr>
                             {% endfor %}

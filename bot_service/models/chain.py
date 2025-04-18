@@ -21,7 +21,9 @@ class UserState(Base, TimeStampedMixin):
     bot_id = Column(
         Integer, ForeignKey("bots.id", ondelete="CASCADE"), nullable=False
     )
-    chain_id = Column(Integer, ForeignKey("chains.id"), nullable=True)
+    chain_id = Column(
+        Integer, ForeignKey("chains.id", ondelete="CASCADE"), nullable=True
+    )
     step_id = Column(Integer, ForeignKey("chain_steps.id"), nullable=True)
     expects_text_input = Column(Boolean, default=False)
     result = Column(JSON, nullable=True)

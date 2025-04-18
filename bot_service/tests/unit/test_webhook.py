@@ -6,19 +6,24 @@ from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 
-# Remove verify_secret_token middleware
+# Clear the middleware stack to remove the secret token verification.
 app.user_middleware.clear()
 app.middleware_stack = app.build_middleware_stack()
 
 client = TestClient(app)
 
-TEST_TOKEN = "test-secret"
+TEST_TOKEN = "test-secret"  # Placeholder for the token used in requests
 
 
 @pytest.mark.asyncio
 async def test_webhook_success(
     mock_webhook_service, mock_chain_handle_service
 ):
+    """
+    Test that a valid webhook request is handled successfully.
+    Mocks the handle_webhook method to return a successful response,
+    and asserts that the API returns a 200 OK status with the expected response.
+    """
     bot_id = 1
     update_data = {
         "message": {
@@ -45,6 +50,11 @@ async def test_webhook_success(
 async def test_webhook_bot_not_found(
     mock_webhook_service, mock_chain_handle_service
 ):
+    """
+    Test handling a case where the bot ID is not found.
+    Mocks the handle_webhook method to raise an HTTPException for a not found bot,
+    and asserts that the API returns a 404 Not Found status with the corresponding message.
+    """
     bot_id = 999
     update_data = {
         "message": {
@@ -70,6 +80,11 @@ async def test_webhook_bot_not_found(
 async def test_webhook_bot_deactivated(
     mock_webhook_service, mock_chain_handle_service
 ):
+    """
+    Test handling a case where the bot is deactivated.
+    Mocks the handle_webhook method to raise an HTTPException for a deactivated bot,
+    and asserts that the API returns a 403 Forbidden status with the corresponding message.
+    """
     bot_id = 1
     update_data = {
         "message": {
@@ -95,6 +110,11 @@ async def test_webhook_bot_deactivated(
 async def test_webhook_invalid_update_data(
     mock_webhook_service, mock_chain_handle_service
 ):
+    """
+    Test handling a case with invalid update data.
+    Mocks the handle_webhook method to raise an HTTPException for improperly formatted update data,
+    and asserts that the API returns a 400 Bad Request status with the corresponding message.
+    """
     bot_id = 1
     update_data = {}  # Invalid update data
 
@@ -115,6 +135,11 @@ async def test_webhook_invalid_update_data(
 async def test_webhook_unsupported_update_type(
     mock_webhook_service, mock_chain_handle_service
 ):
+    """
+    Test handling a case with an unsupported update type.
+    Mocks the handle_webhook method to raise an HTTPException for unsupported update types,
+    and asserts that the API returns a 400 Bad Request status with the corresponding message.
+    """
     bot_id = 1
     update_data = {
         "callback_query": {

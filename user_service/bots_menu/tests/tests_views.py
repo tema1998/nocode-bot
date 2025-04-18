@@ -16,7 +16,10 @@ from ..views import (
 
 
 class BotMainMenuButtonViewTestCase(TestCase):
+    """Test case for BotMainMenuButtonView."""
+
     def setUp(self):
+        """Set up a user and a bot for testing."""
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="testuser", password="12345"
@@ -24,6 +27,7 @@ class BotMainMenuButtonViewTestCase(TestCase):
         self.bot = Bot.objects.create(user=self.user, bot_id=123)
 
     def _add_messages_to_request(self, request):
+        """Utility function to add message storage to a request."""
         setattr(request, "session", "session")
         messages = FallbackStorage(request)
         setattr(request, "_messages", messages)
@@ -34,6 +38,7 @@ class BotMainMenuButtonViewTestCase(TestCase):
     )
     @patch("user_service.bots_menu.views.BotServiceClient.get_bot_chains")
     def test_get_success(self, mock_get_chains, mock_get_button):
+        """Test successful retrieval of the main menu button."""
         mock_get_button.return_value = {"id": 1, "button_text": "Test"}
         mock_get_chains.return_value = {"chains": {"1": "Test Chain"}}
 
@@ -60,6 +65,7 @@ class BotMainMenuButtonViewTestCase(TestCase):
     )
     @patch("user_service.bots_menu.views.BotServiceClient.get_bot_chains")
     def test_get_failure(self, mock_get_chains, mock_get_button):
+        """Test failure when retrieving the main menu button."""
         mock_get_button.side_effect = RequestException("API error")
         mock_get_chains.return_value = {"chains": {}}
 
@@ -84,7 +90,10 @@ class BotMainMenuButtonViewTestCase(TestCase):
 
 
 class UpdateBotMainMenuButtonViewTestCase(TestCase):
+    """Test case for UpdateBotMainMenuButtonView."""
+
     def setUp(self):
+        """Set up a user and a bot for testing."""
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="testuser", password="12345"
@@ -92,6 +101,7 @@ class UpdateBotMainMenuButtonViewTestCase(TestCase):
         self.bot = Bot.objects.create(user=self.user, bot_id=123)
 
     def _add_messages_to_request(self, request):
+        """Utility function to add message storage to a request."""
         setattr(request, "session", "session")
         messages = FallbackStorage(request)
         setattr(request, "_messages", messages)
@@ -101,6 +111,7 @@ class UpdateBotMainMenuButtonViewTestCase(TestCase):
         "user_service.bots_menu.views.BotServiceClient.update_main_menu_button"
     )
     def test_post_success(self, mock_update_button):
+        """Test successful update of the main menu button."""
         mock_update_button.return_value = {}
 
         request = self.factory.post(
@@ -128,6 +139,7 @@ class UpdateBotMainMenuButtonViewTestCase(TestCase):
         "user_service.bots_menu.views.BotServiceClient.update_main_menu_button"
     )
     def test_post_failure(self, mock_update_button):
+        """Test failure when updating the main menu button."""
         mock_update_button.side_effect = RequestException("API error")
 
         request = self.factory.post(
@@ -154,6 +166,7 @@ class UpdateBotMainMenuButtonViewTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_post_invalid_form(self):
+        """Test handling of an invalid form submission."""
         request = self.factory.post("/", {})  # Empty data
         request.user = self.user
         request = self._add_messages_to_request(request)
@@ -171,7 +184,10 @@ class UpdateBotMainMenuButtonViewTestCase(TestCase):
 
 
 class CreateBotMainMenuButtonViewTestCase(TestCase):
+    """Test case for CreateBotMainMenuButtonView."""
+
     def setUp(self):
+        """Set up a user and a bot for testing."""
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="testuser", password="12345"
@@ -179,6 +195,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
         self.bot = Bot.objects.create(user=self.user, bot_id=123)
 
     def _add_messages_to_request(self, request):
+        """Utility function to add message storage to a request."""
         setattr(request, "session", "session")
         messages = FallbackStorage(request)
         setattr(request, "_messages", messages)
@@ -186,6 +203,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
 
     @patch("user_service.bots_menu.views.BotServiceClient.get_bot_chains")
     def test_get_success(self, mock_get_chains):
+        """Test successful retrieval of chains for creating a new button."""
         mock_get_chains.return_value = {"chains": {"1": "Test Chain"}}
 
         request = self.factory.get("/")
@@ -203,6 +221,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
 
     @patch("user_service.bots_menu.views.BotServiceClient.get_bot_chains")
     def test_get_failure(self, mock_get_chains):
+        """Test failure when retrieving chains for creating a new button."""
         mock_get_chains.side_effect = RequestException("API error")
 
         request = self.factory.get("/")
@@ -220,6 +239,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
         "user_service.bots_menu.views.BotServiceClient.create_main_menu_button"
     )
     def test_post_success(self, mock_create_button):
+        """Test successful creation of a new main menu button."""
         mock_create_button.return_value = {}
 
         request = self.factory.post(
@@ -247,6 +267,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
         "user_service.bots_menu.views.BotServiceClient.create_main_menu_button"
     )
     def test_post_failure(self, mock_create_button):
+        """Test failure when creating a new main menu button."""
         mock_create_button.side_effect = RequestException("API error")
 
         request = self.factory.post(
@@ -273,6 +294,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_post_invalid_form(self):
+        """Test handling of an invalid form submission for button creation."""
         request = self.factory.post("/", {})  # Empty data
         request.user = self.user
         request = self._add_messages_to_request(request)
@@ -290,7 +312,10 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
 
 
 class DeleteBotMainMenuButtonViewTestCase(TestCase):
+    """Test case for DeleteBotMainMenuButtonView."""
+
     def setUp(self):
+        """Set up a user and a bot for testing."""
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="testuser", password="12345"
@@ -298,6 +323,7 @@ class DeleteBotMainMenuButtonViewTestCase(TestCase):
         self.bot = Bot.objects.create(user=self.user, bot_id=123)
 
     def _add_messages_to_request(self, request):
+        """Utility function to add message storage to a request."""
         setattr(request, "session", "session")
         messages = FallbackStorage(request)
         setattr(request, "_messages", messages)
@@ -307,6 +333,7 @@ class DeleteBotMainMenuButtonViewTestCase(TestCase):
         "user_service.bots_menu.views.BotServiceClient.delete_main_menu_button"
     )
     def test_post_success(self, mock_delete_button):
+        """Test successful deletion of a main menu button."""
         mock_delete_button.return_value = None
 
         request = self.factory.post("/")
@@ -327,6 +354,7 @@ class DeleteBotMainMenuButtonViewTestCase(TestCase):
         "user_service.bots_menu.views.BotServiceClient.delete_main_menu_button"
     )
     def test_post_failure(self, mock_delete_button):
+        """Test failure when attempting to delete a main menu button."""
         mock_delete_button.side_effect = RequestException("API error")
 
         request = self.factory.post("/")

@@ -6,19 +6,30 @@ from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 
+# Initialize a test client for the FastAPI application
 client = TestClient(app)
 
 
+# Fixture to mock the mailing service dependency
 @pytest.fixture
-def mock_bot_service():
-    with patch("bot_service.services.bot_service.BotService") as mock_service:
-        mock_instance = AsyncMock()
-        mock_service.return_value = mock_instance
-        yield mock_instance
+def mock_mailing_service():
+    with patch(
+        "bot_service.services.mailing_service.MailingService"
+    ) as mock_service:
+        mock_instance = (
+            AsyncMock()
+        )  # Create an AsyncMock instance for async methods
+        mock_service.return_value = mock_instance  # Set the return value of the patched service to the mock instance
+        yield mock_instance  # Yield the mock instance for use in tests
 
 
 @pytest.mark.asyncio
 async def test_start_mailing_success(mock_mailing_service):
+    """
+    Test the successful start of a mailing operation.
+    Mocks the `create_mailing` method to return a predefined response.
+    Asserts the API returns the expected response and a 202 Accepted status.
+    """
     test_message = {"message": "Test message"}
     expected_response = {
         "mailing_id": 123,
@@ -36,6 +47,11 @@ async def test_start_mailing_success(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_start_mailing_bot_not_found(mock_mailing_service):
+    """
+    Test the scenario where the bot specified for mailing is not found.
+    Mocks the `create_mailing` method to raise an HTTPException.
+    Asserts the API returns a 404 Not Found status and the expected error message.
+    """
     test_message = {"message": "Test message"}
 
     mock_mailing_service.create_mailing.side_effect = HTTPException(
@@ -49,6 +65,11 @@ async def test_start_mailing_bot_not_found(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_start_mailing_internal_error(mock_mailing_service):
+    """
+    Test the scenario where an internal error occurs while starting the mailing.
+    Mocks the `create_mailing` method to raise an HTTPException.
+    Asserts the API returns a 500 Internal Server Error status and the expected error message.
+    """
     test_message = {"message": "Test message"}
 
     mock_mailing_service.create_mailing.side_effect = HTTPException(
@@ -62,6 +83,11 @@ async def test_start_mailing_internal_error(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_get_mailing_status_not_found(mock_mailing_service):
+    """
+    Test the scenario where the mailing status is requested but not found.
+    Mocks the `get_mailing_status` method to return a status indicating not found.
+    Asserts the API returns a 200 OK status and the appropriate response.
+    """
     mock_mailing_service.get_mailing_status.return_value = {
         "status": "not_found"
     }
@@ -73,6 +99,11 @@ async def test_get_mailing_status_not_found(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_get_mailing_status_in_progress(mock_mailing_service):
+    """
+    Test retrieving the status of a mailing that is in progress.
+    Mocks the `get_mailing_status` method to return a status indicating in progress.
+    Asserts the API returns a 200 OK status and the appropriate response.
+    """
     mock_mailing_service.get_mailing_status.return_value = {
         "status": "in_progress"
     }
@@ -84,6 +115,11 @@ async def test_get_mailing_status_in_progress(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_get_mailing_status_completed(mock_mailing_service):
+    """
+    Test retrieving the status of a completed mailing.
+    Mocks the `get_mailing_status` method to return a completed status with results.
+    Asserts the API returns a 200 OK status and the appropriate response.
+    """
     completed_response = {
         "status": "completed",
         "result": {
@@ -102,6 +138,11 @@ async def test_get_mailing_status_completed(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_get_mailing_status_failed(mock_mailing_service):
+    """
+    Test retrieving the status of a mailing that has failed.
+    Mocks the `get_mailing_status` method to return a failed status with an error.
+    Asserts the API returns a 200 OK status and the appropriate response.
+    """
     failed_response = {"status": "failed", "error": "Connection error"}
     mock_mailing_service.get_mailing_status.return_value = failed_response
 
@@ -112,6 +153,11 @@ async def test_get_mailing_status_failed(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_cancel_mailing_success(mock_mailing_service):
+    """
+    Test the successful cancellation of a mailing operation.
+    Mocks the `cancel_mailing` method to indicate a successful cancellation.
+    Asserts the API returns a 200 OK status and a success message.
+    """
     mock_mailing_service.cancel_mailing.return_value = True
 
     response = client.post("/api/v1/mailing/123/cancel/")
@@ -121,6 +167,11 @@ async def test_cancel_mailing_success(mock_mailing_service):
 
 @pytest.mark.asyncio
 async def test_cancel_mailing_not_cancelled(mock_mailing_service):
+    """
+    Test the scenario where cancellation of a mailing fails.
+    Mocks the `cancel_mailing` method to indicate cancellation was not successful.
+    Asserts the API returns a 200 OK status and a not cancelled message.
+    """
     mock_mailing_service.cancel_mailing.return_value = False
 
     response = client.post("/api/v1/mailing/123/cancel/")
