@@ -16,26 +16,18 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label>Название шага</label>
-                    <input type="text" name="name" class="form-control" 
-                           value="{{ step.name }}" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Сообщение</label>
-                    <textarea name="message" class="form-control" rows="5" required>{{ step.message }}</textarea>
+                    <label>Название шага <span id="nameCharCount">{{ step.name|length }}</span>/64 символов</label>
+                    <input type="text" name="name" class="form-control" id="nameInput"
+                           value="{{ step.name }}" required maxlength="64">
+                    <small class="form-text text-muted">Максимальная длина названия - 64 символа</small>
                 </div>
 
-<!--                <div class="form-group">-->
-<!--                    <div class="form-check">-->
-<!--                        <input class="form-check-input" type="checkbox" name="text_input" -->
-<!--                               id="text_input" {% if step and step.text_input %}checked{% endif %}>-->
-<!--                        <label class="form-check-label" for="text_input">-->
-<!--                            Запрос текстового ввода-->
-<!--                        </label>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                -->
+                <div class="form-group">
+                    <label>Сообщение <span id="messageCharCount">{{ step.message|length }}</span>/3000 символов</label>
+                    <textarea name="message" class="form-control" rows="5" required
+                              id="messageInput" maxlength="3000">{{ step.message }}</textarea>
+                    <small class="form-text text-muted">Максимальная длина сообщения - 3000 символов</small>
+                </div>
 
                 <button type="submit" class="btn btn-success">
                     <i class="fas fa-save mr-2"></i> Сохранить
@@ -47,5 +39,36 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateCharCount(inputElement, counterElement, maxLength) {
+    const currentLength = inputElement.value.length;
+    counterElement.textContent = currentLength;
+
+    if (currentLength > maxLength) {
+        counterElement.style.color = 'red';
+    } else {
+        counterElement.style.color = 'inherit';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('nameInput');
+    const nameCounter = document.getElementById('nameCharCount');
+    const messageInput = document.getElementById('messageInput');
+    const messageCounter = document.getElementById('messageCharCount');
+
+    nameInput.addEventListener('input', function() {
+        updateCharCount(nameInput, nameCounter, 64);
+    });
+
+    messageInput.addEventListener('input', function() {
+        updateCharCount(messageInput, messageCounter, 3000);
+    });
+
+    updateCharCount(nameInput, nameCounter, 64);
+    updateCharCount(messageInput, messageCounter, 3000);
+});
+</script>
 
 {% endblock %}

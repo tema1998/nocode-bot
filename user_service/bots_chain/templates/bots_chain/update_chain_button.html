@@ -16,9 +16,12 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label>Кнопка</label>
-                    <input type="text" name="text" class="form-control"
-                           value="{{ button.text }}" required>
+                    <label>Кнопка <span id="charCount">0</span>/64 символов</label>
+                    <div class="input-group">
+                        <input type="text" name="text" class="form-control" id="buttonText"
+                               value="{{ button.text }}" required maxlength="64">
+                    </div>
+                    <small class="form-text text-muted">Максимальная длина текста кнопки - 64 символа</small>
                 </div>
 
                 <button type="submit" class="btn btn-success">
@@ -31,5 +34,25 @@
         </div>
     </div>
 </div>
+
+<script>
+
+function updateCharCount() {
+    const input = document.getElementById('buttonText');
+    const charCount = document.getElementById('charCount');
+    charCount.textContent = input.value.length;
+
+    if (input.value.length > 64) {
+        charCount.style.color = 'red';
+    } else {
+        charCount.style.color = 'inherit';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateCharCount();
+    document.getElementById('buttonText').addEventListener('input', updateCharCount);
+});
+</script>
 
 {% endblock %}
