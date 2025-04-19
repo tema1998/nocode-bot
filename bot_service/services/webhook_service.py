@@ -44,13 +44,19 @@ class WebhookService:
             ]
         ]
 
-    async def handle_webhook(self, bot_id: int, update_data: dict) -> dict:
+    async def handle_webhook(
+        self,
+        bot_id: int,
+        update_data: dict,
+        x_telegram_bot_api_secret_token: str,
+    ) -> dict:
         """
         Handle incoming webhook update from Telegram with time-based filtering.
 
         Args:
             bot_id (int): The ID of the bot.
             update_data (dict): The incoming update data from Telegram.
+            x_telegram_bot_api_secret_token (str): Secret token of the telegram bot.
 
         Returns:
             dict: A status message indicating the result of the operation.
@@ -65,6 +71,9 @@ class WebhookService:
         if not bot:
             raise HTTPException(status_code=404, detail="Bot not found")
 
+        if bot.secret_token != x_telegram_bot_api_secret_token:
+            return {"status": "error", "detail": "secret_token_check_error"}
+
         if not bot.is_active:
             return {"status": "ok", "detail": "bot_deactivated"}
 
@@ -78,6 +87,7 @@ class WebhookService:
                 status_code=400, detail="Failed to parse update data."
             )
 
+        # Save bot's user to DB
         await self._save_bot_user(bot_id, update)
 
         # Get current time for time comparison
@@ -90,6 +100,7 @@ class WebhookService:
                 callback_time = datetime.fromtimestamp(
                     update.callback_query.message.date.timestamp()  # type:ignore
                 )
+                # If the message is older than one minute, ignore it
                 if current_time - callback_time > timedelta(minutes=1):
                     return {"status": "ok", "detail": "ignored_old_callback"}
 
@@ -104,6 +115,7 @@ class WebhookService:
                 message_time = datetime.fromtimestamp(
                     update.message.date.timestamp()
                 )
+                # If the message is older than one minute, ignore it
                 if current_time - message_time > timedelta(minutes=1):
                     return {"status": "ok", "detail": "ignored_old_message"}
 
@@ -131,7 +143,6 @@ class WebhookService:
             raise HTTPException(
                 status_code=400, detail="Unsupported update type."
             )
-
         return {"status": "ok"}
 
     async def _handle_start_command(self, bot: Bot, update: Update) -> None:
@@ -161,8 +172,9 @@ class WebhookService:
         if main_menu and main_menu.welcome_message:
             welcome_message = main_menu.welcome_message
 
+        # Get default keyboard with advertisement
         keyboard = self.default_keyboard
-        # Add main menu buttons to the keyboard
+        # Add main menu buttons to the default keyboard
         if main_menu and main_menu.buttons:
             main_menu_buttons = [
                 [KeyboardButton(button.button_text)]
@@ -192,13 +204,14 @@ class WebhookService:
                 status_code=400, detail="Update has no message."
             )
 
-        welcome_message = "Главное меню успешно обновлено."
+        menu_update_message = "Главное меню успешно обновлено."
 
         # Fetch the main menu from the database
         main_menu = await self.db_repository.fetch_by_id_joinedload(
             MainMenu, bot.main_menu.id, "buttons"
         )
 
+        # Get default keyboard with advertisement
         keyboard = self.default_keyboard
         # Add main menu buttons to the keyboard
         if main_menu and main_menu.buttons:
@@ -208,9 +221,9 @@ class WebhookService:
             ]
             keyboard = main_menu_buttons + keyboard
 
-        # Send the welcome message with the keyboard
+        # Send the message that main menu was updated with the keyboard
         await update.message.reply_text(
-            welcome_message,
+            menu_update_message,
             reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True),
         )
 
@@ -238,22 +251,17 @@ class WebhookService:
             },
         )
 
-        if button and button.chain_id:
-            # Send the button's reply text
+        if button:
+            # Send button reply text
             if button.reply_text:
-                reply_text = str(button.reply_text)
-                await update.message.reply_text(reply_text)
+                await update.message.reply_text(str(button.reply_text))
 
-            # Start a chain if the button is linked to one
-            await self.chain_handler_service.start_chain(
-                int(bot.id), update, button.chain_id
-            )
-        elif button and button.reply_text:
-            # Send the button's reply text
-            reply_text = str(button.reply_text)
-            await update.message.reply_text(reply_text)
+            # Start chain
+            if button.chain_id:
+                await self.chain_handler_service.start_chain(
+                    int(bot.id), update, button.chain_id
+                )
         else:
-            # Send a default reply if no button is found
             await update.message.reply_text(
                 str(bot.default_reply)
                 if bot.default_reply
@@ -273,11 +281,12 @@ class WebhookService:
             },
         )
 
-        # Check user.state.expects_text_input
+        # Check if there are any chains waiting for text input
         if user_state:
             await self.chain_handler_service.handle_chain_text_input(
                 update, user_state
             )
+        # If not - process the button press
         else:
             await self._handle_button_press(bot, update)
 
