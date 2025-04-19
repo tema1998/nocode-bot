@@ -118,12 +118,26 @@ class TelegramBotService:
 
         if bot_update.get("token") is not None:
             try:
+                # If user change bot token - reset webhook for previous bot
+                if bot.token != bot_update.get("token"):
+                    try:
+                        await self.tg_api_repository.reset_webhook(
+                            bot_token=bot.token
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to reset webhook for bot ID {bot_id}: {e}"
+                        )
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"Failed to reset webhook: {str(e)}",
+                        )
+
                 await self.tg_api_repository.set_webhook(
                     bot_id=bot_id,
                     bot_token=bot_update["token"],
                     bot_secret_token=bot.secret_token,
                 )
-                await self.tg_api_repository.reset_webhook(bot_token=bot.token)
                 bot.token = bot_update["token"]
                 bot.username = await self.tg_api_repository.get_bot_username(
                     bot_update["token"]
@@ -191,6 +205,8 @@ class TelegramBotService:
         Raises:
             HTTPException: If the bot token is invalid or if there is an error setting the webhook.
         """
+
+        # Create secret token for bot
         secret_token = secrets.token_hex(16)
 
         try:

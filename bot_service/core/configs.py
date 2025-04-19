@@ -22,16 +22,6 @@ class Config(BaseSettings):
 
     sqlalchemy_echo: bool = True
 
-    broker_user: str = "user"
-    broker_pass: str = "pass"
-    broker_protocol: str = "amqp"
-    broker_host: str = "127.0.0.1"
-    broker_port: str = "5672"
-
-    redis_pass: str = "redis_pass"
-    redis_host: str = "127.0.0.1"
-    redis_port: str = "6379"
-
     webhook_url: str = "url"
 
     bot_default_reply: str = (
@@ -43,13 +33,7 @@ class Config(BaseSettings):
 
     @property
     def broker_url(self) -> str:
-        return f"{self.broker_protocol}://{self.broker_user}:{self.broker_pass}@{self.broker_host}:{self.broker_port}//"
-
-    @property
-    def backend_url(self) -> str:
-        return (
-            f"redis://:{self.redis_pass}@{self.redis_host}:{self.redis_port}/0"
-        )
+        return f"{self.broker_protocol}://{self.broker_user}:{self.broker_pass}@{self.broker_host}:{self.broker_port}//"  # type: ignore
 
     @property
     def dsn(self) -> str:

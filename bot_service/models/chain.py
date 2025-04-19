@@ -4,6 +4,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     ForeignKey,
+    Index,
     Integer,
     String,
 )
@@ -31,6 +32,12 @@ class UserState(Base, TimeStampedMixin):
 
     chain = relationship("Chain", foreign_keys=[chain_id])
     step = relationship("ChainStep", foreign_keys=[step_id])
+
+    __table_args__ = (
+        Index("idx_userstate_user_expects", "user_id", "expects_text_input"),
+        Index("idx_userstate_updated_at", "updated_at"),
+        Index("idx_userstate_user_bot", "user_id", "bot_id"),
+    )
 
 
 class Chain(Base):
@@ -65,6 +72,12 @@ class Chain(Base):
     )
     bot = relationship("Bot", back_populates="chains")
 
+    __table_args__ = (
+        Index("idx_chain_bot_id", "bot_id"),
+        Index("idx_chain_first_step", "first_chain_step_id"),
+        Index("idx_chain_name_bot_id", "name", "bot_id"),
+    )
+
 
 class ChainButton(Base):
     __tablename__ = "chain_buttons"
@@ -84,6 +97,12 @@ class ChainButton(Base):
 
     step = relationship(
         "ChainStep", back_populates="chain_buttons", foreign_keys=[step_id]
+    )
+
+    __table_args__ = (
+        Index("idx_chainbutton_step_id", "step_id"),
+        Index("idx_chainbutton_next_step_id", "next_step_id"),
+        Index("idx_chainbutton_text_step_id", "text", "step_id"),
     )
 
 
@@ -118,4 +137,9 @@ class ChainStep(Base):
 
     next_step = relationship(
         "ChainStep", foreign_keys=[next_step_id], remote_side=[id]
+    )
+    __table_args__ = (
+        Index("idx_chainstep_chain_id", "chain_id"),
+        Index("idx_chainstep_next_step_id", "next_step_id"),
+        Index("idx_chainstep_name", "name"),
     )

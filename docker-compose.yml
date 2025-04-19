@@ -9,11 +9,16 @@ services:
         condition: service_healthy
     volumes:
       - ./bot_service:/srv/app/bot_service
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - backend
       - database
+    environment:
+      - TZ=Europe/Moscow
     env_file:
       - .env
+    restart: always
 
   user_service:
     container_name: user_service
@@ -23,6 +28,8 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       user_service_db:
         condition: service_healthy
@@ -31,6 +38,8 @@ services:
       - database
     env_file:
       - .env
+    environment:
+      - TZ=Europe/Moscow
     restart: always
 
   bot_service_db:
@@ -40,6 +49,8 @@ services:
       POSTGRES_DB: ${BOT_SERVICE_DB_NAME}
       POSTGRES_USER: ${BOT_SERVICE_DB_USER}
       POSTGRES_PASSWORD: ${BOT_SERVICE_DB_PASSWORD}
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
     volumes:
       - bot_service_db_data:/var/lib/postgresql/data/
     networks:
@@ -58,6 +69,8 @@ services:
       POSTGRES_DB: ${USER_SERVICE_DB_NAME}
       POSTGRES_USER: ${USER_SERVICE_DB_USER}
       POSTGRES_PASSWORD: ${USER_SERVICE_DB_PASSWORD}
+      TZ: Europe/Moscow
+      PGTZ: Europe/Moscow
     volumes:
       - user_service_db_data:/var/lib/postgresql/data/
     networks:
