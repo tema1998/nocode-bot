@@ -1,4 +1,4 @@
-from typing import Dict, Literal
+from typing import Dict
 
 from bot_service.schemas.bot import MailingRequest
 from bot_service.services.mailing_service import (
@@ -45,64 +45,3 @@ async def start_mailing(
     return await mailing_service.create_mailing(
         bot_id, message_request.message
     )
-
-
-@router.get(
-    "/{mailing_id}/status/",
-    response_model=Dict[str, str | Dict],
-    summary="Check mailing status",
-    response_description="Current status of mailing campaign",
-)
-async def get_status(
-    mailing_id: int,
-    mailing_service: MailingService = Depends(get_mailing_service),
-) -> Dict[str, str | Dict]:
-    """
-    Retrieves current status of an ongoing or completed mailing campaign.
-
-    Args:
-        mailing_id (int): ID of mailing campaign to check
-        mailing_service (MailingService): Injected mailing service dependency
-
-    Returns:
-        Dict[str, str | Dict]: Status dictionary with one of these structures:
-            - {"status": "not_found"}
-            - {"status": "in_progress"}
-            - {"status": "completed", "result": {stats_dict}}
-            - {"status": "failed", "error": error_message}
-
-    Note:
-        The 'result' field for completed mailings contains delivery statistics
-        including total users, successful deliveries, and failures.
-    """
-    return await mailing_service.get_mailing_status(mailing_id)
-
-
-@router.post(
-    "/{mailing_id}/cancel/",
-    response_model=Dict[str, Literal["cancelled", "not_cancelled"]],
-    summary="Cancel active mailing",
-    response_description="Cancellation attempt result",
-)
-async def cancel_mailing(
-    mailing_id: int,
-    mailing_service: MailingService = Depends(get_mailing_service),
-) -> Dict[str, Literal["cancelled", "not_cancelled"]]:
-    """
-    Attempts to cancel an active mailing campaign.
-
-    Args:
-        mailing_id (int): ID of mailing campaign to cancel
-        mailing_service (MailingService): Injected mailing service dependency
-
-    Returns:
-        Dict[str, Literal["cancelled", "not_cancelled"]]:
-            {"status": "cancelled"} if successful,
-            {"status": "not_cancelled"} if mailing couldn't be cancelled
-
-    Note:
-        Only mailings with "in_progress" status can be cancelled.
-        Completed or failed mailings will return "not_cancelled".
-    """
-    success = await mailing_service.cancel_mailing(mailing_id)
-    return {"status": "cancelled" if success else "not_cancelled"}

@@ -190,16 +190,12 @@ class ChainButtonService:
         try:
             # Call the internal method to update the button's next_step_id
             await self._set_next_step_for_button(
-                button_id=int(button_id),  # Ensure button_id is an integer
-                next_chain_step_id=int(
-                    next_chain_step_id
-                ),  # Ensure next_chain_step_id is an integer
+                button_id=int(button_id),
+                next_chain_step_id=int(next_chain_step_id),
             )
         except HTTPException:
-            # Re-raise HTTPException if it was raised in the internal method
             raise
         except Exception as e:
-            # Log the error and raise a 500 Internal Server Error for unexpected failures
             logger.error(f"Failed to set next chain step to button: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -247,10 +243,8 @@ class ChainButtonService:
             await self.db_repository.update(button)
 
         except HTTPException:
-            # Re-raise HTTPException if it was raised in this method
             raise
         except Exception as e:
-            # Log the error and raise a 500 Internal Server Error for unexpected failures
             logger.error(f"Failed to set next step for button: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -2,6 +2,7 @@ from bot_service.models.mixin import TimeStampedMixin
 from sqlalchemy import (
     Column,
     ForeignKey,
+    Index,
     Integer,
     String,
 )
@@ -28,6 +29,13 @@ class Button(Base, TimeStampedMixin):
     bot = relationship("Bot", back_populates="buttons")
     chain = relationship("Chain", back_populates="buttons")
 
+    __table_args__ = (
+        Index("idx_button_bot_text", "bot_id", "button_text"),
+        Index("idx_button_main_menu_id", "main_menu_id"),
+        Index("idx_button_reply_text", "reply_text"),
+        Index("idx_button_chain", "chain_id"),
+    )
+
 
 class MainMenu(Base):
     __tablename__ = "main_menu"
@@ -42,4 +50,9 @@ class MainMenu(Base):
         back_populates="main_menu",
         cascade="all, delete-orphan",
         passive_deletes=True,
+    )
+
+    __table_args__ = (
+        Index("idx_mainmenu_bot", "bot_id", unique=True),
+        Index("idx_mainmenu_welcome_message", "welcome_message"),
     )

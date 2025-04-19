@@ -67,7 +67,6 @@ class MailingService:
             )
             return True
         except Exception as e:
-            # Log full error but don't fail the entire mailing
             logging.error(f"Failed to send to user {user_id}: {str(e)}")
             return False
 
@@ -176,7 +175,7 @@ class MailingService:
             failed += sum(1 for r in batch_results if r is False)
 
             offset += chunk_size
-            await asyncio.sleep(delay)  # Rate limiting
+            await asyncio.sleep(delay)
 
         return {
             "status": "completed",
@@ -185,51 +184,6 @@ class MailingService:
             "failed": failed,
             "completed_at": datetime.utcnow().isoformat(),
         }
-
-    async def get_mailing_status(self, mailing_id: int) -> Dict:
-        """
-        Retrieve current status of a mailing campaign.
-
-        Args:
-            mailing_id (int): ID of the mailing to check
-
-        Returns:
-            Dict: Status information with:
-                - "not_found" if ID invalid
-                - "in_progress" if running
-                - "completed" with results if finished
-                - "failed" with error if errored
-        """
-        task = self.active_tasks.get(mailing_id)
-        if not task:
-            return {"status": "not_found"}
-
-        if task.done():
-            try:
-                return {"status": "completed", "result": task.result()}
-            except Exception as e:
-                return {"status": "failed", "error": str(e)}
-        return {"status": "in_progress"}
-
-    async def cancel_mailing(self, mailing_id: int) -> bool:
-        """
-        Attempt to cancel an active mailing.
-
-        Args:
-            mailing_id (int): ID of mailing to cancel
-
-        Returns:
-            bool: True if cancellation was successful, False otherwise
-        """
-        task = self.active_tasks.get(mailing_id)
-        if task and not task.done():
-            task.cancel()
-            try:
-                await task  # Handle cancellation properly
-                return True
-            except asyncio.CancelledError:
-                return True
-        return False
 
 
 async def get_mailing_service() -> MailingService:

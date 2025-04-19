@@ -20,7 +20,7 @@ class Bot(Base, TimeStampedMixin):
     __tablename__ = "bots"
     id = Column(Integer, primary_key=True, index=True)
     is_active = Column(Boolean, default=True)
-    token = Column(String, unique=True, index=True)
+    token = Column(String, unique=True)
     secret_token = Column(String)
     default_reply = Column(String(3000), nullable=True, default="")
     username = Column(String)
@@ -60,15 +60,16 @@ class Bot(Base, TimeStampedMixin):
         passive_deletes=True,
     )
 
+    __table_args__ = (
+        Index("idx_bot_token", "token", unique=True),
+        Index("idx_bot_username", "username"),
+    )
+
 
 class BotUser(Base, TimeStampedMixin):
     """Model representing a bot user."""
 
     __tablename__ = "bot_users"
-    __table_args__ = (
-        Index("idx_bot_user_unique", "bot_id", "user_id", unique=True),
-        {"schema": "public"},
-    )
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, nullable=False)  # Telegram user_id
@@ -82,3 +83,8 @@ class BotUser(Base, TimeStampedMixin):
     bot = relationship("Bot", back_populates="users")
 
     model_config = ConfigDict(from_attributes=True)  # type: ignore
+
+    __table_args__ = (
+        Index("idx_bot_user_unique", "bot_id", "user_id", unique=True),
+        Index("idx_botuser_created_at", "created_at"),
+    )
