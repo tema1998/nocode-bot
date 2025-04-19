@@ -8,7 +8,6 @@ from telegram.error import TelegramError
 from telegram.ext import Application
 
 
-# Настройка логгера
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +69,7 @@ class TelegramApiRepository:
             bot_token (str): The Telegram bot token.
         """
         try:
-            # webhook_url = f"{config.webhook_url}/api/v1/blocked"
+            # Fake webhook URL to bot
             webhook_url = "https://com.com/api/v1/blocked"
 
             # Initialize the Telegram bot application
@@ -103,6 +102,8 @@ class TelegramApiRepository:
         try:
 
             application = Application.builder().token(bot_token).build()
+
+            # Get bot info from TG
             bot_info = await application.bot.get_me()
             username = bot_info.username
 
@@ -132,6 +133,8 @@ class TelegramApiRepository:
         try:
 
             application = Application.builder().token(bot_token).build()
+
+            # Get bot info from TG
             bot_info = await application.bot.get_me()
             name = bot_info.first_name
 
@@ -159,40 +162,31 @@ class TelegramApiRepository:
             Dictionary with user information or None if failed
         """
         try:
-            application = Application.builder().token(bot_token).build()
-            await application.initialize()
+            bot = telegram.Bot(token=bot_token)
 
+            user = await bot.get_chat(user_id)
+
+            user_info = {
+                "id": user.id,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "photo_url": None,
+                "profile_link": f"tg://user?id={user.id}",
+            }
+
+            # Get profile photo if available
             try:
-                user = await application.bot.get_chat(user_id)
+                photos = await bot.get_user_profile_photos(user_id, limit=1)
+                if photos and photos.photos:
+                    file = await bot.get_file(photos.photos[0][-1].file_id)
+                    user_info["photo_url"] = file.file_path
+            except telegram.error.TelegramError as photo_error:
+                logger.debug(
+                    f"Profile photo unavailable for user {user_id}: {photo_error}"
+                )
 
-                user_info = {
-                    "id": user.id,
-                    "username": user.username,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "photo_url": None,
-                    "profile_link": f"tg://user?id={user.id}",
-                }
-
-                # Get profile photo if available
-                try:
-                    photos = await application.bot.get_user_profile_photos(
-                        user_id, limit=1
-                    )
-                    if photos and photos.photos:
-                        file = await application.bot.get_file(
-                            photos.photos[0][-1].file_id
-                        )
-                        user_info["photo_url"] = f"{file.file_path}"
-                except telegram.error.TelegramError as photo_error:
-                    logger.debug(
-                        f"Profile photo unavailable for user {user_id}: {photo_error}"
-                    )
-
-                return user_info
-
-            finally:
-                await application.shutdown()
+            return user_info
 
         except telegram.error.TelegramError as tg_error:
             logger.warning(
