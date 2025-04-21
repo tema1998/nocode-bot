@@ -30,7 +30,7 @@
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle"></i> У бота @{{ bot.bot_username }} нет цепочек для анализа результатов.
                     </div>
-                    <a href="{% url 'create-chain' bot.id %}" class="btn btn-success btn-block btn-md">
+                    <a href="{% url 'chain-create' bot.id %}" class="btn btn-success btn-block btn-md">
                         <i class="fas fa-plus"></i> Добавить новую цепочку
                     </a>
                     {% endif %}

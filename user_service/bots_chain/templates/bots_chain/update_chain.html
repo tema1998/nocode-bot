@@ -27,7 +27,7 @@
             <div class="container mt-3">
                 <div class="card border-left-primary">
                     <div class="card-body">
-                        <form id="chainForm" method="post" action="{% url 'update-chain' bot.id chain.id %}">
+                        <form id="chainForm" method="post" action="{% url 'chain-update' bot.id chain.id %}">
                             {% csrf_token %}
 
                             <div class="form-group">
@@ -49,7 +49,7 @@
                             {% endif %}
 
                             <div class="d-flex justify-content-between mt-4">
-                                <a href="{% url 'bot-chains' bot.id %}" class="btn btn-secondary">
+                                <a href="{% url 'chain-list' bot.id %}" class="btn btn-secondary">
                                     <i class="fas fa-arrow-left"></i> Назад к списку
                                 </a>
                                 <div class="btn-group">
@@ -82,7 +82,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
-                    <form method="post" action="{% url 'update-chain' bot.id chain.id %}" class="d-inline">
+                    <form method="post" action="{% url 'chain-update' bot.id chain.id %}" class="d-inline">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt"></i> Удалить

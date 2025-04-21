@@ -85,7 +85,7 @@ class BotMainMenuButtonViewTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
-            response.url, f"/bots-menu/main-menu-button/{self.bot.id}/1"
+            response.url, f"/bots-menu/bots/{self.bot.id}/menu/buttons/1/"
         )
 
 
@@ -133,7 +133,7 @@ class UpdateBotMainMenuButtonViewTestCase(TestCase):
         self.assertEqual(len(messages_list), 1)
         self.assertEqual(str(messages_list[0]), "Изменения сохранены.")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"/bots-menu/main-menu/{self.bot.id}")
+        self.assertEqual(response.url, f"/bots-menu/bots/{self.bot.id}/menu/")
 
     @patch(
         "user_service.bots_menu.views.BotServiceClient.update_main_menu_button"
@@ -261,7 +261,7 @@ class CreateBotMainMenuButtonViewTestCase(TestCase):
         self.assertEqual(len(messages_list), 1)
         self.assertEqual(str(messages_list[0]), "Кнопка успешно создана.")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"/bots-menu/main-menu/{self.bot.id}")
+        self.assertEqual(response.url, f"/bots-menu/bots/{self.bot.id}/menu/")
 
     @patch(
         "user_service.bots_menu.views.BotServiceClient.create_main_menu_button"
@@ -348,7 +348,7 @@ class DeleteBotMainMenuButtonViewTestCase(TestCase):
         self.assertEqual(len(messages_list), 1)
         self.assertEqual(str(messages_list[0]), "Кнопка успешно удалена.")
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, f"/bots-menu/main-menu/{self.bot.id}")
+        self.assertEqual(response.url, f"/bots-menu/bots/{self.bot.id}/menu/")
 
     @patch(
         "user_service.bots_menu.views.BotServiceClient.delete_main_menu_button"

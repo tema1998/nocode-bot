@@ -23,7 +23,7 @@
                 <h1>Telegram Bot @{{ bot.bot_username }}</h1>
                 <div class="card">
                     <div class="card-body">
-                        <form id="botForm" method="post" action="{% url 'update-bot-main-menu-button' bot.id button.id %}">
+                        <form id="botForm" method="post" action="{% url 'menu-button-update' bot.id button.id %}">
                             {% csrf_token %}
 
                             <div class="form-group">
@@ -55,7 +55,7 @@
                                     </select>
                                     {% if button.chain %}
                                     <div class="input-group-append">
-                                        <a class="btn btn-outline-primary" target="_blank" href="{% url 'bot-chain' bot.id button.chain_id %}">
+                                        <a class="btn btn-outline-primary" target="_blank" href="{% url 'chain-detail' bot.id button.chain_id %}">
                                             <i class="fas fa-external-link-alt"></i> Перейти к текущей цепочке
                                         </a>
                                     </div>
@@ -78,7 +78,7 @@
                                 <button type="submit" class="btn btn-success px-4">
                                     <i class="fas fa-save mr-2"></i> Сохранить изменения
                                 </button>
-                                <a href="{% url 'bot-main-menu' bot.id %}" class="btn btn-secondary ml-2">
+                                <a href="{% url 'menu-main' bot.id %}" class="btn btn-secondary ml-2">
                                     <i class="fas fa-arrow-left mr-2"></i> Назад к меню
                                 </a>
                             </div>

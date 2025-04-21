@@ -74,7 +74,7 @@ class BotDetailView(BaseBotView):
             messages.error(
                 request, "Неверный формат токена. Изменения не были сохранены."
             )
-            return redirect("bot-details", bot_id=bot.id)
+            return redirect("bot-detail", bot_id=bot.id)
 
         try:
             updated_bot = BotService.update_bot(
@@ -95,7 +95,7 @@ class BotDetailView(BaseBotView):
                 "Ошибка при обновлении данных. Проверьте токен, возможно он уже используется другим ботом.",
             )
 
-        return redirect("bot-details", bot_id=bot.id)
+        return redirect("bot-detail", bot_id=bot.id)
 
 
 class BotDeleteView(BaseBotView):
@@ -117,7 +117,7 @@ class BotDeleteView(BaseBotView):
                 exc_info=True,
             )
             messages.error(request, "Ошибка при удалении бота.")
-            return redirect("bot-details", bot_id=bot.id)
+            return redirect("bot-detail", bot_id=bot.id)
 
 
 class AddBotView(LoginRequiredMixin, FormView):
@@ -135,7 +135,7 @@ class AddBotView(LoginRequiredMixin, FormView):
                 bot_id=bot_data["id"],
                 bot_username=bot_data["username"],
             )
-            return redirect("bot-details", bot_id=bot.id)
+            return redirect("bot-detail", bot_id=bot.id)
         except Exception as e:
             logger.error(
                 f"Failed to create bot. Error: {str(e)}",

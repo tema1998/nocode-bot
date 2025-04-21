@@ -135,7 +135,7 @@ class CreateChainViewTestCase(BaseChainViewTestCase):
         )  # Validate success message
         self.assertEqual(response.status_code, 302)  # Validate redirection
         self.assertEqual(
-            response.url, f"/bots-chain/chains/{self.bot.id}/"
+            response.url, f"/bots-chain/bots/{self.bot.id}/chains/"
         )  # Validate redirect URL
 
     @patch("bots_chain.services.ChainService.create_chain")
@@ -179,7 +179,7 @@ class UpdateChainViewTestCase(BaseChainViewTestCase):
         )  # Validate update success message
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
-            response.url, f"/bots-chain/chain/{self.bot.id}/1"
+            response.url, f"/bots-chain/bots/{self.bot.id}/chains/1/"
         )  # Validate redirect URL
 
     @patch("bots_chain.services.ChainService.update_chain")
@@ -224,7 +224,7 @@ class DeleteChainViewTestCase(BaseChainViewTestCase):
         )  # Validate deletion success message
         self.assertEqual(response.status_code, 302)
         self.assertEqual(
-            response.url, f"/bots-chain/chains/{self.bot.id}/"
+            response.url, f"/bots-chain/bots/{self.bot.id}/chains/"
         )  # Validate redirect URL
 
     @patch("bots_chain.services.ChainService.delete_chain")
