@@ -27,7 +27,7 @@ async def test_create_chain_button_success(mock_chain_button_service):
 
     mock_chain_button_service.create_chain_button.return_value = mock_button
 
-    response = client.post("/api/v1/chain-button/", json=test_button_data)
+    response = client.post("/api/v1/buttons/", json=test_button_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
         "id": 1,
@@ -50,7 +50,7 @@ async def test_create_chain_button_failure(mock_chain_button_service):
         status_code=500, detail="Failed to create chain button"
     )
 
-    response = client.post("/api/v1/chain-button/", json=test_button_data)
+    response = client.post("/api/v1/buttons/", json=test_button_data)
     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert response.json() == {"detail": "Failed to create chain button"}
 
@@ -70,7 +70,7 @@ async def test_get_chain_button_success(mock_chain_button_service):
 
     mock_chain_button_service.get_chain_button.return_value = mock_button
 
-    response = client.get("/api/v1/chain-button/1")
+    response = client.get("/api/v1/buttons/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "id": 1,
@@ -91,7 +91,7 @@ async def test_get_chain_button_not_found(mock_chain_button_service):
         status_code=404, detail="Chain button with ID 999 not found"
     )
 
-    response = client.get("/api/v1/chain-button/999")
+    response = client.get("/api/v1/buttons/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain button with ID 999 not found"}
 
@@ -113,7 +113,7 @@ async def test_update_chain_button_success(mock_chain_button_service):
 
     mock_chain_button_service.update_chain_button.return_value = mock_button
 
-    response = client.patch("/api/v1/chain-button/1", json=test_update_data)
+    response = client.patch("/api/v1/buttons/1", json=test_update_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "id": 1,
@@ -140,7 +140,7 @@ async def test_update_chain_button_partial(mock_chain_button_service):
 
     mock_chain_button_service.update_chain_button.return_value = mock_button
 
-    response = client.patch("/api/v1/chain-button/1", json=test_update_data)
+    response = client.patch("/api/v1/buttons/1", json=test_update_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "id": 1,
@@ -163,7 +163,7 @@ async def test_update_chain_button_not_found(mock_chain_button_service):
         status_code=404, detail="Chain button with ID 999 not found"
     )
 
-    response = client.patch("/api/v1/chain-button/999", json=test_update_data)
+    response = client.patch("/api/v1/buttons/999", json=test_update_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain button with ID 999 not found"}
 
@@ -175,7 +175,7 @@ async def test_delete_chain_button_success(mock_chain_button_service):
     Asserts that the API returns a 204 No Content status after a successful delete operation.
     Also verifies that the delete method on the mock service was called with the correct ID.
     """
-    response = client.delete("/api/v1/chain-button/1")
+    response = client.delete("/api/v1/buttons/1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     mock_chain_button_service.delete_chain_button.assert_awaited_once_with(1)
 
@@ -191,7 +191,7 @@ async def test_delete_chain_button_not_found(mock_chain_button_service):
         status_code=404, detail="Chain button with ID 999 not found"
     )
 
-    response = client.delete("/api/v1/chain-button/999")
+    response = client.delete("/api/v1/buttons/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain button with ID 999 not found"}
 
@@ -207,9 +207,7 @@ async def test_set_next_chain_step_success(mock_chain_button_service):
 
     mock_chain_button_service.set_next_chain_step_to_button.return_value = None
 
-    response = client.post(
-        "/api/v1/chain-button/set-next-step/1", json=test_data
-    )
+    response = client.post("/api/v1/buttons/set-next-step/1", json=test_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "message": "Next chain step for button updated successfully"
@@ -229,9 +227,7 @@ async def test_set_next_chain_step_button_not_found(mock_chain_button_service):
         HTTPException(status_code=404, detail="Button with ID 999 not found.")
     )
 
-    response = client.post(
-        "/api/v1/chain-button/set-next-step/999", json=test_data
-    )
+    response = client.post("/api/v1/buttons/set-next-step/999", json=test_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Button with ID 999 not found."}
 
@@ -252,9 +248,7 @@ async def test_set_next_chain_step_invalid(mock_chain_button_service):
         )
     )
 
-    response = client.post(
-        "/api/v1/chain-button/set-next-step/1", json=test_data
-    )
+    response = client.post("/api/v1/buttons/set-next-step/1", json=test_data)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
         "detail": "Cannot set the current step as the next step."

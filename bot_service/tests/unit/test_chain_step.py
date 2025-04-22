@@ -35,7 +35,7 @@ async def test_create_chain_step_success(mock_chain_step_service):
 
     mock_chain_step_service.create_chain_step.return_value = mock_step
 
-    response = client.post("/api/v1/chain-step/", json=test_step_data)
+    response = client.post("/api/v1/steps/", json=test_step_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {
         "id": 1,
@@ -74,7 +74,7 @@ async def test_create_chain_step_with_button_link(mock_chain_step_service):
 
     mock_chain_step_service.create_chain_step.return_value = mock_step
 
-    response = client.post("/api/v1/chain-step/", json=test_step_data)
+    response = client.post("/api/v1/steps/", json=test_step_data)
     assert response.status_code == status.HTTP_201_CREATED
     mock_chain_step_service.create_chain_step.assert_called_once()
 
@@ -97,7 +97,7 @@ async def test_create_chain_step_failure(mock_chain_step_service):
         status_code=500, detail="Failed to create chain step"
     )
 
-    response = client.post("/api/v1/chain-step/", json=test_step_data)
+    response = client.post("/api/v1/steps/", json=test_step_data)
     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert response.json() == {"detail": "Failed to create chain step"}
 
@@ -120,7 +120,7 @@ async def test_get_chain_step_success(mock_chain_step_service):
 
     mock_chain_step_service.get_chain_step.return_value = mock_step
 
-    response = client.get("/api/v1/chain-step/1")
+    response = client.get("/api/v1/steps/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "id": 1,
@@ -143,7 +143,7 @@ async def test_get_chain_step_not_found(mock_chain_step_service):
         status_code=404, detail="Chain step with ID 999 not found"
     )
 
-    response = client.get("/api/v1/chain-step/999")
+    response = client.get("/api/v1/steps/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain step with ID 999 not found"}
 
@@ -173,7 +173,7 @@ async def test_update_chain_step_success(mock_chain_step_service):
 
     mock_chain_step_service.update_chain_step.return_value = mock_step
 
-    response = client.patch("/api/v1/chain-step/1", json=test_update_data)
+    response = client.patch("/api/v1/steps/1", json=test_update_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "id": 1,
@@ -206,7 +206,7 @@ async def test_update_chain_step_partial(mock_chain_step_service):
 
     mock_chain_step_service.update_chain_step.return_value = mock_step
 
-    response = client.patch("/api/v1/chain-step/1", json=test_update_data)
+    response = client.patch("/api/v1/steps/1", json=test_update_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["message"] == "Updated message"
 
@@ -224,7 +224,7 @@ async def test_update_chain_step_not_found(mock_chain_step_service):
         status_code=404, detail="Chain step with ID 999 not found"
     )
 
-    response = client.patch("/api/v1/chain-step/999", json=test_update_data)
+    response = client.patch("/api/v1/steps/999", json=test_update_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain step with ID 999 not found"}
 
@@ -236,7 +236,7 @@ async def test_delete_chain_step_success(mock_chain_step_service):
     Asserts that the API returns a 204 No Content status after a successful delete operation.
     Also verifies that the delete method on the mock service was called with the correct ID.
     """
-    response = client.delete("/api/v1/chain-step/1")
+    response = client.delete("/api/v1/steps/1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     mock_chain_step_service.delete_chain_step.assert_awaited_once_with(1)
 
@@ -252,6 +252,6 @@ async def test_delete_chain_step_not_found(mock_chain_step_service):
         status_code=404, detail="Chain step with ID 999 not found"
     )
 
-    response = client.delete("/api/v1/chain-step/999")
+    response = client.delete("/api/v1/steps/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain step with ID 999 not found"}

@@ -66,7 +66,7 @@ async def test_get_main_menu_success(mock_main_menu_service):
         mock_response
     )
 
-    response = client.get("/api/v1/main-menu/1")
+    response = client.get("/api/v1/menu/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == mock_response
 
@@ -83,7 +83,7 @@ async def test_get_main_menu_not_found(mock_main_menu_service):
         HTTPException(status_code=404, detail="Bot's main menu not found")
     )
 
-    response = client.get("/api/v1/main-menu/999")
+    response = client.get("/api/v1/menu/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Bot's main menu not found"}
 
@@ -102,7 +102,7 @@ async def test_update_welcome_message_success(mock_main_menu_service):
         PatchWelcomeMessageResponse(**expected_response)
     )
 
-    response = client.patch("/api/v1/main-menu/1", json=test_data)
+    response = client.patch("/api/v1/menu/1", json=test_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == expected_response
 
@@ -120,7 +120,7 @@ async def test_update_welcome_message_not_found(mock_main_menu_service):
         status_code=404, detail="Bot's main menu not found"
     )
 
-    response = client.patch("/api/v1/main-menu/999", json=test_data)
+    response = client.patch("/api/v1/menu/999", json=test_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Bot's main menu not found"}
 
@@ -145,7 +145,7 @@ async def test_get_button_success(mock_main_menu_service):
         **mock_response
     )
 
-    response = client.get("/api/v1/main-menu/button/1")
+    response = client.get("/api/v1/menu/buttons/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == mock_response
 
@@ -162,7 +162,7 @@ async def test_get_button_not_found(mock_main_menu_service):
         status_code=404, detail="Button not found"
     )
 
-    response = client.get("/api/v1/main-menu/button/999")
+    response = client.get("/api/v1/menu/buttons/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Button not found"}
 
@@ -195,7 +195,7 @@ async def test_create_button_success(
         ButtonResponse(**mock_response)
     )
 
-    response = client.post("/api/v1/main-menu/button/", json=test_data)
+    response = client.post("/api/v1/menu/buttons/", json=test_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == mock_response
 
@@ -218,7 +218,7 @@ async def test_create_button_duplicate_text(mock_main_menu_service):
         status_code=400, detail="A button with the same text already exists."
     )
 
-    response = client.post("/api/v1/main-menu/button/", json=test_data)
+    response = client.post("/api/v1/menu/buttons/", json=test_data)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
         "detail": "A button with the same text already exists."
@@ -251,7 +251,7 @@ async def test_update_button_success(
         ButtonUpdateResponse(**mock_response)
     )
 
-    response = client.patch("/api/v1/main-menu/button/1", json=test_data)
+    response = client.patch("/api/v1/menu/buttons/1", json=test_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == mock_response
 
@@ -272,7 +272,7 @@ async def test_update_button_not_found(mock_main_menu_service):
         status_code=404, detail="Button not found"
     )
 
-    response = client.patch("/api/v1/main-menu/button/999", json=test_data)
+    response = client.patch("/api/v1/menu/buttons/999", json=test_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Button not found"}
 
@@ -286,7 +286,7 @@ async def test_delete_button_success(
     Test successfully deleting a button from the main menu.
     Asserts that the API responds with a 204 No Content status after deletion.
     """
-    response = client.delete("/api/v1/main-menu/button/1")
+    response = client.delete("/api/v1/menu/buttons/1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     mock_main_menu_service.delete_main_menu_button.assert_awaited_once_with(1)
 
@@ -303,7 +303,7 @@ async def test_delete_button_not_found(mock_main_menu_service):
         status_code=404, detail="Button not found"
     )
 
-    response = client.delete("/api/v1/main-menu/button/999")
+    response = client.delete("/api/v1/menu/buttons/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Button not found"}
 
@@ -326,7 +326,7 @@ async def test_button_text_validation(mock_main_menu_service):
         status_code=400, detail="A button with this name is forbidden."
     )
 
-    response = client.post("/api/v1/main-menu/button/", json=test_data)
+    response = client.post("/api/v1/menu/buttons/", json=test_data)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
         "detail": "A button with this name is forbidden."
