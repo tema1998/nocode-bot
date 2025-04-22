@@ -58,7 +58,7 @@ class BotServiceClient:
     def get_main_menu(bot_id: int) -> Dict[str, Any]:
         return cast(
             Dict[str, Any],
-            BotServiceClient._handle_request("GET", f"main-menu/{bot_id}"),
+            BotServiceClient._handle_request("GET", f"menu/{bot_id}"),
         )
 
     @staticmethod
@@ -67,7 +67,7 @@ class BotServiceClient:
             Dict[str, Any],
             BotServiceClient._handle_request(
                 "PATCH",
-                f"main-menu/{bot_id}",
+                f"menu/{bot_id}",
                 json={"welcome_message": welcome_message},
             ),
         )
@@ -77,7 +77,7 @@ class BotServiceClient:
         return cast(
             Dict[str, Any],
             BotServiceClient._handle_request(
-                "GET", f"main-menu/button/{button_id}"
+                "GET", f"menu/buttons/{button_id}"
             ),
         )
 
@@ -86,7 +86,7 @@ class BotServiceClient:
         return cast(
             Dict[str, Any],
             BotServiceClient._handle_request(
-                "PATCH", f"main-menu/button/{button_id}", json=kwargs
+                "PATCH", f"menu/buttons/{button_id}", json=kwargs
             ),
         )
 
@@ -95,14 +95,14 @@ class BotServiceClient:
         return cast(
             Dict[str, Any],
             BotServiceClient._handle_request(
-                "POST", "main-menu/button/", json={"bot_id": bot_id, **kwargs}
+                "POST", "menu/buttons/", json={"bot_id": bot_id, **kwargs}
             ),
         )
 
     @staticmethod
     def delete_main_menu_button(button_id: int) -> None:
         BotServiceClient._handle_request(
-            "DELETE", f"main-menu/button/{button_id}", expect_json=False
+            "DELETE", f"menu/buttons/{button_id}", expect_json=False
         )
 
     # Chain operations
@@ -110,5 +110,5 @@ class BotServiceClient:
     def get_bot_chains(bot_id: int) -> Dict[str, Any]:
         return cast(
             Dict[str, Any],
-            BotServiceClient._handle_request("GET", f"chain/{bot_id}"),
+            BotServiceClient._handle_request("GET", f"chains/{bot_id}"),
         )

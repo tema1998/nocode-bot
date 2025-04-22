@@ -29,7 +29,9 @@ class BaseAPIService:
                 method, url, params=params, json=json_data, timeout=timeout
             )
             response.raise_for_status()
-            return response.json()  # type: ignore
+            if response.content:
+                return response.json()  # type: ignore
+            return {}
         except RequestException as e:
             logger.error(
                 f"API request failed. Endpoint: {endpoint}. Error: {str(e)}",
@@ -41,32 +43,32 @@ class BaseAPIService:
 class ChainService(BaseAPIService):
     @classmethod
     def get_chain(cls, chain_id: int) -> ChainData:
-        response = cls._make_request("GET", f"chain/detail/{chain_id}")
+        response = cls._make_request("GET", f"chains/detail/{chain_id}")
         return cast(ChainData, response)
 
     @classmethod
     def get_bot_chains(cls, bot_id: int) -> Dict[str, List[ChainData]]:
-        response = cls._make_request("GET", f"chain/{bot_id}")
+        response = cls._make_request("GET", f"chains/{bot_id}")
         return cast(Dict[str, List[ChainData]], response)
 
     @classmethod
     def create_chain(cls, bot_id: int, name: str) -> ChainData:
         response = cls._make_request(
-            "POST", "chain/", json_data={"bot_id": bot_id, "name": name}
+            "POST", "chains/", json_data={"bot_id": bot_id, "name": name}
         )
         return cast(ChainData, response)
 
     @classmethod
     def update_chain(cls, chain_id: int, name: str) -> ChainData:
         response = cls._make_request(
-            "PATCH", f"chain/{chain_id}", json_data={"name": name}
+            "PATCH", f"chains/{chain_id}", json_data={"name": name}
         )
         return cast(ChainData, response)
 
     @classmethod
     def delete_chain(cls, chain_id: int) -> bool:
         try:
-            cls._make_request("DELETE", f"chain/{chain_id}")
+            cls._make_request("DELETE", f"chains/{chain_id}")
             return True
         except RequestException:
             return False
@@ -76,7 +78,7 @@ class ChainService(BaseAPIService):
         cls, chain_id: int
     ) -> List[Dict[str, Union[str, int, bool]]]:
         try:
-            response = cls._make_request("GET", f"chain/results/{chain_id}")
+            response = cls._make_request("GET", f"chains/results/{chain_id}")
             return cast(
                 List[Dict[str, Union[str, int, bool]]],
                 response.get("items", []),
@@ -88,7 +90,7 @@ class ChainService(BaseAPIService):
 class ChainStepService(BaseAPIService):
     @classmethod
     def get_step(cls, step_id: int) -> ChainStepData:
-        response = cls._make_request("GET", f"chain-step/{step_id}")
+        response = cls._make_request("GET", f"steps/{step_id}")
         return cast(ChainStepData, response)
 
     @classmethod
@@ -107,7 +109,7 @@ class ChainStepService(BaseAPIService):
         if button_id:
             payload["set_as_next_step_for_button_id"] = button_id
 
-        response = cls._make_request("POST", "chain-step/", json_data=payload)
+        response = cls._make_request("POST", "steps/", json_data=payload)
         return cast(ChainStepData, response)
 
     @classmethod
@@ -130,14 +132,14 @@ class ChainStepService(BaseAPIService):
             payload["text_input"] = text_input
 
         response = cls._make_request(
-            "PATCH", f"chain-step/{step_id}", json_data=payload
+            "PATCH", f"steps/{step_id}", json_data=payload
         )
         return cast(ChainStepData, response)
 
     @classmethod
     def delete_step(cls, step_id: int) -> bool:
         try:
-            cls._make_request("DELETE", f"chain-step/{step_id}")
+            cls._make_request("DELETE", f"steps/{step_id}")
             return True
         except RequestException:
             return False
@@ -146,7 +148,7 @@ class ChainStepService(BaseAPIService):
 class ChainButtonService(BaseAPIService):
     @classmethod
     def get_button(cls, button_id: int) -> ChainButtonData:
-        response = cls._make_request("GET", f"chain-button/{button_id}")
+        response = cls._make_request("GET", f"buttons/{button_id}")
         return cast(ChainButtonData, response)
 
     @classmethod
@@ -160,9 +162,7 @@ class ChainButtonService(BaseAPIService):
         if next_step_id:
             payload["next_step_id"] = next_step_id
 
-        response = cls._make_request(
-            "POST", "chain-button/", json_data=payload
-        )
+        response = cls._make_request("POST", "buttons/", json_data=payload)
         return cast(ChainButtonData, response)
 
     @classmethod
@@ -179,14 +179,14 @@ class ChainButtonService(BaseAPIService):
             payload["next_step_id"] = next_step_id
 
         response = cls._make_request(
-            "PATCH", f"chain-button/{button_id}", json_data=payload
+            "PATCH", f"buttons/{button_id}", json_data=payload
         )
         return cast(ChainButtonData, response)
 
     @classmethod
     def delete_button(cls, button_id: int) -> bool:
         try:
-            cls._make_request("DELETE", f"chain-button/{button_id}")
+            cls._make_request("DELETE", f"buttons/{button_id}")
             return True
         except RequestException:
             return False

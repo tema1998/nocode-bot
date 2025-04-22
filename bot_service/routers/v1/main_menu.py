@@ -86,7 +86,7 @@ async def update_welcome_message(
 
 
 @router.get(
-    "/button/{button_id}",
+    "/buttons/{button_id}",
     response_model=ButtonResponse,
     status_code=status.HTTP_200_OK,
     summary="Get details of a specific button",
@@ -116,7 +116,7 @@ async def get_main_menu_button(
 
 
 @router.post(
-    "/button/",
+    "/buttons/",
     response_model=ButtonResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new button for the main menu",
@@ -153,7 +153,7 @@ async def create_main_menu_button(
 
 
 @router.patch(
-    "/button/{button_id}",
+    "/buttons/{button_id}",
     response_model=ButtonResponse,
     status_code=status.HTTP_200_OK,
     summary="Update a button in the main menu",
@@ -188,7 +188,7 @@ async def update_main_menu_button(
 
 
 @router.delete(
-    "/button/{button_id}",
+    "/buttons/{button_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete a button from the main menu",
     description="Deletes a button from the main menu by its unique identifier.",

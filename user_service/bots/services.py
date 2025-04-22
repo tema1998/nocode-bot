@@ -20,7 +20,7 @@ class BotService:
     def get_bot_details(cls, bot_id: int) -> Dict[str, Any]:
         """Fetch bot details from the API."""
         try:
-            response = requests.get(f"{cls.BASE_URL}bot/{bot_id}")
+            response = requests.get(f"{cls.BASE_URL}bots/{bot_id}")
             response.raise_for_status()
             return cast(Dict[str, Any], response.json())
         except RequestException as e:
@@ -46,7 +46,7 @@ class BotService:
         }
         try:
             response = requests.patch(
-                f"{cls.BASE_URL}bot/{bot_id}", json=payload
+                f"{cls.BASE_URL}bots/{bot_id}", json=payload
             )
             response.raise_for_status()
             return cast(Dict[str, Any], response.json())
@@ -62,7 +62,7 @@ class BotService:
         """Create a new bot via API."""
         try:
             response = requests.post(
-                f"{cls.BASE_URL}bot/", json={"token": token}
+                f"{cls.BASE_URL}bots/", json={"token": token}
             )
             response.raise_for_status()
             return cast(Dict[str, Any], response.json())
@@ -77,7 +77,7 @@ class BotService:
     def delete_bot(cls, bot_id: int) -> None:
         """Delete a bot via API."""
         try:
-            response = requests.delete(f"{cls.BASE_URL}bot/{bot_id}")
+            response = requests.delete(f"{cls.BASE_URL}bots/{bot_id}")
             response.raise_for_status()
         except RequestException as e:
             logger.error(
@@ -97,7 +97,7 @@ class BotUserService:
         """Fetch paginated bot users from the API."""
         try:
             response = requests.get(
-                f"{cls.BASE_URL}bot/{bot_id}/list/", timeout=10
+                f"{cls.BASE_URL}bots/{bot_id}/users/", timeout=10
             )
             response.raise_for_status()
             data = cast(Dict[str, Any], response.json())
