@@ -42,7 +42,7 @@ async def test_webhook_success(
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "ok"}
     mock_webhook_service.handle_webhook.assert_awaited_once_with(
-        bot_id, update_data
+        bot_id, update_data, "test-secret"
     )
 
 

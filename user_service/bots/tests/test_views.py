@@ -226,7 +226,7 @@ class BotDeleteViewTestCase(BaseBotViewTestCase):
         )  # Check error message
         self.assertEqual(response.status_code, 302)  # Check for redirect
         self.assertEqual(
-            response.url, f"/bots/{self.bot.id}"
+            response.url, f"/bots/{self.bot.id}/"
         )  # Ensure redirect to the correct URL
 
 

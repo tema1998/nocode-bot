@@ -46,7 +46,7 @@ class BotMainMenuView(BaseBotView):
 
         if not form.is_valid():
             messages.error(request, "Неверный формат сообщения.")
-            return redirect("bot-main-menu", bot_id=bot.id)
+            return redirect("menu-main", bot_id=bot.id)
 
         try:
             BotServiceClient.update_main_menu(
@@ -59,7 +59,7 @@ class BotMainMenuView(BaseBotView):
                 "Ошибка при обновлении данных. Проверьте формат сообщения!",
             )
 
-        return redirect("bot-main-menu", bot_id=bot.id)
+        return redirect("menu-main", bot_id=bot.id)
 
 
 class BotMainMenuButtonView(BaseBotView):
@@ -79,7 +79,7 @@ class BotMainMenuButtonView(BaseBotView):
                 "Ошибка при загрузке данных. Попробуйте обновить страницу.",
             )
             return redirect(
-                "bot-main-menu-button", bot_id=bot_id, button_id=button_id
+                "menu-button-detail", bot_id=bot_id, button_id=button_id
             )
 
         return render(
@@ -103,7 +103,7 @@ class UpdateBotMainMenuButtonView(BaseBotView):
         if not form.is_valid():
             messages.error(request, "Проверьте правильность данных.")
             return redirect(
-                "bot-main-menu-button", bot_id=bot.id, button_id=button_id
+                "menu-button-detail", bot_id=bot.id, button_id=button_id
             )
 
         try:
@@ -120,7 +120,7 @@ class UpdateBotMainMenuButtonView(BaseBotView):
                 "Ошибка при обновлении данных. Проверьте формат данных!",
             )
 
-        return redirect("bot-main-menu", bot_id=bot.id)
+        return redirect("menu-main", bot_id=bot.id)
 
 
 class CreateBotMainMenuButtonView(BaseBotView):
@@ -148,7 +148,7 @@ class CreateBotMainMenuButtonView(BaseBotView):
 
         if not form.is_valid():
             messages.error(request, "Проверьте правильность данных.")
-            return redirect("create-bot-main-menu-button", bot_id=bot.id)
+            return redirect("menu-main", bot_id=bot.id)
 
         try:
             BotServiceClient.create_main_menu_button(
@@ -164,7 +164,7 @@ class CreateBotMainMenuButtonView(BaseBotView):
                 "Ошибка при создании кнопки. Возможно такая кнопка уже существует. Запрещено использовать названия служебных команд '/start', '/update'.",
             )
 
-        return redirect("bot-main-menu", bot_id=bot.id)
+        return redirect("menu-main", bot_id=bot.id)
 
 
 class DeleteBotMainMenuButtonView(BaseBotView):
@@ -181,4 +181,4 @@ class DeleteBotMainMenuButtonView(BaseBotView):
                 request, "Ошибка при удалении кнопки. Попробуйте позже."
             )
 
-        return redirect("bot-main-menu", bot_id=bot_id)
+        return redirect("menu-main", bot_id=bot_id)

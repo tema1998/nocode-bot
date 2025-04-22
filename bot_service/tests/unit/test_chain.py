@@ -30,7 +30,7 @@ async def test_create_chain_success(mock_chain_service):
     mock_chain_service.create_chain.return_value = mock_chain
     mock_chain_service.create_and_set_first_step.return_value = mock_chain
 
-    response = client.post("/api/v1/chain/", json=test_chain_data)
+    response = client.post("/api/v1/chains/", json=test_chain_data)
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"id": 1, "bot_id": 1, "name": "Test Chain"}
 
@@ -50,7 +50,7 @@ async def test_create_chain_name_exists(mock_chain_service):
         detail="Chain with name 'Existing Chain' already exists",
     )
 
-    response = client.post("/api/v1/chain/", json=test_chain_data)
+    response = client.post("/api/v1/chains/", json=test_chain_data)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
         "detail": "Chain with name 'Existing Chain' already exists"
@@ -72,7 +72,7 @@ async def test_get_chains_success(mock_chain_service):
         chains=mock_chains
     )
 
-    response = client.get("/api/v1/chain/1")
+    response = client.get("/api/v1/chains/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "chains": [
@@ -91,7 +91,7 @@ async def test_get_chains_empty(mock_chain_service):
     """
     mock_chain_service.get_chains.return_value = ChainsResponse(chains=[])
 
-    response = client.get("/api/v1/chain/1")
+    response = client.get("/api/v1/chains/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"chains": []}
 
@@ -112,7 +112,7 @@ async def test_update_chain_success(mock_chain_service):
 
     mock_chain_service.update_chain.return_value = mock_chain
 
-    response = client.patch("/api/v1/chain/1", json=test_update_data)
+    response = client.patch("/api/v1/chains/1", json=test_update_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"id": 1, "bot_id": 1, "name": "Updated Chain"}
 
@@ -131,7 +131,7 @@ async def test_update_chain_not_found(mock_chain_service):
         status_code=404, detail="Chain with ID 999 not found"
     )
 
-    response = client.patch("/api/v1/chain/999", json=test_update_data)
+    response = client.patch("/api/v1/chains/999", json=test_update_data)
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain with ID 999 not found"}
 
@@ -143,7 +143,7 @@ async def test_delete_chain_success(mock_chain_service):
     Asserts the API returns a 204 No Content status after a successful delete operation.
     Also verifies that the delete method on the mock service was called with the correct ID.
     """
-    response = client.delete("/api/v1/chain/1")
+    response = client.delete("/api/v1/chains/1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     mock_chain_service.delete_chain.assert_awaited_once_with(1)
 
@@ -160,7 +160,7 @@ async def test_delete_chain_not_found(mock_chain_service):
         status_code=404, detail="Chain with ID 999 not found"
     )
 
-    response = client.delete("/api/v1/chain/999")
+    response = client.delete("/api/v1/chains/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain with ID 999 not found"}
 
@@ -187,7 +187,7 @@ async def test_get_chain_with_details_success(mock_chain_service):
         mock_chain_data
     )
 
-    response = client.get("/api/v1/chain/detail/1")
+    response = client.get("/api/v1/chains/detail/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == mock_chain_data
 
@@ -202,7 +202,7 @@ async def test_get_chain_with_details_not_found(mock_chain_service):
     """
     mock_chain_service.get_chain_with_steps_and_buttons.return_value = None
 
-    response = client.get("/api/v1/chain/detail/999")
+    response = client.get("/api/v1/chains/detail/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Chain not found"}
 
@@ -235,7 +235,7 @@ async def test_get_chain_results_success(mock_chain_service):
     }
     mock_chain_service.get_paginated_chain_results.return_value = mock_results
 
-    response = client.get("/api/v1/chain/results/1?page=1&per_page=10")
+    response = client.get("/api/v1/chains/results/1?page=1&per_page=10")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == mock_results
 
@@ -256,7 +256,7 @@ async def test_get_chain_results_not_found(mock_chain_service):
         "total_pages": 0,
     }
 
-    response = client.get("/api/v1/chain/results/999")
+    response = client.get("/api/v1/chains/results/999")
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["total"] == 0
 
@@ -267,5 +267,5 @@ async def test_get_chain_results_invalid_params(mock_chain_service):
     Test FastAPI's built-in parameter validation by sending invalid pagination parameters.
     Asserts that the API returns a 422 Unprocessable Entity status for invalid parameters.
     """
-    response = client.get("/api/v1/chain/results/1?page=0")
+    response = client.get("/api/v1/chains/results/1?page=0")
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

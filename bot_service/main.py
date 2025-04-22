@@ -75,16 +75,14 @@ app.add_middleware(
 )
 
 
-app.include_router(bot.router, prefix="/api/v1/bot", tags=["bot"])
-app.include_router(
-    main_menu.router, prefix="/api/v1/main-menu", tags=["main-menu"]
-)
+app.include_router(bot.router, prefix="/api/v1/bots", tags=["bot"])
+app.include_router(main_menu.router, prefix="/api/v1/menu", tags=["main-menu"])
 app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
-app.include_router(chain.router, prefix="/api/v1/chain", tags=["chain"])
+app.include_router(chain.router, prefix="/api/v1/chains", tags=["chain"])
 app.include_router(
-    chain_step.router, prefix="/api/v1/chain-step", tags=["chain-step"]
+    chain_step.router, prefix="/api/v1/steps", tags=["chain-step"]
 )
 app.include_router(
-    chain_button.router, prefix="/api/v1/chain-button", tags=["chain-button"]
+    chain_button.router, prefix="/api/v1/buttons", tags=["chain-button"]
 )
 app.include_router(mailing.router, prefix="/api/v1/mailing", tags=["mailing"])

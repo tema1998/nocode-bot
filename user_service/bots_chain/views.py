@@ -109,19 +109,19 @@ class CreateChainView(BaseChainView):
             messages.error(
                 request, "Неверное имя цепочки или имя уже существует."
             )
-            return redirect("create-chain", bot_id=bot.id)
+            return redirect("chain-create", bot_id=bot.id)
 
         try:
             ChainService.create_chain(bot.bot_id, form.cleaned_data["name"])
             messages.success(request, "Цепочка создана успешно.")
-            return redirect("bot-chains", bot_id=bot.id)
+            return redirect("chain-list", bot_id=bot.id)
         except RequestException as e:
             logger.error(f"Failed to create chain: {str(e)}", exc_info=True)
             messages.error(
                 request,
                 "Ошибка создания цепочки. Возможно цепочка с таким именем уже существует.",
             )
-            return redirect("bot-chains", bot_id=bot.id)
+            return redirect("chain-list", bot_id=bot.id)
 
 
 class UpdateChainView(BaseChainView):
@@ -133,16 +133,16 @@ class UpdateChainView(BaseChainView):
 
         if not form.is_valid():
             messages.error(request, "Недопустимое имя цепочки.")
-            return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
+            return redirect("chain-update", bot_id=bot.id, chain_id=chain_id)
 
         try:
             ChainService.update_chain(chain_id, form.cleaned_data["name"])
             messages.success(request, "Цепочка успешно обновлена.")
-            return redirect("bot-chain", bot_id=bot.id, chain_id=chain_id)
+            return redirect("chain-detail", bot_id=bot.id, chain_id=chain_id)
         except RequestException as e:
             logger.error(f"Failed to update chain: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка обновления цепочки.")
-            return redirect("update-chain", bot_id=bot.id, chain_id=chain_id)
+            return redirect("chain-update", bot_id=bot.id, chain_id=chain_id)
 
 
 class DeleteChainView(BaseChainView):
@@ -158,7 +158,7 @@ class DeleteChainView(BaseChainView):
             logger.error(f"Failed to delete chain: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка удаления цепочки.")
 
-        return redirect("bot-chains", bot_id=bot_id)
+        return redirect("chain-list", bot_id=bot_id)
 
 
 class ChainStepMixin(BaseChainView):
@@ -188,7 +188,7 @@ class CreateChainStepView(ChainStepMixin):
             logger.error(f"Failed to create step: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка создания шага.")
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class CreateChainStepTextinputView(ChainStepMixin):
@@ -218,7 +218,7 @@ class CreateChainStepTextinputView(ChainStepMixin):
                 request, "Ошибка создания шага для текстового ввода."
             )
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class UpdateChainStepView(ChainStepMixin):
@@ -252,7 +252,7 @@ class UpdateChainStepView(ChainStepMixin):
             logger.error(f"Failed to update step: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка обновления шага.")
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class DeleteChainStepView(ChainStepMixin):
@@ -268,7 +268,7 @@ class DeleteChainStepView(ChainStepMixin):
             logger.error(f"Failed to delete step: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка удаления шага.")
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class EditTextinputView(ChainStepMixin):
@@ -295,7 +295,7 @@ class EditTextinputView(ChainStepMixin):
                 request, "Ошибка обновления настроек текстового ввода."
             )
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class ChainButtonMixin(BaseChainView):
@@ -322,7 +322,7 @@ class CreateChainButtonView(ChainButtonMixin):
             logger.error(f"Failed to create button: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка создания кнопки.")
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class UpdateChainButtonView(ChainButtonMixin):
@@ -354,7 +354,7 @@ class UpdateChainButtonView(ChainButtonMixin):
             logger.error(f"Failed to update button: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка обновления кнопки.")
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class DeleteChainButtonView(ChainButtonMixin):
@@ -370,7 +370,7 @@ class DeleteChainButtonView(ChainButtonMixin):
             logger.error(f"Failed to delete button: {str(e)}", exc_info=True)
             messages.error(request, "Ошибка удаления кнопки.")
 
-        return redirect("bot-chain", bot_id=bot_id, chain_id=chain_id)
+        return redirect("chain-detail", bot_id=bot_id, chain_id=chain_id)
 
 
 class ChainResultsView(BaseChainView):

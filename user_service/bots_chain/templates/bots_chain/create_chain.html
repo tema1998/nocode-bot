@@ -22,7 +22,7 @@
             <div class="container mt-5">
                 <div class="card">
                     <div class="card-body">
-                        <form id="botForm" method="post" action="{% url 'create-chain' bot.id %}">
+                        <form id="botForm" method="post" action="{% url 'chain-create' bot.id %}">
                             {% csrf_token %}
 
                             <p class="card-text h3">

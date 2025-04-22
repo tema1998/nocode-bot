@@ -25,7 +25,7 @@ async def test_get_bot_success(mock_telegram_bot_service):
         "default_reply": "Hello!",
     }
 
-    response = client.get("/api/v1/bot/1")
+    response = client.get("/api/v1/bots/1")
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "is_active": True,
@@ -47,7 +47,7 @@ async def test_get_bot_not_found(mock_telegram_bot_service):
         status_code=404, detail="Bot not found"
     )
 
-    response = client.get("/api/v1/bot/999")
+    response = client.get("/api/v1/bots/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Bot not found"}
 
@@ -59,7 +59,7 @@ async def test_delete_bot_success(mock_telegram_bot_service):
     Asserts that the API returns a 204 No Content status after a successful delete operation.
     Also verifies that the delete method on the mock service was called with the correct ID.
     """
-    response = client.delete("/api/v1/bot/1")
+    response = client.delete("/api/v1/bots/1")
     assert response.status_code == status.HTTP_204_NO_CONTENT
     mock_telegram_bot_service.delete_bot.assert_awaited_once_with(1)
 
@@ -75,7 +75,7 @@ async def test_delete_bot_not_found(mock_telegram_bot_service):
         status_code=404, detail="Bot not found"
     )
 
-    response = client.delete("/api/v1/bot/999")
+    response = client.delete("/api/v1/bots/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json() == {"detail": "Bot not found"}
 
@@ -95,7 +95,7 @@ async def test_update_bot_success(mock_telegram_bot_service):
     }
 
     response = client.patch(
-        "/api/v1/bot/1",
+        "/api/v1/bots/1",
         json={
             "is_active": False,
             "token": "new_token",
@@ -125,7 +125,7 @@ async def test_update_bot_partial_data(mock_telegram_bot_service):
         "default_reply": "Original reply",
     }
 
-    response = client.patch("/api/v1/bot/1", json={"is_active": False})
+    response = client.patch("/api/v1/bots/1", json={"is_active": False})
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == {
         "is_active": False,
@@ -147,7 +147,7 @@ async def test_create_bot_success(mock_telegram_bot_service):
         "username": "new_bot",
     }
 
-    response = client.post("/api/v1/bot/", json={"token": "valid_token"})
+    response = client.post("/api/v1/bots/", json={"token": "valid_token"})
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json() == {"id": 1, "username": "new_bot"}
 
@@ -163,7 +163,7 @@ async def test_create_bot_invalid_token(mock_telegram_bot_service):
         status_code=400, detail="Bot token is not valid."
     )
 
-    response = client.post("/api/v1/bot/", json={"token": "invalid_token"})
+    response = client.post("/api/v1/bots/", json={"token": "invalid_token"})
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {"detail": "Bot token is not valid."}
 
@@ -194,7 +194,7 @@ async def test_get_bot_users_success(mock_bot_service):
         BotUserSchema(**{**valid_user_data, "id": 3, "username": "user3"}),
     ]
 
-    response = client.get("/api/v1/bot/1/list/?offset=0&limit=3")
+    response = client.get("/api/v1/bots/1/users/?offset=0&limit=3")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -228,7 +228,7 @@ async def test_get_bot_users_default_pagination(mock_bot_service):
         for i in range(100)
     ]
 
-    response = client.get("/api/v1/bot/1/list/")
+    response = client.get("/api/v1/bots/1/users/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -246,7 +246,7 @@ async def test_get_bot_users_empty(mock_bot_service):
     mock_bot_service.get_bot_users_count.return_value = 0
     mock_bot_service.get_bot_users_chunk.return_value = []
 
-    response = client.get("/api/v1/bot/1/list/")
+    response = client.get("/api/v1/bots/1/users/")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()

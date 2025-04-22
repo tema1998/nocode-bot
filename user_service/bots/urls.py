@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 
 from .views import (
     AddBotView,
@@ -12,13 +12,20 @@ from .views import (
 
 urlpatterns = [
     path("", BotsView.as_view(), name="bots"),
-    path("add-bot", AddBotView.as_view(), name="add-bot"),
-    path("<int:bot_id>", BotDetailView.as_view(), name="bot-details"),
-    path("delete/<int:bot_id>", BotDeleteView.as_view(), name="bot-delete"),
+    path("add/", AddBotView.as_view(), name="add-bot"),
     path(
-        "default-reply/<int:bot_id>",
-        BotDefaultReplyView.as_view(),
-        name="bot-default-reply",
+        "<int:bot_id>/",
+        include(
+            [
+                path("", BotDetailView.as_view(), name="bot-detail"),
+                path("delete/", BotDeleteView.as_view(), name="bot-delete"),
+                path(
+                    "default-reply/",
+                    BotDefaultReplyView.as_view(),
+                    name="bot-default-reply",
+                ),
+                path("users/", BotUsersView.as_view(), name="bot-users"),
+            ]
+        ),
     ),
-    path("bots/<int:bot_id>/users/", BotUsersView.as_view(), name="bot-users"),
 ]
