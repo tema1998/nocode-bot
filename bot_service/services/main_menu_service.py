@@ -214,10 +214,8 @@ class MainMenuService:
         await self.db_repository.insert(button)
 
         # Send notification to users that buttons were updated
-        await self.mailing_service.create_mailing(
-            bot_id,
-            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
-        )
+        await self._send_notification_about_buttons_update(bot_id)
+
         return ButtonResponse(
             id=button.id,  # type: ignore
             bot_id=bot_id,
@@ -262,10 +260,7 @@ class MainMenuService:
         await self._process_chain_association(button, chain_id)
         await self.db_repository.update(button)
         # Send notification to users that buttons were updated
-        await self.mailing_service.create_mailing(
-            int(button.bot_id),
-            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
-        )
+        await self._send_notification_about_buttons_update(button.bot_id)
 
         return ButtonUpdateResponse(
             id=button.id,  # type: ignore
@@ -287,11 +282,9 @@ class MainMenuService:
         """
         button = await self._get_button(button_id)
         await self.db_repository.delete(Button, button.id)  # type: ignore
+
         # Send notification to users that buttons were updated
-        await self.mailing_service.create_mailing(
-            int(button.bot_id),
-            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
-        )
+        await self._send_notification_about_buttons_update(button.bot_id)
 
     async def _check_button_text_constraint(self, bot_id, button_text):
         buttons_with_same_text = await self.db_repository.fetch_by_query(
@@ -311,6 +304,12 @@ class MainMenuService:
                 status_code=400,
                 detail="A button with this name is forbidden.",
             )
+
+    async def _send_notification_about_buttons_update(self, bot_id):
+        await self.mailing_service.create_mailing(
+            bot_id,
+            "В кнопки главного меню внесены изменения. Чтобы обновить ваше главное меню: нажмите /update",
+        )
 
 
 def get_main_menu_service(

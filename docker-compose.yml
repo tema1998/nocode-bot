@@ -112,6 +112,47 @@ services:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  mailing_worker:
+    container_name: mailing_worker
+    build:
+      context: .
+      dockerfile: bot_service/Dockerfile
+    command: python -m bot_service.workers.worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      bot_service_db:
+        condition: service_healthy
+    networks:
+      - backend
+      - database
+    environment:
+      - TZ=Europe/Moscow
+    env_file:
+      - .env
+    restart: always
+    deploy:
+      replicas: 1
+
+
 volumes:
   bot_service_db_data:
   user_service_db_data:
