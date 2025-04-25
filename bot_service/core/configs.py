@@ -24,6 +24,9 @@ class Config(BaseSettings):
 
     webhook_url: str = "url"
 
+    rabbitmq_user: str = "user"
+    rabbitmq_password: str = "pass"
+
     bot_default_reply: str = (
         "Я Вас не понимаю. Пожалуйста выберите команду в кнопочном меню."
     )
@@ -38,6 +41,10 @@ class Config(BaseSettings):
     @property
     def dsn(self) -> str:
         return f"postgresql+asyncpg://{self.bot_service_db_user}:{self.bot_service_db_password}@{self.bot_service_db_host}:{self.bot_service_db_port}/{self.bot_service_db_name}"
+
+    @property
+    def rabbitmq_url(self) -> str:
+        return f"amqp://{self.rabbitmq_user}:{self.rabbitmq_password}@rabbitmq:5672/"
 
     model_config = SettingsConfigDict(
         env_file=".env",

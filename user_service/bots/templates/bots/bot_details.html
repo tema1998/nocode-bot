@@ -34,14 +34,14 @@
                                     </h4>
                                     <div class="pl-0 pl-md-4">
                                         <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-2">
-                                            <span class="font-weight-bold mb-1 mb-sm-0" style="min-width: 120px; width: auto;">Username:</span>
+                                            <span class="font-weight-bold mb-1 mb-sm-0" style="min-width: 120px; width: auto;">Имя бота:</span>
                                             <a href="https://t.me/{{bot.bot_username}}" target="_blank" class="text-info text-break">
                                                 @{{ bot_data.username }} <i class="fas fa-external-link-alt ml-1"></i>
                                             </a>
                                         </div>
                                         {% if not bot_data.token_error %}
                                         <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center mb-2">
-                                            <span class="font-weight-bold mb-1 mb-sm-0" style="min-width: 120px; width: auto;">Имя бота:</span>
+                                            <span class="font-weight-bold mb-1 mb-sm-0" style="min-width: 120px; width: auto;">Название бота: </span>
                                             <span class="text-break">{{bot_data.name}}</span>
                                         </div>
                                         {% endif %}
