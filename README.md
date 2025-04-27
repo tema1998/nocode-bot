@@ -7,6 +7,7 @@
 ![nocode-bot.ru](readme/nocode-bot.png)
 * FastAPI
 * Django
+* RabbitMQ
 * PostgreSQL
 * SQLAlchemy
 * Alembic
@@ -16,7 +17,7 @@
 * Настроен pre-commit и CI проверки кода различными линтерами
 * Pytests, unittest
 ## Переменные окружения
-Создайте файл /.env используя /.env.example(.env.dev для локального запуска).
+Создайте файл /.env используя /.env.dev (.env.example для запуска на сервере).
 Для настройки Webhook telegram необходимо иметь SSL сертификаты. Для локальной разработки можно использовать Ngrok(инфу по установки можно найти в интернете).
 ```
 ngrok http 8080
@@ -34,7 +35,7 @@ make start-dev
 make run-tests
 ```
 
-Платформа будет доступна по адресу http://127.0.0.1:8000/.
+Платформа будет доступна по адресу http://127.0.0.1/.
 
 API-документация: http://127.0.0.1:8080/docs.
 
