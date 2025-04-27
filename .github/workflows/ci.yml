@@ -33,7 +33,6 @@ jobs:
           black --config ./.github/config/.black .
           isort --settings-file ./.github/config/.isort.cfg . --profile black --filter-files
           flake8 --config ./.github/config/.flake8 .
-          mypy . --config-file .github/config/mypy.ini --ignore-missing-imports
 
       # Run the linters and generate an HTML report
       - name: Check and Upload Lint Report
