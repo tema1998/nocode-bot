@@ -1,18 +1,15 @@
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from bot_service.main import app
 from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 
-# Clear the middleware stack to remove the secret token verification.
 app.user_middleware.clear()
 app.middleware_stack = app.build_middleware_stack()
 
 client = TestClient(app)
 
-TEST_TOKEN = "test-secret"  # Placeholder for the token used in requests
+TEST_TOKEN = "test-secret"
 
 
 @pytest.mark.asyncio
