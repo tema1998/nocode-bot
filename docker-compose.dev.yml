@@ -9,10 +9,15 @@ services:
         condition: service_healthy
     volumes:
       - ./bot_service:/srv/app/bot_service
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     env_file:
       - .env
+    environment:
+      - TZ=Europe/Moscow
     ports:
       - "8080:8080"
+    restart: always
 
   user_service:
     container_name: user_service
@@ -22,11 +27,15 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       user_service_db:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      - TZ=Europe/Moscow
     restart: always
     ports:
       - "8000:8000"
@@ -66,6 +75,58 @@ services:
     restart: always
     ports:
       - "5433:5432"
+
+  nginx:
+    build:
+      dockerfile: ./Dockerfile.dev
+      context: ./nginx/
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+      - static_volume:/user_service/staticfiles
+      - media_volume:/user_service/media
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: always
+    depends_on:
+      - bot_service
+      - user_service
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+
+  mailing_worker:
+    container_name: mailing_worker
+    build:
+      context: .
+      dockerfile: bot_service/Dockerfile
+    command: python -m bot_service.workers.worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      bot_service_db:
+        condition: service_healthy
+    environment:
+      - TZ=Europe/Moscow
+    env_file:
+      - .env
+    restart: always
 
 volumes:
   bot_service_db_data:
