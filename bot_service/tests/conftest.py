@@ -65,22 +65,22 @@ def mock_chain_step_service():
 
 
 @pytest.fixture
-def mock_mailing_service():
-    with patch(
-        "bot_service.services.mailing_service.MailingService"
-    ) as mock_service:
-        mock_instance = AsyncMock()
-        mock_service.return_value = mock_instance
-        yield mock_instance
-
-
-@pytest.fixture
-def mock_main_menu_service():
+def mock_main_menu_service(mock_mailing_service):
     with patch(
         "bot_service.services.main_menu_service.MainMenuService"
-    ) as mock_service:
+    ) as mock_service, patch(
+        "bot_service.services.main_menu_service.PostgresAsyncRepository"
+    ) as mock_db_repo, patch(
+        "bot_service.services.main_menu_service.TelegramApiRepository"
+    ) as mock_tg_repo:
         mock_instance = AsyncMock()
         mock_service.return_value = mock_instance
+
+        mock_db_repo.return_value = AsyncMock()
+        mock_tg_repo.return_value = AsyncMock()
+
+        mock_instance.mailing_service = mock_mailing_service
+
         yield mock_instance
 
 
@@ -101,4 +101,24 @@ def mock_chain_handle_service():
     ) as mock_service:
         mock_instance = AsyncMock()
         mock_service.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture
+def mock_mailing_service():
+    with patch(
+        "bot_service.services.mailing_service.MailingService"
+    ) as mock_service, patch(
+        "bot_service.services.mailing_service.RabbitMQRepository"
+    ) as mock_broker_repo:
+        mock_instance = AsyncMock()
+        mock_service.return_value = mock_instance
+
+        mock_broker_instance = AsyncMock()
+        mock_broker_repo.return_value = mock_broker_instance
+
+        mock_broker_instance.publish = AsyncMock()
+        mock_broker_instance.connect = AsyncMock()
+        mock_broker_instance.close = AsyncMock()
+
         yield mock_instance

@@ -15,24 +15,6 @@ from fastapi.testclient import TestClient
 client = TestClient(app)
 
 
-@pytest.fixture
-def mock_mailing_service():
-    """
-    Fixture to mock the Mailing Service.
-    Provides an AsyncMock instance for use across test cases.
-    """
-    with patch(
-        "bot_service.services.mailing_service.MailingService"
-    ) as mock_service:
-        mock_instance = (
-            AsyncMock()
-        )  # Create an AsyncMock instance for async methods
-        mock_service.return_value = (
-            mock_instance  # Set the return value for the service
-        )
-        yield mock_instance  # Yield the mock instance for use in tests
-
-
 # Test getting the main menu successfully
 @pytest.mark.asyncio
 async def test_get_main_menu_success(mock_main_menu_service):

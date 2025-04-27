@@ -6,21 +6,7 @@ from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 
-# Initialize a test client for the FastAPI application
 client = TestClient(app)
-
-
-# Fixture to mock the mailing service dependency
-@pytest.fixture
-def mock_mailing_service():
-    with patch(
-        "bot_service.services.mailing_service.MailingService"
-    ) as mock_service:
-        mock_instance = (
-            AsyncMock()
-        )  # Create an AsyncMock instance for async methods
-        mock_service.return_value = mock_instance  # Set the return value of the patched service to the mock instance
-        yield mock_instance  # Yield the mock instance for use in tests
 
 
 @pytest.mark.asyncio
