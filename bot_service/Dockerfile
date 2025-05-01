@@ -13,6 +13,8 @@ COPY /bot_service/start.sh ./
 COPY /bot_service/alembic.ini ./bot_service/
 COPY /bot_service/poetry.lock /bot_service/pyproject.toml ./bot_service/
 
+RUN mkdir -p /var/log/bot-service && \
+    chmod -R 777 /var/log/bot-service
 
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir poetry && \

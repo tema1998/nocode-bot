@@ -1,5 +1,6 @@
 import logging
-from logging.handlers import TimedRotatingFileHandler
+import os
+from logging.handlers import RotatingFileHandler
 
 from bot_service.create_fastapi_app import create_app
 from bot_service.models.bot import Bot
@@ -21,16 +22,30 @@ app = create_app(
     create_custom_static_urls=True,
 )
 
-logging.basicConfig(
-    level=logging.ERROR,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        TimedRotatingFileHandler(
-            "error.log", when="midnight", backupCount=7
-        ),  # Ротация каждый день
-        logging.StreamHandler(),
-    ],
+log_dir = os.path.dirname("/var/log/bot-service/bot_service.log")
+os.makedirs(log_dir, exist_ok=True)
+
+log_formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
+
+log_file = "/var/log/bot-service/bot_service.log"
+file_handler = RotatingFileHandler(
+    log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+)
+file_handler.setFormatter(log_formatter)
+file_handler.setLevel(logging.INFO)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(log_formatter)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 @app.middleware("http")
