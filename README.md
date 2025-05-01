@@ -14,6 +14,7 @@
 * Docker
 * Nginx
 * Certbot
+* ELK(Elasticsearch, Logstash, Kibana, Filebeat)
 * Настроен pre-commit и CI проверки кода различными линтерами
 * Pytests, unittest
 ## Переменные окружения

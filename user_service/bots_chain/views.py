@@ -166,7 +166,9 @@ class ChainStepMixin(BaseChainView):
         try:
             return ChainStepService.get_step(step_id)
         except RequestException as e:
-            logger.error(f"Failed to get step {step_id}: {str(e)}")
+            logger.error(
+                f"Failed to get step {step_id}: {str(e)}", exc_info=True
+            )
             raise Http404("Step not found")
 
 
@@ -303,7 +305,9 @@ class ChainButtonMixin(BaseChainView):
         try:
             return ChainButtonService.get_button(button_id)
         except RequestException as e:
-            logger.error(f"Failed to get button {button_id}: {str(e)}")
+            logger.error(
+                f"Failed to get button {button_id}: {str(e)}", exc_info=True
+            )
             raise Http404("Button not found")
 
 

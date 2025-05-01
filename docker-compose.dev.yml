@@ -11,6 +11,7 @@ services:
       - ./bot_service:/srv/app/bot_service
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - ./logs/bot-service:/srv/app/bot_service/logs/bot-service
     env_file:
       - .env
     environment:
@@ -29,6 +30,7 @@ services:
       - media_volume:/app/media
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+      - ./logs/user-service:/app/logs/user-service
     depends_on:
       user_service_db:
         condition: service_healthy
@@ -87,6 +89,7 @@ services:
       - ./data/certbot/www:/var/www/certbot
       - static_volume:/user_service/staticfiles
       - media_volume:/user_service/media
+      - ./nginx/logs:/var/log/nginx
     ports:
       - "80:80"
       - "443:443"
@@ -94,6 +97,7 @@ services:
     depends_on:
       - bot_service
       - user_service
+      - kibana
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -127,6 +131,51 @@ services:
     env_file:
       - .env
     restart: always
+
+  elasticsearch:
+    image: elasticsearch:7.16.1
+    volumes:
+      - ./elk_configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./docker_volumes/elasticsearch/data:/usr/share/elasticsearch/data
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+      discovery.type: single-node
+
+  logstash:
+    image: logstash:7.16.2
+    volumes:
+      - ./elk_configs/logstash/config.yml:/usr/share/logstash/config/logstash.yml
+      - ./elk_configs/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./elk_configs/logstash/pipelines:/usr/share/logstash/pipelines
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:7.16.1
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./elk_configs/kibana/config.yml:/usr/share/kibana/config/kibana.yml:ro
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+
+  beats:
+    image: elastic/filebeat:7.16.2
+    volumes:
+      - ./logs:/usr/share/filebeat/logs:ro
+      - ./elk_configs/filebeat/config.yml:/usr/share/filebeat/filebeat.yml
+      - ./nginx/logs:/var/log/nginx:ro
+    depends_on:
+      - elasticsearch
 
 volumes:
   bot_service_db_data:

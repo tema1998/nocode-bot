@@ -1,0 +1,42 @@
+filebeat.inputs:
+- type: log
+  paths:
+    - /usr/share/filebeat/logs/bot-service/*.log
+  fields:
+    service: bot_service
+  scan_frequency: 10s
+
+- type: log
+  paths:
+    - /usr/share/filebeat/logs/user-service/*.log
+  fields:
+    service: user_service
+  scan_frequency: 10s
+  processors:
+    - decode_json_fields:
+        fields: [ "message" ]
+        target: "json"
+        overwrite_keys: true
+        add_error_key: true
+- type: filestream
+  id: nginx-access
+  enabled: true
+  paths:
+    - /var/log/nginx/access.log
+  fields:
+    service: nginx
+    type: access
+
+- type: filestream
+  id: nginx-error
+  enabled: true
+  paths:
+    - /var/log/nginx/error.log
+  fields:
+    service: nginx
+    type: error
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+logging.level: info

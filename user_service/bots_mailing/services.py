@@ -74,7 +74,9 @@ class MailingService:
 
         if not isinstance(response_data, dict):
             error_msg = f"Invalid API response format for bot {bot_id}"
-            logger.error(f"{error_msg}. Response: {response.text}")
+            logger.error(
+                f"{error_msg}. Response: {response.text}", exc_info=True
+            )
             raise ValueError(error_msg)
 
         return response_data
