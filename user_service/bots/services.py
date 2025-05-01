@@ -103,11 +103,13 @@ class BotUserService:
             data = cast(Dict[str, Any], response.json())
 
             if not isinstance(data, dict) or "users" not in data:
-                logger.error(f"Unexpected API response format: {data}")
+                logger.error(
+                    f"Unexpected API response format: {data}", exc_info=True
+                )
                 return []
 
             users = data.get("users", [])
             return cast(List[Dict[str, Any]], users)
         except (RequestException, json.JSONDecodeError) as e:
-            logger.error(f"Failed to get bot users: {str(e)}")
+            logger.error(f"Failed to get bot users: {str(e)}", exc_info=True)
             return []
