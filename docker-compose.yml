@@ -118,9 +118,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     networks:
       - backend
     healthcheck:
@@ -151,6 +148,58 @@ services:
     restart: always
     deploy:
       replicas: 1
+
+  elasticsearch:
+    image: elasticsearch:7.16.1
+    volumes:
+      - ./configs/elasticsearch/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./docker_volumes/elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - backend
+    environment:
+      ES_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+      discovery.type: single-node
+
+  logstash:
+    image: logstash:7.16.2
+    volumes:
+      - ./configs/logstash/config.yml:/usr/share/logstash/config/logstash.yml
+      - ./configs/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml
+      - ./configs/logstash/pipelines:/usr/share/logstash/pipelines
+    networks:
+      - backend
+    environment:
+      LS_JAVA_OPTS: "-Xmx512m -Xms512m"
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:7.16.1
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ./configs/kibana/config-prod.yml:/usr/share/kibana/config/kibana.yml:ro
+    networks:
+      - backend
+    environment:
+      ELASTIC_USERNAME: "${ELASTIC_USERNAME}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+
+  beats:
+    image: elastic/filebeat:7.16.2
+    volumes:
+      - ./bot_service/logs:/var/log/bot-service:ro
+      - ./user_service/logs:/var/log/user-service:ro
+      - ./configs/filebeat/config.yml:/usr/share/filebeat/filebeat.yml
+      - ./nginx/logs:/var/log/nginx:ro
+    networks:
+      - backend
+    depends_on:
+      - elasticsearch
 
 
 volumes:
