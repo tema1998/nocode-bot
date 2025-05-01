@@ -1,46 +1,42 @@
+import logging.config
 import os
 
-from .base import BASE_DIR
 
+LOG_DIR = "/var/log/user-service"
+
+
+os.makedirs(LOG_DIR, exist_ok=True)
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {message}",
-            "style": "{",
-        },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
         },
     },
     "handlers": {
-        "file": {
-            "level": "ERROR",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": os.path.join(BASE_DIR, "errors.log"),
-            "maxBytes": 1024 * 1024 * 5,
-            "backupCount": 5,
-            "formatter": "verbose",
-        },
         "console": {
-            "level": "INFO",
             "class": "logging.StreamHandler",
-            "formatter": "simple",
+            "formatter": "json",
+        },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "json",
+            "filename": os.path.join(LOG_DIR, "user_service.log"),
+            "maxBytes": 10 * 1024 * 1024,
+            "backupCount": 5,
+            "encoding": "utf-8",
         },
     },
     "loggers": {
-        "django": {
-            "handlers": ["file", "console"],
-            "level": "INFO",
-            "propagate": True,
-        },
-        "bots": {
-            "handlers": ["file", "console"],
-            "level": "ERROR",
-            "propagate": False,
+        "": {  # корень логгера
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
         },
     },
 }
+
+logging.config.dictConfig(LOGGING)
+logger = logging.getLogger(__name__)
