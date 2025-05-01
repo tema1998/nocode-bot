@@ -1,6 +1,6 @@
 import logging
-import os
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 from bot_service.create_fastapi_app import create_app
 from bot_service.models.bot import Bot
@@ -22,16 +22,17 @@ app = create_app(
     create_custom_static_urls=True,
 )
 
-log_dir = os.path.dirname("/var/log/bot-service/bot_service.log")
-os.makedirs(log_dir, exist_ok=True)
+LOG_DIR = Path(__file__).resolve().parent / "logs" / "bot-service"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 
 log_formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
-log_file = "/var/log/bot-service/bot_service.log"
+log_file = LOG_DIR / "bot_service.log"
 file_handler = RotatingFileHandler(
-    log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+    str(log_file), maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
 )
 file_handler.setFormatter(log_formatter)
 file_handler.setLevel(logging.INFO)

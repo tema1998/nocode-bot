@@ -1,11 +1,11 @@
 import logging.config
-import os
+from pathlib import Path
 
 
-LOG_DIR = "/var/log/user-service"
-
-
-os.makedirs(LOG_DIR, exist_ok=True)
+LOG_DIR = (
+    Path(__file__).resolve().parent.parent.parent / "logs" / "user-service"
+)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 LOGGING = {
     "version": 1,
@@ -24,7 +24,7 @@ LOGGING = {
         "file": {
             "class": "logging.handlers.RotatingFileHandler",
             "formatter": "json",
-            "filename": os.path.join(LOG_DIR, "user_service.log"),
+            "filename": str(LOG_DIR / "user_service.log"),
             "maxBytes": 10 * 1024 * 1024,
             "backupCount": 5,
             "encoding": "utf-8",

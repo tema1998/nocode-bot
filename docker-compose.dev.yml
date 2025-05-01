@@ -11,7 +11,7 @@ services:
       - ./bot_service:/srv/app/bot_service
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./bot_service/logs:/var/log/bot-service
+      - ./logs/bot-service:/srv/app/bot_service/logs/bot-service
     env_file:
       - .env
     environment:
@@ -30,7 +30,7 @@ services:
       - media_volume:/app/media
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./user_service/logs:/var/log/user-service
+      - ./logs/user-service:/app/logs/user-service
     depends_on:
       user_service_db:
         condition: service_healthy
@@ -171,8 +171,7 @@ services:
   beats:
     image: elastic/filebeat:7.16.2
     volumes:
-      - ./bot_service/logs:/var/log/bot-service:ro
-      - ./user_service/logs:/var/log/user-service:ro
+      - ./logs:/usr/share/filebeat/logs:ro
       - ./elk_configs/filebeat/config.yml:/usr/share/filebeat/filebeat.yml
       - ./nginx/logs:/var/log/nginx:ro
     depends_on:
